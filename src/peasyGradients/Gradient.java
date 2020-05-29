@@ -5,6 +5,8 @@ import static processing.core.PConstants.HSB;
 
 import java.util.ArrayList;
 
+import peasyGradients.Functions.StepModes;
+
 /**
  * A gradient contains color, and the position (percentage) at which that color
  * occurs within the gradient. multi-position color stops Stops may be
@@ -21,7 +23,6 @@ public final class Gradient {
 
 	static final int DEFAULT_COLOR_MODE = RGB;
 	private ArrayList<ColorStop> colorStops = new ArrayList<ColorStop>();
-	private int COLOR_SPACE = RGB;
 
 	/**
 	 * Defines how gradient should interpolate between colors (by performining
@@ -31,10 +32,21 @@ public final class Gradient {
 	 *
 	 */
 	enum ColorSpaces {
-		RGB, HSB, LCH, HCL, CMYK, LAB
+		RGB, HSB, LAB;
+		// LCH, HCL, CMYK, TODO
+		
+		private final static ColorSpaces[] vals = values();
+
+		ColorSpaces next() {
+			return vals[(ordinal() + 1) % vals.length];
+		}
 	} // TODO
 	
-	ColorSpaces colorSpace = ColorSpaces.HSB; // TODO
+	public void nextColSpace() {
+		colorSpace = colorSpace.next();
+	}
+	
+	ColorSpaces colorSpace = ColorSpaces.RGB; // TODO
 
 	/**
 	 * Return randomised gradient (random colors and stop positions).

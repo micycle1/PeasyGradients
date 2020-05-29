@@ -397,7 +397,7 @@ final class Functions {
 	}
 	
 	static int composeclr(float red, float green, float blue) {
-		return round(255) << 24 | round(red) << 16 | round(green) << 8 | round(blue);
+		return 255 << 24 | (int)red << 16 | (int)green << 8 | (int)blue;
 	}
 
 	/**
