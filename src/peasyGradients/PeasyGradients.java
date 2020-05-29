@@ -15,7 +15,7 @@ import static processing.core.PConstants.PI;
  * (centre-offset, angled, n-color gradient with color stops)
  * 
  * TODO memoisation TODO pshape masks TODO set color interpolation method shape,
- * gradient
+ * TODO interpolation mode in this class! gradient
  * Shape.applycolorgradient(gradient).applyopacitygradient(shape.applyopacity))
  * 
  * gradient.mask(shape).mask(opacity)
@@ -43,6 +43,14 @@ public final class PeasyGradients {
 	 * @param mask
 	 */
 	public void setMask(PImage mask) {
+
+	}
+
+	/**
+	 * This defines how the gradient's colors are represented when they are interpolated. This can
+	 * dramatically affect how a gradient (the transition colors) looks.
+	 */
+	public void setColorSpace() {
 
 	}
 

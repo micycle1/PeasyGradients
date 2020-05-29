@@ -1,6 +1,7 @@
 package peasyGradients;
 
 import static processing.core.PApplet.round;
+import static processing.core.PApplet.pow;
 
 import processing.core.PApplet;
 import processing.core.PConstants;
@@ -15,16 +16,104 @@ import processing.core.PVector;
  */
 final class Functions {
 
+	static enum StepModes {
+		/**
+		 * No transformation
+		 */
+		LINEAR,
+		/**
+		 * Ken Perlin’s smoother step, a simoid like function.
+		 * 
+		 * @param st step, between 0 and 1
+		 * @return the new mapped step, having undergone a transformation according to a
+		 *         sigmoid-like function (eg: [0.5 -> 0.5], [0.25 -> 0.104], [0.65
+		 *         ->0.765])
+		 */
+		KPERLIN, EXPONENTIAL, CUBIC,
+		/**
+		 * Provides a reversible parabolic bouncing easing out function. From t=0 value
+		 * starts with an accelerating motion until destination reached then it bounces
+		 * back in increasingly small bounces finally settling at 1 when t=1. If the
+		 * <code>direction</code> parameter is negative, the direction of the function
+		 * is reversed. This can be useful for oscillating animations.
+		 */
+		BOUNCE,
+		/**
+		 * Provides an elastic easing out function simulating an increasingly agitated
+		 * elastic. From t=0 value starts at 0.5 with increasingly large perturbations
+		 * ending at 1 when t=1.
+		 */
+		ELASTIC, CIRCULAR, SINE;
+
+		private final static StepModes[] vals = values();
+
+		StepModes next() {
+			return vals[(ordinal() + 1) % vals.length];
+		}
+	}
+
+	static void nextStepMode() {
+		stepMode = stepMode.next();
+	}
+
+	static StepModes stepMode = StepModes.KPERLIN;
+
 	/**
-	 * Ken Perlin’s smoother step, a simoid like function.
+	 * Calculate the step by passing it to the selected smoothing function. Allows
+	 * gradient renderer to easily change how the gradient is smoothed.
 	 * 
-	 * @param st step, between 0 and 1
-	 * @return the new mapped step, having undergone a transformation according to a
-	 *         sigmoid-like function (eg: [0.5 -> 0.5], [0.25 -> 0.104], [0.65
-	 *         ->0.765])
+	 * @param step
+	 * @return the new step (mapped to a
 	 */
-	private static float smootherStep(float st) {
-		return st * st * st * (st * (st * 6 - 15) + 10);
+	static float calcStep(float step) {
+		switch (stepMode) {
+			case KPERLIN :
+				return step * step * step * (step * (step * 6 - 15) + 10);
+			case LINEAR :
+				return step;
+			case EXPONENTIAL :
+				return step == 1.0f ? step : 1.0f - pow(2, -10 * step);
+			case CUBIC :
+				return step * step * step;
+			case BOUNCE :
+				float sPrime = step;
+
+				if (sPrime < 0.36364) { // 1/2.75
+					return 7.5625f * sPrime * sPrime;
+				}
+				if (sPrime < 0.72727) // 2/2.75
+				{
+					return 7.5625f * (sPrime -= 0.545454f) * sPrime + 0.75f;
+				}
+				if (sPrime < 0.90909) // 2.5/2.75
+				{
+					return 7.5625f * (sPrime -= 0.81818f) * sPrime + 0.9375f;
+				}
+
+				return 7.5625f * (sPrime -= 0.95455f) * sPrime + 0.984375f;
+			case ELASTIC :
+				if (step <= 0) {
+					return 0.5f;
+				}
+
+				if (step >= 1) {
+					return 1;
+				}
+
+				float sPrime1 = 1 - step;
+				float p = 0.25f; // Period
+				float a = 1.05f; // Amplitude.
+				float s = 0.0501717f; // asin(1/a)*p/TWO_PI;
+
+				return (float) Math.min(1,
+						0.5 - a * pow(2, -10 * sPrime1) * Math.sin((sPrime1 - s) * PConstants.TWO_PI / p));
+			case CIRCULAR :
+				return PApplet.sqrt((2.0f - step) * step);
+			case SINE :
+				PApplet.sin(step * PConstants.HALF_PI);
+			default :
+				return step;
+		}
 	}
 
 	/**
@@ -40,7 +129,7 @@ final class Functions {
 	 * @return
 	 */
 	static float[] smootherStepRgb(float[] col1, float[] col2, float st, float[] out) {
-		float smoothStep = smootherStep(st); // apply sigmoid-like function to step
+		float smoothStep = calcStep(st); // apply sigmoid-like function to step
 		out[0] = col1[0] + smoothStep * (col2[0] - col1[0]);
 		out[1] = col1[1] + smoothStep * (col2[1] - col1[1]);
 		out[2] = col1[2] + smoothStep * (col2[2] - col1[2]);
@@ -69,7 +158,7 @@ final class Functions {
 		}
 		float scl = st * (sz - 1);
 		int i = (int) scl;
-		float eval = smootherStep(scl - i);
+		float eval = calcStep(scl - i);
 		out[0] = arr[i][0] + eval * (arr[i + 1][0] - arr[i][0]);
 		out[1] = arr[i][1] + eval * (arr[i + 1][1] - arr[i][1]);
 		out[2] = arr[i][2] + eval * (arr[i + 1][2] - arr[i][2]);
@@ -77,6 +166,18 @@ final class Functions {
 		return out;
 	}
 
+	/**
+	 * Returns a color by interpolating between two given colors. An alternative to
+	 * Processing's native lerpColor() method (which is linear).
+	 * 
+	 * @param col1 First color, represented as [H,S,B,A] array; each value between
+	 *             0...1.
+	 * @param col2 Second color, represented as [H,S,B,A] array; each value between
+	 *             0...1.
+	 * @param st   step: percentage between the two colors.
+	 * @param out  The new interpolated color, represented by a [H,S,B,A] array.
+	 * @return
+	 */
 	static float[] smootherStepHsb(float[] a, float[] b, float st, float[] out) {
 
 		// Find difference in hues.
@@ -91,7 +192,7 @@ final class Functions {
 			huea += 1.0;
 		}
 
-		float eval = smootherStep(st);
+		float eval = calcStep(st);
 
 		// The two hues may be outside of 0 .. 1 range,
 		// so modulate by 1.
@@ -294,6 +395,10 @@ final class Functions {
 	static int composeclr(float red, float green, float blue, float alpha) {
 		return round(alpha * 255) << 24 | round(red * 255) << 16 | round(green * 255) << 8 | round(blue * 255);
 	}
+	
+	static int composeclr(float red, float green, float blue) {
+		return round(255) << 24 | round(red) << 16 | round(green) << 8 | round(blue);
+	}
 
 	/**
 	 * Decompose color integer (RGBA) into 4 separate components and scale between
@@ -309,6 +414,21 @@ final class Functions {
 		out[0] = (clr >> 16 & 0xff) * 0.003921569f;
 		out[1] = (clr >> 8 & 0xff) * 0.003921569f;
 		out[2] = (clr & 0xff) * 0.003921569f;
+		return out;
+	}
+	
+	/**
+	 * Decompose color integer (RGBA) into 4 separate components dont scale
+	 * 
+	 * @param clr
+	 * @param out
+	 * @return
+	 */
+	static float[] decomposeclr(int clr) {
+		float[] out = new float[3];
+		out[0] = (clr >> 16 & 0xff);
+		out[1] = (clr >> 8 & 0xff);
+		out[2] = (clr & 0xff);
 		return out;
 	}
 
