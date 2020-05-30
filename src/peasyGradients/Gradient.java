@@ -1,11 +1,11 @@
 package peasyGradients;
 
-import static processing.core.PConstants.RGB;
-import static processing.core.PConstants.HSB;
-
 import java.util.ArrayList;
 
-import peasyGradients.Functions.StepModes;
+import peasyGradients.colourSpaces.FastLAB;
+import peasyGradients.colourSpaces.HSB;
+import peasyGradients.colourSpaces.LAB;
+import peasyGradients.colourSpaces.RGB;
 
 /**
  * A gradient contains color, and the position (percentage) at which that color
@@ -21,8 +21,9 @@ import peasyGradients.Functions.StepModes;
  */
 public final class Gradient {
 
-	static final int DEFAULT_COLOR_MODE = RGB;
 	private ArrayList<ColorStop> colorStops = new ArrayList<ColorStop>();
+	float[] rsltclrF = new float[4];
+	double[] rsltclrD = new double[4];
 
 	/**
 	 * Defines how gradient should interpolate between colors (by performining
@@ -32,21 +33,21 @@ public final class Gradient {
 	 *
 	 */
 	enum ColorSpaces {
-		RGB, HSB, LAB;
+		RGB, HSB, LAB, FAST_LAB;
 		// LCH, HCL, CMYK, TODO
-		
+
 		private final static ColorSpaces[] vals = values();
 
 		ColorSpaces next() {
 			return vals[(ordinal() + 1) % vals.length];
 		}
 	} // TODO
-	
+
 	public void nextColSpace() {
 		colorSpace = colorSpace.next();
 	}
-	
-	ColorSpaces colorSpace = ColorSpaces.RGB; // TODO
+
+	ColorSpaces colorSpace = ColorSpaces.LAB; // TODO
 
 	/**
 	 * Return randomised gradient (random colors and stop positions).
@@ -138,8 +139,9 @@ public final class Gradient {
 			}
 		}
 		colorStops.add(colorStop);
-		java.util.Collections.sort(colorStops);
+		java.util.Collections.sort(colorStops); // sort colorstops by value
 	}
+	
 
 	/**
 	 * Main method of gradient class.
@@ -156,14 +158,15 @@ public final class Gradient {
 	int eval(final float step) {
 		final int size = colorStops.size();
 
-		// Exit from the function early whenever possible.
-//		if (size == 0) {
-//			return 0x00000000;
-//		} else if (size == 1 || step < 0.0) {
-//			return colorStops.get(0).clr;
-//		} else if (step >= 1.0) {
-//			return colorStops.get(size - 1).clr;
-//		}
+//		 Exit from the function early whenever possible.
+		if (size == 0) {
+			return 0x00000000;
+		} else if (size == 1 || step < 0.0) {
+			return colorStops.get(0).clr;
+		} else if (step >= 1.0) {
+			return colorStops.get(size - 1).clr;
+		}
+		
 
 		ColorStop currStop;
 		ColorStop prevStop;
@@ -174,13 +177,6 @@ public final class Gradient {
 
 			if (step < currPercent) {
 
-				// These can be declared within the for-loop because
-				// if step < currPercent, the function will return
-				// and no more iterations will be executed.
-				float[] originclr = new float[4];
-				float[] destclr = new float[4];
-				float[] rsltclr = new float[4];
-
 				// If not at the first stop in the gradient (i == 0),
 				// then get the previous.
 				prevStop = colorStops.get(i - 1 < 0 ? 0 : i - 1);
@@ -190,39 +186,28 @@ public final class Gradient {
 				if (denom != 0) {
 					scaledst /= denom;
 				}
+				final float smoothStep = Functions.functStep(scaledst); // apply function to step
 
-				// Assumes that color stops' colors are ints. They could
-				// also be float[] arrays, in which case they wouldn't
-				// need to be decomposed.
 				switch (colorSpace) {
-					// TODO CALC STEP HERE
+					// TODO CALC STEP HERE ?
 					case HSB :
-						Functions.rgbToHsb(currStop.clr, originclr);
-						Functions.rgbToHsb(prevStop.clr, destclr);
-						Functions.smootherStepHsb(originclr, destclr, scaledst, rsltclr);
-						return Functions.composeclr(Functions.hsbToRgb(rsltclr));
-						
-					case LAB : 
-						float[] labA = LAB.rgb2lab(Functions.decomposeclr(currStop.clr)); // RGB->LAB
-						float[] labB = LAB.rgb2lab(Functions.decomposeclr(prevStop.clr));
-						LAB.interpolate(labA, labB, scaledst, rsltclr); // stil in LAB
-						float[] inter = LAB.lab2rgb2(rsltclr);
-						return Functions.composeclr(inter[0], inter[1], inter[2]);
-						
-//						float[] col = Functions.decomposeclr(currStop.clr);
-//						float[] labA = LAB.rgb2xyz(col[0],col[1], col[2]); // RGB->xyz
-//						col = Functions.decomposeclr(prevStop.clr);
-//						float[] labB = LAB.rgb2xyz(col[0],col[1], col[2]); // RGB->xyz
-//						LAB.interpolate(labA, labB, scaledst, rsltclr); // stil in LAB
-//						float[] inter = LAB.XYZ2sRGB(rsltclr);
-//						return Functions.composeclr(inter[0], inter[1], inter[2]);
-						
+						HSB.interpolate(currStop.clrHSB, prevStop.clrHSB, smoothStep, rsltclrF);
+						return Functions.composeclr(HSB.hsbToRgb(rsltclrF));
+
 					case RGB :
-						Functions.decomposeclr(currStop.clr, originclr); // decompose int color to [R,G,B,A] (0-1)
-						Functions.decomposeclr(prevStop.clr, destclr); // decompose int color to [R,G,B,A] (0-1)
-						Functions.smootherStepRgb(originclr, destclr, scaledst, rsltclr); // lerp between colors?
-//						return Functions.composeclr(rsltclr[0], rsltclr[1], rsltclr[2]);
-						return Functions.composeclr(rsltclr);
+						RGB.interpolate(currStop.clrRGB, prevStop.clrRGB, smoothStep, rsltclrF);
+						return Functions.composeclr(rsltclrF);
+
+					case LAB :
+						
+						LAB.interpolate(currStop.labclr, prevStop.labclr, smoothStep, rsltclrD);
+						return LAB.lab2rgb(rsltclrD);
+
+					case FAST_LAB :
+						LAB.interpolate(currStop.labclr, prevStop.labclr, smoothStep, rsltclrD);
+						return FastLAB.lab2rgb(rsltclrD);
+					default :
+						break;
 				}
 			}
 		}
