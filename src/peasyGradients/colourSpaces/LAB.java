@@ -139,13 +139,13 @@ public final class LAB {
 			db = (FastMath.exp(FastMath.log(db) / 2.4) * 1.055 - 0.055);
 		}
 
-		dr = (dr > 1) ? 1 : dr;
+//		dr = (dr > 1) ? 1 : dr;
 		dr *= 255;
 
-		dg = (dg > 1) ? 1 : dg;
+//		dg = (dg > 1) ? 1 : dg;
 		dg *= 255;
 
-		db = (db > 1) ? 1 : db;
+//		db = (db > 1) ? 1 : db;
 		db *= 255;
 
 		return 255 << 24 | (int) (dr + 0.5) << 16 | (int) (dg + 0.5) << 8 | (int) (db + 0.5);

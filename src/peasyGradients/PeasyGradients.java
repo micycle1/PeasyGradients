@@ -23,7 +23,8 @@ import java.util.concurrent.Executors;
  * TODO interpolation mode in this class! gradient
  * Shape.applycolorgradient(gradient).applyopacitygradient(shape.applyopacity))
  * 
- * TODO conic & sweep gradietn (https://css-tricks.com/snippets/css/css-conic-gradient/)
+ * TODO conic & sweep gradietn
+ * (https://css-tricks.com/snippets/css/css-conic-gradient/)
  * 
  * gradient.mask(shape).mask(opacity)
  * 
@@ -94,7 +95,7 @@ public final class PeasyGradients {
 		float oy = p.mouseY;
 		float dx = centre.x + xo;
 		float dy = centre.y + yo;
-		
+
 		final int threadCount = 4;
 		gradientPG = p.createGraphics((int) dimensions.x, (int) dimensions.y);
 
@@ -105,7 +106,7 @@ public final class PeasyGradients {
 		for (int i = 0; i < threadCount; i++) {
 			threads.add(new LinearThread(i * pixels, pixels, ox, oy, dx, dy, gradient));
 		}
-		
+
 		try {
 			exec.invokeAll(threads); // run threads, block until all finished
 		} catch (InterruptedException e) {
@@ -202,6 +203,16 @@ public final class PeasyGradients {
 		return null;
 	}
 
+	/**
+	 * 5 = best (redner every pixel) 4 = every 2, etc. 1 = render every
+	 * 
+	 * @param quality
+	 */
+	public void setQuality(int quality) {
+		quality = (quality > 5) ? 5 : (quality < 1 ? 1 : quality); // clamp to 1...5
+//		quality = 2^(6-quality) // TODO
+	}
+
 	public static boolean withinRegion(PVector point, PVector UL, PVector BR) {
 		return (point.x >= UL.x && point.y >= UL.y) && (point.x <= BR.x && point.y <= BR.y) // SE
 				|| (point.x >= BR.x && point.y >= BR.y) && (point.x <= UL.x && point.y <= UL.y) // NW
@@ -215,8 +226,7 @@ public final class PeasyGradients {
 		final float ox, oy, dx, dy;
 		final Gradient gradient;
 
-		public LinearThread(int offset, int pixels, float ox, float oy, float dx, float dy,
-				Gradient gradient) {
+		public LinearThread(int offset, int pixels, float ox, float oy, float dx, float dy, Gradient gradient) {
 			this.offset = offset;
 			this.gradient = new Gradient();
 			this.dx = dx;

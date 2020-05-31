@@ -2,6 +2,8 @@ package peasyGradients;
 
 import static processing.core.PApplet.round;
 
+import java.util.Random;
+
 import net.jafama.FastMath;
 
 import processing.core.PApplet;
@@ -17,47 +19,13 @@ import processing.core.PVector;
  */
 public final class Functions {
 
-	static enum StepModes {
-		/**
-		 * No transformation
-		 */
-		LINEAR,
-		/**
-		 * Ken Perlin’s smoother step, a simoid like function.
-		 * 
-		 * @param st step, between 0 and 1
-		 * @return the new mapped step, having undergone a transformation according to a
-		 *         sigmoid-like function (eg: [0.5 -> 0.5], [0.25 -> 0.104], [0.65
-		 *         ->0.765])
-		 */
-		KPERLIN, EXPONENTIAL, CUBIC,
-		/**
-		 * Provides a reversible parabolic bouncing easing out function. From t=0 value
-		 * starts with an accelerating motion until destination reached then it bounces
-		 * back in increasingly small bounces finally settling at 1 when t=1. If the
-		 * <code>direction</code> parameter is negative, the direction of the function
-		 * is reversed. This can be useful for oscillating animations.
-		 */
-		BOUNCE,
-		/**
-		 * Provides an elastic easing out function simulating an increasingly agitated
-		 * elastic. From t=0 value starts at 0.5 with increasingly large perturbations
-		 * ending at 1 when t=1.
-		 */
-		ELASTIC, CIRCULAR, SINE;
-
-		private final static StepModes[] vals = values();
-
-		StepModes next() {
-			return vals[(ordinal() + 1) % vals.length];
-		}
-	}
+	private static final Random random = new Random();
 
 	static void nextStepMode() {
 		stepMode = stepMode.next();
 	}
 
-	static StepModes stepMode = StepModes.KPERLIN;
+	static Interpolation stepMode = Interpolation.KPERLIN;
 
 	/**
 	 * Calculate the step by passing it to the selected smoothing function. Allows
@@ -106,10 +74,9 @@ public final class Functions {
 				float a = 1.05f; // Amplitude.
 				float s = 0.0501717f; // asin(1/a)*p/TWO_PI;
 
-				return (float) Math.min(1,
-						0.5 - a * FastMath.pow(2, -10 * sPrime1) * FastMath.sinQuick((sPrime1 - s) * PConstants.TWO_PI / p));
+				return (float) Math.min(1, 0.5 - a * FastMath.pow(2, -10 * sPrime1)
+						* FastMath.sinQuick((sPrime1 - s) * PConstants.TWO_PI / p));
 			case CIRCULAR :
-//				return PApplet.sqrt();
 				return (float) FastMath.sqrtQuick((2.0 - step) * step);
 			case SINE :
 				PApplet.sin(step * PConstants.HALF_PI);
@@ -164,9 +131,7 @@ public final class Functions {
 	}
 
 	/**
-	 * (1) decompose the color, (2) convert the color data from RGB channels to
-	 * those of the schema, (3) perform any desired transformations on these colors,
-	 * (4) convert back to RGB, and then (5) recompose the color.
+	 * Compose an sRGBA int from float[] 0...1
 	 * 
 	 * @param in
 	 * @return
@@ -176,7 +141,7 @@ public final class Functions {
 	}
 
 	/**
-	 * Compose an RGBA color using
+	 * Compose an RGBA color using a float[] of values in range 0...1
 	 * 
 	 * @param red
 	 * @param green
@@ -216,11 +181,20 @@ public final class Functions {
 	 * @param out
 	 * @return
 	 */
-	static float[] decomposeclr(int clr) {
+	static float[] decomposeclrRGB(int clr) {
 		float[] out = new float[3];
 		out[0] = (clr >> 16 & 0xff);
 		out[1] = (clr >> 8 & 0xff);
 		out[2] = (clr & 0xff);
+		return out;
+	}
+
+	static float[] decomposeclrRGBA(int clr) {
+		float[] out = new float[4];
+		out[3] = (clr >> 24 & 0xff) * 0.003921569f;
+		out[0] = (clr >> 16 & 0xff) * 0.003921569f;
+		out[1] = (clr >> 8 & 0xff) * 0.003921569f;
+		out[2] = (clr & 0xff) * 0.003921569f;
 		return out;
 	}
 
@@ -232,4 +206,31 @@ public final class Functions {
 		return out;
 	}
 
+	/**
+	 * Min of 3 floats
+	 */
+	public static float min(float a, float b, float c) {
+		return (a < b) ? ((a < c) ? a : c) : ((b < c) ? b : c);
+	}
+
+	/**
+	 * Max of 3 floats
+	 */
+	public static float max(float a, float b, float c) {
+		return (a > b) ? ((a > c) ? a : c) : ((b > c) ? b : c);
+	}
+
+	public static float random(float min, float max) {
+		return min + random.nextFloat() * (max - min);
+	}
+
+	/**
+	 * Returns a pseudorandom, uniformly distributed float value between 0.0 and
+	 * 1.0.
+	 * 
+	 * @return
+	 */
+	public static float randomFloat() {
+		return random.nextFloat();
+	}
 }

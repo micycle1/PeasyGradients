@@ -7,15 +7,14 @@ public final class HSB {
 		return hsbToRgb(in[0], in[1], in[2], in[3], out);
 	}
 
-	private static float[] hsbToRgb(float[] in, float[] out) {
-		if (in.length == 3) {
-			return hsbToRgb(in[0], in[1], in[2], 1, out);
-		} else if (in.length == 4) {
-			return hsbToRgb(in[0], in[1], in[2], in[3], out);
-		}
-		return out;
-	}
-
+	/**
+	 * 
+	 * @param hue 0...1
+	 * @param sat
+	 * @param bri
+	 * @param alpha
+	 * @return
+	 */
 	public static float[] hsbToRgb(float hue, float sat, float bri, float alpha) {
 		float[] out = new float[] { 0, 0, 0, 1 };
 		return hsbToRgb(hue, sat, bri, alpha, out);
@@ -77,7 +76,8 @@ public final class HSB {
 
 	/**
 	 * Returns a color by interpolating between two given colors. An alternative to
-	 * Processing's native lerpColor() method (which is linear).
+	 * Processing's native lerpColor() method (which is linear). The shortest path
+	 * between hues is used.
 	 * 
 	 * @param col1 First color, represented as [H,S,B,A] array; each value between
 	 *             0...1.
@@ -87,7 +87,7 @@ public final class HSB {
 	 * @param out  The new interpolated color, represented by a [H,S,B,A] array.
 	 * @return
 	 */
-	public static float[] interpolate(float[] a, float[] b, float st, float[] out) {
+	public static float[] interpolateShort(float[] a, float[] b, float st, float[] out) {
 
 		// Find difference in hues.
 		float huea = a[0];
@@ -104,6 +104,26 @@ public final class HSB {
 		// The two hues may be outside of 0 .. 1 range,
 		// so modulate by 1.
 		out[0] = (huea + st * (hueb - huea)) % 1;
+		out[1] = a[1] + st * (b[1] - a[1]);
+		out[2] = a[2] + st * (b[2] - a[2]);
+		out[3] = a[3] + st * (b[3] - a[3]);
+		return out;
+	}
+
+	/**
+	 * Like {@link #interpolateShort(float[], float[], float, float[])
+	 * interpolateShort()}, but does not use the shortest path between hues.
+	 * 
+	 * @param a
+	 * @param b
+	 * @param st
+	 * @param out
+	 * @return
+	 */
+	public static float[] interpolateLong(float[] a, float[] b, float st, float[] out) {
+		// The two hues may be outside of 0 .. 1 range,
+		// so modulate by 1.
+		out[0] = (a[0] + st * (b[0] - a[0])) % 1;
 		out[1] = a[1] + st * (b[1] - a[1]);
 		out[2] = a[2] + st * (b[2] - a[2]);
 		out[3] = a[3] + st * (b[3] - a[3]);

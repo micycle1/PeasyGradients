@@ -1,8 +1,12 @@
 package peasyGradients;
 
+import peasyGradients.colourSpaces.HCG;
 import peasyGradients.colourSpaces.HSB;
 import peasyGradients.colourSpaces.LAB;
+import peasyGradients.colourSpaces.LCH;
 import peasyGradients.colourSpaces.RGB;
+import peasyGradients.colourSpaces.RYB;
+import peasyGradients.colourSpaces.TEMP;
 import processing.core.PApplet;
 import processing.core.PConstants;
 
@@ -16,11 +20,16 @@ final class ColorStop implements Comparable<ColorStop> {
 
 	static final float TOLERANCE = 0.05f;
 	
-	final float percent; // percent at which this stop occurs (0...1.0)
+	final float originalPercent; // percent at which this stop occurs (0...1.0)
+	float percent; // percent, taking into account animation offset
 	final int clr; // colour int
 	float[] clrRGB; // decomposed RGB colour
 	final float[] clrHSB; // decomposed HSB colour
 	final double[] labclr; // decomposed LAB colour
+	final double[] lchclr;
+	final float[] ckrHCG;
+	final float tempclr;
+	final float[] clrRYB;
 
 	protected ColorStop(int colorMode, float percent, float[] arr) {
 		this(colorMode, percent, arr[0], arr[1], arr[2], arr.length == 4 ? arr[3] : 1.0f);
@@ -32,17 +41,22 @@ final class ColorStop implements Comparable<ColorStop> {
 	}
 
 	protected ColorStop(float percent, int clr) {
-		this.percent = PApplet.constrain(percent, 0.0f, 1.0f);
+		this.originalPercent = PApplet.constrain(percent, 0.0f, 1.0f);
 		this.clr = clr;
 		clrRGB = new float[4];
 		Functions.decomposeclr(clr, clrRGB);
 		clrHSB = RGB.rgbToHsb(clr);
-		labclr = LAB.rgb2lab(Functions.decomposeclr(clr));
+		ckrHCG = HCG.rgb2hcg(Functions.decomposeclrRGB(clr));
+		labclr = LAB.rgb2lab(Functions.decomposeclrRGB(clr));
+		lchclr = LCH.rgb2lch(Functions.decomposeclrRGB(clr));
+		tempclr = TEMP.rgb2temp(Functions.decomposeclrRGB(clr));
+		clrRYB = RYB.rgb2ryb(Functions.decomposeclrRGBA(clr));
+		this.percent = originalPercent;
 		// TODO additional color modes
 	}
 
-	boolean approxPercent(ColorStop cs, float tolerance) {
-		return PApplet.abs(percent - cs.percent) < tolerance;
+	static boolean approxPercent(ColorStop cs, float tolerance) {
+		return PApplet.abs(cs.percent - cs.percent) < tolerance;
 	}
 
 	// Mandated by the interface Comparable<ColorStop>.

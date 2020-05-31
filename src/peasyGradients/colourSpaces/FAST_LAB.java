@@ -3,14 +3,17 @@ package peasyGradients.colourSpaces;
 import net.jafama.FastMath;
 
 /**
- * Roughly 2.5x faster, but more a imprecise LAB gradient interpolator.
- * Consider using for real-time LAB gradients. Not recommended for static
- * rendering since results are slightly worse.
+ * Roughly 2.5x faster, but more a imprecise LAB gradient interpolator. Consider
+ * using for real-time LAB gradients. Not recommended for static rendering since
+ * results are slightly worse.
+ * 
+ * A LAB version that uses less mathematical precision to convert to RGB colour
+ * space.
  * 
  * @author micycle1
  *
  */
-public final class FastLAB {
+public final class FAST_LAB {
 
 	// D65 standard referent
 	private static final double Xn = 0.950470;
@@ -151,21 +154,5 @@ public final class FastLAB {
 		db *= 255;
 
 		return 255 << 24 | (int) (dr + 0.5) << 16 | (int) (dg + 0.5) << 8 | (int) (db + 0.5);
-	}
-
-	/**
-	 * originclr, destclr, scaledst, rsltclr
-	 * 
-	 * @param a   LAB col 1
-	 * @param b   LAB col 2
-	 * @param st  step
-	 * @param out new col
-	 * @return
-	 */
-	public static double[] interpolate(double[] a, double[] b, float step, double[] out) {
-		out[0] = a[0] + step * (b[0] - a[0]);
-		out[1] = a[1] + step * (b[1] - a[1]);
-		out[2] = a[2] + step * (b[2] - a[2]);
-		return out;
 	}
 }
