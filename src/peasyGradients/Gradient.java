@@ -3,13 +3,17 @@ package peasyGradients;
 import java.util.ArrayList;
 
 import peasyGradients.colourSpaces.ColourSpace;
-import peasyGradients.colourSpaces.FAST_LAB;
 import peasyGradients.colourSpaces.HCG;
 import peasyGradients.colourSpaces.HSB;
-import peasyGradients.colourSpaces.LAB;
+import peasyGradients.colourSpaces.CIE_LAB;
 import peasyGradients.colourSpaces.LCH;
 import peasyGradients.colourSpaces.RGB;
+import peasyGradients.colourSpaces.RYB;
 import peasyGradients.colourSpaces.TEMP;
+import peasyGradients.colourSpaces.XYZ;
+import peasyGradients.colourSpaces.YUV;
+import peasyGradients.utilities.Functions;
+import processing.core.PImage;
 
 /**
  * A gradient contains color, and the position (percentage) at which that color
@@ -30,11 +34,13 @@ public final class Gradient {
 	float animate = 0; // animation colour offset
 	double[] rsltclrD = new double[4];
 
+	PImage cacheLastImage; // TODO, last PImage output (cache and return if args haven't changed)
+
 	public void nextColSpace() {
 		colourSpace = colourSpace.next();
 	}
 
-	ColourSpace colourSpace = ColourSpace.RGB; // TODO
+	ColourSpace colourSpace = ColourSpace.LAB; // TODO
 
 	/**
 	 * Return randomised gradient (random colors and stop positions).
@@ -204,16 +210,18 @@ public final class Gradient {
 						return Functions.composeclr(rsltclrF);
 
 					case LAB :
-						LAB.interpolate(currStop.labclr, prevStop.labclr, smoothStep, rsltclrD);
-						return LAB.lab2rgb(rsltclrD);
-
+						CIE_LAB.interpolate(currStop.clrLAB, prevStop.clrLAB, smoothStep, rsltclrD);
+						return Functions.composeclr(CIE_LAB.lab2rgb(rsltclrD));
 					case FAST_LAB :
-						LAB.interpolate(currStop.labclr, prevStop.labclr, smoothStep, rsltclrD);
-						return FAST_LAB.lab2rgb(rsltclrD);
-
+						CIE_LAB.interpolate(currStop.clrLAB, prevStop.clrLAB, smoothStep, rsltclrD);
+						return Functions.composeclr(CIE_LAB.lab2rgbQuick(rsltclrD));
+					case VERY_FAST_LAB :
+						CIE_LAB.interpolate(currStop.clrLAB, prevStop.clrLAB, smoothStep, rsltclrD);
+						return Functions.composeclr(CIE_LAB.lab2rgbVeryQuick(rsltclrD));
+					
 					case LCH :
-						LAB.interpolate(currStop.lchclr, prevStop.lchclr, smoothStep, rsltclrD);
-						return LCH.lch2rgb(rsltclrD);
+						CIE_LAB.interpolate(currStop.clrLCH, prevStop.clrLCH, smoothStep, rsltclrD);
+						return Functions.composeclr(LCH.lch2rgb(rsltclrD));
 
 					case HCG :
 						HCG.interpolate(currStop.ckrHCG, prevStop.ckrHCG, smoothStep, rsltclrF);
@@ -224,7 +232,13 @@ public final class Gradient {
 						return Functions.composeclr(TEMP.temp2rgb(kelvin));
 					case RYB :
 						RGB.interpolate(currStop.clrRYB, prevStop.clrRYB, smoothStep, rsltclrF);
-						return Functions.composeclr(rsltclrF);
+						return Functions.composeclr(RYB.ryb2rgb(rsltclrF));
+					case YUV :
+						RGB.interpolate(currStop.clrYUV, prevStop.clrYUV, smoothStep, rsltclrF);
+						return Functions.composeclr(YUV.yuv2rgb(rsltclrF));
+					case XYZ :
+						CIE_LAB.interpolate(currStop.clrXYZ, prevStop.clrXYZ, smoothStep, rsltclrD);
+						return Functions.composeclr(XYZ.xyz2rgb(rsltclrD));
 					default :
 						break;
 				}

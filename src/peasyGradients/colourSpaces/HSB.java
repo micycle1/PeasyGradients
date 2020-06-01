@@ -1,5 +1,10 @@
 package peasyGradients.colourSpaces;
 
+/**
+ * Same as HSV
+ * @author micycle1
+ *
+ */
 public final class HSB {
 
 	public static float[] hsbToRgb(float[] in) {

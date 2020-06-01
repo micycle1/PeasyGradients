@@ -1,11 +1,11 @@
-package peasyGradients;
+package peasyGradients.utilities;
 
 import static processing.core.PApplet.round;
 
 import java.util.Random;
 
 import net.jafama.FastMath;
-
+import peasyGradients.Interpolation;
 import processing.core.PApplet;
 import processing.core.PConstants;
 import processing.core.PVector;
@@ -21,11 +21,11 @@ public final class Functions {
 
 	private static final Random random = new Random();
 
-	static void nextStepMode() {
+	public static void nextStepMode() {
 		stepMode = stepMode.next();
 	}
 
-	static Interpolation stepMode = Interpolation.KPERLIN;
+	public static Interpolation stepMode = Interpolation.KPERLIN;
 
 	/**
 	 * Calculate the step by passing it to the selected smoothing function. Allows
@@ -79,7 +79,7 @@ public final class Functions {
 			case CIRCULAR :
 				return (float) FastMath.sqrtQuick((2.0 - step) * step);
 			case SINE :
-				PApplet.sin(step * PConstants.HALF_PI);
+				return (float) FastMath.sinQuick(step);
 			default :
 				return step;
 		}
@@ -97,7 +97,7 @@ public final class Functions {
 	 * @param pointY
 	 * @return between 0...1
 	 */
-	static float project(float originX, float originY, float destX, float destY, int pointX, int pointY) {
+	public static float project(float originX, float originY, float destX, float destY, int pointX, int pointY) {
 		// Rise and run of line.
 		float odX = destX - originX;
 		float odY = destY - originY;
@@ -122,7 +122,7 @@ public final class Functions {
 	 * @param head PVector Coordinate 2.
 	 * @return float θ in radians.
 	 */
-	static float angleBetween(PVector tail, PVector head) {
+	public static float angleBetween(PVector tail, PVector head) {
 		float a = PApplet.atan2(tail.y - head.y, tail.x - head.x);
 		if (a < 0) {
 			a += PConstants.TWO_PI;
@@ -136,7 +136,7 @@ public final class Functions {
 	 * @param in
 	 * @return
 	 */
-	static int composeclr(float[] in) {
+	public static int composeclr(float[] in) {
 		return composeclr(in[0], in[1], in[2], in[3]);
 	}
 
@@ -149,12 +149,29 @@ public final class Functions {
 	 * @param alpha
 	 * @return integer representation of RGBA
 	 */
-	static int composeclr(float red, float green, float blue, float alpha) {
+	public static int composeclr(float red, float green, float blue, float alpha) {
 		return round(alpha * 255) << 24 | round(red * 255) << 16 | round(green * 255) << 8 | round(blue * 255);
 	}
 
-	static int composeclr(float red, float green, float blue) {
+	public static int composeclr(float red, float green, float blue) {
 		return 255 << 24 | (int) red << 16 | (int) green << 8 | (int) blue;
+	}
+
+	private static int fullAlpha = 255 << 24;
+
+	/**
+	 * sRGB (0...1) in
+	 * 
+	 * @param in
+	 * @return
+	 */
+	public static int composeclr(double[] in) {
+		return fullAlpha | (int) (in[0] * 255 + 0.5) << 16 | (int) (in[1] * 255 + 0.5) << 8 | (int) (in[2] * 255 + 0.5);
+	}
+
+	public static int[] composeclrTo255(double[] in) {
+		return new int[] { (int) Math.round(in[0] * 255), (int) Math.round(in[1] * 255),
+				(int) Math.round(in[2] * 255) };
 	}
 
 	/**
@@ -165,7 +182,7 @@ public final class Functions {
 	 * @param out
 	 * @return
 	 */
-	static float[] decomposeclr(int clr, float[] out) {
+	public static float[] decomposeclr(int clr, float[] out) {
 		// 1.0 / 255.0 = 0.003921569
 		out[3] = (clr >> 24 & 0xff) * 0.003921569f;
 		out[0] = (clr >> 16 & 0xff) * 0.003921569f;
@@ -181,7 +198,7 @@ public final class Functions {
 	 * @param out
 	 * @return
 	 */
-	static float[] decomposeclrRGB(int clr) {
+	public static float[] decomposeclrRGB(int clr) {
 		float[] out = new float[3];
 		out[0] = (clr >> 16 & 0xff);
 		out[1] = (clr >> 8 & 0xff);
@@ -189,7 +206,21 @@ public final class Functions {
 		return out;
 	}
 
-	static float[] decomposeclrRGBA(int clr) {
+	/**
+	 * out 255
+	 * 
+	 * @param clr
+	 * @return
+	 */
+	public static double[] decomposeclrRGBDouble(int clr) {
+		double[] out = new double[3];
+		out[0] = (clr >> 16 & 0xff);
+		out[1] = (clr >> 8 & 0xff);
+		out[2] = (clr & 0xff);
+		return out;
+	}
+
+	public static float[] decomposeclrRGBA(int clr) {
 		float[] out = new float[4];
 		out[3] = (clr >> 24 & 0xff) * 0.003921569f;
 		out[0] = (clr >> 16 & 0xff) * 0.003921569f;
@@ -198,11 +229,17 @@ public final class Functions {
 		return out;
 	}
 
-	static double[] decomposeclrDouble(int clr) {
+	/**
+	 * out 0...1
+	 * 
+	 * @param clr
+	 * @return
+	 */
+	public static double[] decomposeclrDouble(int clr) {
 		double[] out = new double[3];
-		out[0] = (clr >> 16 & 0xff);
-		out[1] = (clr >> 8 & 0xff);
-		out[2] = (clr & 0xff);
+		out[0] = (clr >> 16 & 0xff) * 0.003921569f;
+		out[1] = (clr >> 8 & 0xff) * 0.003921569f;
+		out[2] = (clr & 0xff) * 0.003921569f;
 		return out;
 	}
 
@@ -233,4 +270,18 @@ public final class Functions {
 	public static float randomFloat() {
 		return random.nextFloat();
 	}
+
+	/**
+	 * Very fast, but appreciable inaccuracy.
+	 * https://martin.ankerl.com/2007/10/04/optimized-pow-approximation-for-java-and-c-c/
+	 * 
+	 * @param a base
+	 * @param b exponent
+	 * @return a^b (roughly)
+	 */
+	public static double veryFastPow(final double a, final double b) {
+		return Double.longBitsToDouble(
+				((long) (b * ((Double.doubleToRawLongBits(a) >> 32) - 1072632447) + 1072632447)) << 32);
+	}
+
 }

@@ -32,7 +32,7 @@ public enum Interpolation {
 
 	private final static Interpolation[] vals = values();
 
-	Interpolation next() {
+	public Interpolation next() {
 		return vals[(ordinal() + 1) % vals.length];
 	}
 }

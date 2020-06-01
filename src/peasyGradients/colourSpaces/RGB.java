@@ -2,8 +2,18 @@ package peasyGradients.colourSpaces;
 
 import processing.core.PApplet;
 
+/***
+ * Standard RGB (1996), not to be confused with CIERGB (1931)
+ * @author micycle1
+ *
+ */
 public final class RGB {
 	
+	/**
+	 * 
+	 * @param clr sRGBA integer
+	 * @return float[] hsb
+	 */
 	public static float[] rgbToHsb(int clr) {
 		return rgbToHsb(clr, new float[] { 0, 0, 0, 1 });
 	}

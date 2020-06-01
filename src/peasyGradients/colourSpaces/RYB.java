@@ -1,6 +1,6 @@
 package peasyGradients.colourSpaces;
 
-import peasyGradients.Functions;
+import peasyGradients.utilities.Functions;
 
 /**
  * Red, yellow, blue RYB Color Compositing:

@@ -1,5 +1,7 @@
 package peasyGradients.colourSpaces;
 
+import peasyGradients.utilities.Functions;
+
 /**
  * Hue, Colour, Greyness https://nicedoc.io/acterhd/hcg-color * hue.. [0..360]
  * chroma .. [0..1] grayness .. [0..1]
@@ -14,8 +16,8 @@ public final class HCG {
 		float g = rgba[1];
 		float b = rgba[2];
 
-		final float min = r > g ? (g > b ? b : g) : (r > b ? b : r);
-		final float max = r > g ? (r > b ? r : b) : (g > b ? g : r);
+		final float min = Functions.min(r, g, b);
+		final float max = Functions.max(r, g, b);
 		final float delta = max - min;
 		final float c = delta * 100 / 255;
 		final float _g = min / (255 - delta) * 100;

@@ -14,6 +14,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import peasyGradients.utilities.Functions;
+
 /**
  * Offers both quick constructors for more simple gradients (such as 2 color
  * horizontal) and more powerful constructors for more __ gradients
