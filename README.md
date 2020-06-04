@@ -1,4 +1,7 @@
-# PeasyGradients
+\~work in progress\~
+
+# PeasyGradients0
+
 PeasyGradients for Processing
 A library make drawing gradients in Processing easy-peasy.
 
