@@ -5,13 +5,14 @@ import peasyGradients.utilities.FastPow;
 import peasyGradients.utilities.Functions;
 
 /**
- * Using https://www.easyrgb.com/en/math.php method
+ * aka CIE 1931, Java implementation of https://www.easyrgb.com/en/math.php
+ * method
  * 
  * @author micycle1
  *
  */
 public final class XYZ {
-	
+
 	private static final double constA = 1 / 2.4d;
 
 	/**
@@ -88,6 +89,7 @@ public final class XYZ {
 
 	/**
 	 * Fast, negligible visual effect.
+	 * 
 	 * @param xyz [X,Y,Z]
 	 * @return [R,G,B] where values are 0...1.0
 	 */
@@ -114,15 +116,16 @@ public final class XYZ {
 			g *= 12.92;
 		}
 		if (b > 0.0031308) {
-			b = 1.055 *  FastPow.fastPow(b, constA) - 0.055;
+			b = 1.055 * FastPow.fastPow(b, constA) - 0.055;
 		} else {
 			b *= 12.92;
 		}
 		return new double[] { r, g, b };
 	}
-	
+
 	/**
 	 * Very fast, but visible inaccuracies
+	 * 
 	 * @param xyz [X,Y,Z]
 	 * @return [R,G,B] where values are 0...1.0
 	 */
@@ -130,9 +133,9 @@ public final class XYZ {
 
 		double r, g, b;
 
-		xyz[0] /= 100;
-		xyz[1] /= 100;
-		xyz[2] /= 100;
+		xyz[0] *= 0.01;
+		xyz[1] *= 0.01;
+		xyz[2] *= 0.01;
 
 		r = xyz[0] * 3.2406 + xyz[1] * -1.5372 + xyz[2] * -0.4986;
 		g = xyz[0] * -0.9689 + xyz[1] * 1.8758 + xyz[2] * 0.0415;

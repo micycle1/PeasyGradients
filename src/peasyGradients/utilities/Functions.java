@@ -86,6 +86,66 @@ public final class Functions {
 	}
 
 	/**
+	 * Linearly interpolate between 2 colours (color-space independent)
+	 * 
+	 * @param a    double[3] (col 1)
+	 * @param b    double[3] (col 2)
+	 * @param step
+	 * @param out  double[]
+	 * @return
+	 */
+	public static double[] interpolateLinear(double[] a, double[] b, float step, double[] out) {
+		out[0] = a[0] + step * (b[0] - a[0]);
+		out[1] = a[1] + step * (b[1] - a[1]);
+		out[2] = a[2] + step * (b[2] - a[2]);
+		return out;
+	}
+
+	/**
+	 * Returns a color by interpolating between two given colors. An alternative to
+	 * Processing's native lerpColor() method (which is linear).
+	 * 
+	 * @param col1 First color, represented as [R,G,B,A] array; each value between
+	 *             0...1.
+	 * @param col2 Second color, represented as [R,G,B,A] array; each value between
+	 *             0...1.
+	 * @param st   step: percentage between the two colors.
+	 * @param out  The new interpolated color, represented by a [R,G,B,A] array.
+	 * @return
+	 */
+	public static float[] interpolateLinear(float[] col1, float[] col2, float step, float[] out) {
+		out[0] = col1[0] + step * (col2[0] - col1[0]);
+		out[1] = col1[1] + step * (col2[1] - col1[1]);
+		out[2] = col1[2] + step * (col2[2] - col1[2]);
+		out[3] = col1[3] + step * (col2[3] - col1[3]);
+		return out;
+	}
+
+	/**
+	 * TODO https://discourse.processing.org/t/per-vertex-color-gradient-fill/9679/7
+	 * 
+	 * @param w
+	 * @param h
+	 * @param corners
+	 * @return
+	 */
+	static int[] interpolateBilinear(int w, int h, int[] corners) {
+		int[] arr = new int[w * h];
+//		  for (int x = 0; x < w; x++) {
+//		    float xinc = (float) x/w;
+//		    RGB.interpolate(decomposeclr(corners[0], corners[0]), col2, st, out)
+//		    int t = lerpint(corners[0], corners[2], xinc);
+//		    int b = lerpint(corners[1], corners[3], xinc);
+//		    for (int y = 0; y < h; y++) {
+//		      float yinc = (float) y/h;
+//		      int m = lerpint(t, b, yinc);
+//		      arr[x + y*w] = m;
+//		    }
+//		  }
+		return arr;
+	}
+
+	/**
 	 * Project a given pixel coordinate (x, y) onto the imaginary spine of the
 	 * gradient.
 	 * 
@@ -272,7 +332,7 @@ public final class Functions {
 	}
 
 	/**
-	 * Very fast, but appreciable inaccuracy.
+	 * Very fast, but with appreciable inaccuracy.
 	 * https://martin.ankerl.com/2007/10/04/optimized-pow-approximation-for-java-and-c-c/
 	 * 
 	 * @param a base

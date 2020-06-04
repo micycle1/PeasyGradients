@@ -26,7 +26,7 @@ public final class FastPow {
 	private static int precision;
 
 	/**
-	 * Initialize powFast lookup table.Initialize powFast lookup table.
+	 * Initialize powFast lookup table. Must be called once before use.
 	 * 
 	 * @param precision number of mantissa bits used, >= 0 and <= 18
 	 */
@@ -47,7 +47,7 @@ public final class FastPow {
 	}
 
 	/**
-	 * Use {@link #getbaseRepresentation(float)}
+	 * Use {@link #getBaseRepresentation(float)}
 	 * @param baseRepresentation one over log, to required radix, of two
 	 * @param exponent           power to raise radix to
 	 * @return
@@ -62,8 +62,8 @@ public final class FastPow {
 		return Float.intBitsToFloat(it); // Calls a JNI binding
 	}
 	
-	public static float getbaseRepresentation(float base) {
-		return (float) Math.log(base) / log2;
+	public static float getBaseRepresentation(float base) {
+		return (float) FastMath.log(base) / log2;
 	}
 
 	/**

@@ -1,9 +1,13 @@
 package peasyGradients.colourSpaces;
 
 /**
- * TODO
+ * YUV is a color space typically used for color image/video processing. It
+ * encodes a color image/video taking into account properties of the human eye
+ * that allow for reduced bandwidth for chroma components without perceptual
+ * distortion. aka YCbCr (a scaled and offset version of the YUV color space for
+ * digital)
  * https://stackoverflow.com/questions/17892346/how-to-convert-rgb-yuv-rgb-both-ways
- * 
+ * https://www.vocal.com/video/rgb-and-yuv-color-space-conversion/
  * @author micycle1
  *
  */
@@ -13,7 +17,7 @@ public final class YUV {
 	 * YUVA 0...1
 	 * 
 	 * @param yuva
-	 * @return 
+	 * @return
 	 */
 	public static float[] yuv2rgb(float[] yuva) {
 		yuva[0] -= 16;

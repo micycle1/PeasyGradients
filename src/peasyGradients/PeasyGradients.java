@@ -28,6 +28,9 @@ import peasyGradients.utilities.Functions;
  * TODO conic & sweep gradietn
  * (https://css-tricks.com/snippets/css/css-conic-gradient/)
  * 
+ * TODO dithering/banding/rgb depth
+ * TODO parallelStream for iteration/calculation?
+ * 
  * gradient.mask(shape).mask(opacity)
  * 
  * @author micycle1
@@ -79,6 +82,14 @@ public final class PeasyGradients {
 	 *                   intersect with angle) TODO
 	 * @param palette
 	 * @return
+	 * 
+	 * Preset: Several predefined configurations are provided in this menu for your use.
+Start Point: Use these controls to define the location of the start point of the gradient.
+Position: Sets the location for the start point, using X (horizontal) and Y (vertical) values.
+End Point: Use these controls to define the location of the end point of the gradient.
+Position: Sets the location for the end point, using X (horizontal) and Y (vertical) values.
+Ramp Scatter: Adds subtle noise into the gradient areas between colors, which can help to improve naturalness.
+Blend: Select the blend mode used to combine the gradient with the contents of the layer to which it is applied.
 	 */
 	public PImage linearGradient(PVector dimensions, PVector centre, Gradient gradient) {
 
@@ -188,7 +199,7 @@ public final class PeasyGradients {
 			float x1 = p.bezierPoint(headPos.x, bezierCPoint.x, bezierCPoint.x, tailPos.x, t);
 			float y1 = p.bezierPoint(headPos.y, bezierCPoint.y, bezierCPoint.y, tailPos.y, t);
 			PVector pointB = new PVector(x1, y1);
-			p.stroke(gradient.eval(PApplet.abs(PApplet.sin(t + p.frameCount * 0.02f))));
+			p.stroke(gradient.evalRGB(PApplet.abs(PApplet.sin(t + p.frameCount * 0.02f))));
 			p.line(point.x, point.y, pointB.x, pointB.y);
 			point = pointB.copy(); // previous point
 		}
@@ -230,7 +241,7 @@ public final class PeasyGradients {
 
 		public LinearThread(int offset, int pixels, float ox, float oy, float dx, float dy, Gradient gradient) {
 			this.offset = offset;
-			this.gradient = new Gradient();
+			this.gradient = gradient;
 			this.dx = dx;
 			this.dy = dy;
 			this.ox = ox;
@@ -242,7 +253,7 @@ public final class PeasyGradients {
 		public Boolean call() {
 			for (int i = offset; i < offset + pixels; i++) {
 				float step = Functions.project(ox, oy, dx, dy, i % p.width, (i - i % p.width) / p.height);
-				gradientPG.pixels[i] = gradient.eval(step);
+				gradientPG.pixels[i] = gradient.evalRGB(step);
 			}
 			return true;
 		}

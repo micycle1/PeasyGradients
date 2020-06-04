@@ -9,6 +9,9 @@ import net.jafama.FastMath;
  * Equal distances in the space approximately represent equal color differences
  * Also known as L*a*b* or CIE-L*ab.
  * 
+ * TODO
+ * https://community.khronos.org/t/converting-to-and-from-color-space-in-glsl-only-works-for-few-colors/72107
+ * 
  * @author micycle1
  *
  */
@@ -53,7 +56,7 @@ public class CIE_LAB {
 
 		return new double[] { (116 * Y) - 16, 500 * (X - Y), 200 * (Y - Z) };
 	}
-	
+
 	/**
 	 * 
 	 * @param lab [L,A,B]
@@ -62,22 +65,22 @@ public class CIE_LAB {
 	public static double[] lab2rgb(double[] lab) {
 		return XYZ.xyz2rgb(lab2xyz(lab));
 	}
-	
+
 	public static double[] lab2rgbQuick(double[] lab) {
 		return XYZ.xyz2rgbQuick(lab2xyz(lab));
 	}
-	
+
 	public static double[] lab2rgbVeryQuick(double[] lab) {
 		return XYZ.xyz2rgbVeryQuick(lab2xyz(lab));
 	}
-	
+
 	private static double[] lab2xyz(double[] lab) {
 		double cache = lab[1];
 
 		lab[0] = cache * 0.002 + (lab[1] = (lab[0] + 16) * 0.0086207);
-		lab[2] = lab[1] - lab[2] *0.005;
+		lab[2] = lab[1] - lab[2] * 0.005;
 
-		if (lab[1] > 0.2069) { // 0.2069 === 0.008856^1/3
+		if (lab[1] > 0.2069) { // 6/29
 			lab[1] = lab[1] * lab[1] * lab[1];
 		} else {
 			lab[1] = (lab[1] - 16) * 14.8966;
@@ -99,13 +102,6 @@ public class CIE_LAB {
 		lab[1] *= illuminantY;
 		lab[2] *= illuminantZ;
 		return lab;
-	}
-	
-	public static double[] interpolate(double[] a, double[] b, float step, double[] out) {
-		out[0] = a[0] + step * (b[0] - a[0]);
-		out[1] = a[1] + step * (b[1] - a[1]);
-		out[2] = a[2] + step * (b[2] - a[2]);
-		return out;
 	}
 
 }
