@@ -1,20 +1,20 @@
-package peasyGradients;
+package peasyGradients.gradient;
 
 import static peasyGradients.utilities.Functions.interpolateLinear;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+
 import peasyGradients.colourSpaces.*;
 import peasyGradients.utilities.Functions;
 import processing.core.PImage;
 
 /**
- * A gradient contains color, and the position (percentage) at which that color
- * occurs within the gradient. multi-position color stops Stops may be
- * equidistant A gradient comprises of {@link #colorStops}, which each specify a
- * color and location. Supports opacity
- * 
- * TODO change colorspace interpolation: CIE-LCh, HSB
- * http://www.brucelindbloom.com/index.html?Math.html
+ * A gradient comprises of {@link #colorStops}, which each specify a color and a
+ * percentage position that it occurs on the 1D gradient. Supports opacity.
+ * Gradients also define the colour space in which colours are interpolated
+ * (such as CIE_LAB) and the gradient curve function (such as sine()) -- the
+ * function governing how the gradient's colour transtions.
  * 
  * @author micycle1
  *
@@ -26,14 +26,21 @@ public final class Gradient {
 	float animate = 0; // animation colour offset
 	double[] rsltclrD = new double[4];
 	private int numStops = 0;
+	ColorStop[] colorStops2; // faster index access than arraylist
 
 	PImage cacheLastImage; // TODO, last PImage output (cache and return if args haven't changed)
+
+	public ColourSpace colourSpace = ColourSpace.ITP; // TODO
+
+//	Interpolation interpolation = Interpolation.PARABOLA;
 
 	public void nextColSpace() {
 		colourSpace = colourSpace.next();
 	}
 
-	ColourSpace colourSpace = ColourSpace.JAB; // TODO
+	public void prevColSpace() {
+		colourSpace = colourSpace.prev();
+	}
 
 	/**
 	 * Return randomised gradient (random colors and stop positions).
@@ -66,44 +73,53 @@ public final class Gradient {
 		return new Gradient(temp);
 	}
 
-	Gradient() {
+	public Gradient() {
 		this(0xff000000, 0xffffffff); // default: black-->white
 	}
 
 	// Creates equidistant color stops.
-	Gradient(int... colors) {
+	public Gradient(int... colors) {
 		int sz = colors.length;
 		float szf = (sz <= 1.0f ? 1.0f : sz - 1.0f);
 		for (int i = 0; i < sz; i++) {
 			colorStops.add(new ColorStop(i / szf, colors[i]));
 		}
-		numStops+=sz;
+		numStops += sz;
 	}
 
 	// Creates equidistant color stops.
-	Gradient(int colorMode, float[]... colors) {
+	public Gradient(int colorMode, float[]... colors) {
 		int sz = colors.length;
 		float szf = sz <= 1.0f ? 1.0f : sz - 1.0f;
 		for (int i = 0; i < sz; i++) {
 			colorStops.add(new ColorStop(colorMode, i / szf, colors[i]));
 		}
-		numStops+=sz;
+		numStops += sz;
 	}
 
-	Gradient(ColorStop... colorStops) {
+	public Gradient(ColorStop... colorStops) {
 		int sz = colorStops.length;
 		for (int i = 0; i < sz; i++) {
 			this.colorStops.add(colorStops[i]);
 		}
 		java.util.Collections.sort(this.colorStops);
 		remove();
-		numStops+=sz;
+		numStops += sz;
 	}
 
-	Gradient(ArrayList<ColorStop> colorStops) {
+	public Gradient(ArrayList<ColorStop> colorStops) {
 		this.colorStops = colorStops;
 		java.util.Collections.sort(this.colorStops);
 		remove();
+	}
+
+	/*
+	 * Set a given color stop colour
+	 */
+	public void setColorStopCol(int stopIndex, int col) {
+		if (stopIndex < colorStops.size()) {
+			colorStops.get(stopIndex).setColor(col);
+		}
 	}
 
 	/**
@@ -120,7 +136,7 @@ public final class Gradient {
 
 			colorStop.percent = (((newAmt - x_min) % (x_max - x_min)) + (x_max - x_min)) % (x_max - x_min) + x_min;
 		}
-		java.util.Collections.sort(colorStops);
+//		java.util.Collections.sort(colorStops);
 	}
 
 	void add(int colorMode, float percent, float[] arr) {
@@ -138,7 +154,7 @@ public final class Gradient {
 	void add(final ColorStop colorStop) {
 		for (int sz = colorStops.size(), i = sz - 1; i > 0; --i) {
 			ColorStop current = colorStops.get(i);
-			if (current.approxPercent(colorStop, ColorStop.TOLERANCE)) {
+			if (ColorStop.approxPercent(colorStop, ColorStop.TOLERANCE)) {
 				System.out.println(current.toString() + " will be replaced by " + colorStop.toString()); // TODO
 				colorStops.remove(current);
 			}
@@ -162,7 +178,7 @@ public final class Gradient {
 	 * @param colorMode
 	 * @return
 	 */
-	int evalRGB(float step) {
+	public int evalRGB(float step) {
 
 //		 Exit from the function early whenever possible.
 		if (numStops == 0) {
@@ -173,6 +189,9 @@ public final class Gradient {
 			return colorStops.get(numStops - 1).clr;
 		}
 
+		/*
+		 * TODO: track last currStop use current step to decide if need to use next one.
+		 */
 		ColorStop currStop;
 		ColorStop prevStop;
 		float currPercent, scaledst;
@@ -215,6 +234,12 @@ public final class Gradient {
 					case HUNTER_LAB :
 						interpolateLinear(currStop.clrHLAB, prevStop.clrHLAB, smoothStep, rsltclrD);
 						return Functions.composeclr(HUNTER_LAB.hlab2rgb(rsltclrD));
+					case HUNTER_LAB_FAST :
+						interpolateLinear(currStop.clrHLAB, prevStop.clrHLAB, smoothStep, rsltclrD);
+						return Functions.composeclr(HUNTER_LAB.hlab2rgbQuick(rsltclrD));
+					case YCoCg :
+						interpolateLinear(currStop.clrYCoCg, prevStop.clrYCoCg, smoothStep, rsltclrD);
+						return Functions.composeclr(YCoCg.YCoCg2rgb(rsltclrD));
 					case LUV :
 						interpolateLinear(currStop.clrLUV, prevStop.clrLUV, smoothStep, rsltclrD);
 						return Functions.composeclr(LUV.luv2rgb(rsltclrD));
@@ -224,13 +249,12 @@ public final class Gradient {
 					case JAB :
 						interpolateLinear(currStop.clrJAB, prevStop.clrJAB, smoothStep, rsltclrD);
 						return Functions.composeclr(JAB.jab2rgb(rsltclrD));
-					case LCH :
-						interpolateLinear(currStop.clrLCH, prevStop.clrLCH, smoothStep, rsltclrD);
-						return Functions.composeclr(LCH.lch2rgb(rsltclrD));
+					case JAB_FAST :
+						interpolateLinear(currStop.clrJAB, prevStop.clrJAB, smoothStep, rsltclrD);
+						return Functions.composeclr(JAB.jab2rgbQuick(rsltclrD));
 					case HCG :
-						HCG.interpolate(currStop.ckrHCG, prevStop.ckrHCG, smoothStep, rsltclrF);
-						float rgb[] = HCG.hcg2rgb(rsltclrF);
-						return Functions.composeclr(rgb[0], rgb[1], rgb[2], 1);
+						HCG.interpolate(currStop.clrHCG, prevStop.clrHCG, smoothStep, rsltclrF);
+						return Functions.composeclr(HCG.hcg2rgb(rsltclrF));
 					case TEMP :
 						float kelvin = TEMP.interpolate(currStop.tempclr, prevStop.tempclr, smoothStep);
 						return Functions.composeclr(TEMP.temp2rgb(kelvin));
@@ -243,6 +267,9 @@ public final class Gradient {
 					case XYZ :
 						interpolateLinear(currStop.clrXYZ, prevStop.clrXYZ, smoothStep, rsltclrD);
 						return Functions.composeclr(XYZ.xyz2rgb(rsltclrD));
+					case ITP :
+						interpolateLinear(currStop.clrITP, prevStop.clrITP, smoothStep, rsltclrD);
+						return Functions.composeclr(ITP.itp2rgb(rsltclrD));
 					default :
 						break;
 				}
@@ -250,10 +277,11 @@ public final class Gradient {
 		}
 		return colorStops.get(numStops - 1).clr;
 	}
-	
+
 	/**
-	 * TODO
-	 * Return raw colour value (don't convert to rgb). Used for quad gradients / second pass
+	 * TODO Return raw colour value (don't convert to rgb). Used for quad gradients
+	 * / second pass
+	 * 
 	 * @return
 	 */
 	int evalRaw() {

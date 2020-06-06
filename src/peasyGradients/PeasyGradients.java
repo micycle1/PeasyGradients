@@ -14,6 +14,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import peasyGradients.gradient.Gradient;
 import peasyGradients.utilities.Functions;
 
 /**
@@ -28,8 +29,11 @@ import peasyGradients.utilities.Functions;
  * TODO conic & sweep gradietn
  * (https://css-tricks.com/snippets/css/css-conic-gradient/)
  * 
- * TODO dithering/banding/rgb depth
- * TODO parallelStream for iteration/calculation?
+ * TODO dithering/banding/rgb depth TODO parallelStream for
+ * iteration/calculation?
+ * 
+ * API:
+ * rectPane.applyLinearGradient(gradient).applyCircularGradient(gradient1).setColorspace(HSV).get().getRaw().applyRadialGradientMask().get()
  * 
  * gradient.mask(shape).mask(opacity)
  * 
@@ -40,8 +44,6 @@ public final class PeasyGradients {
 
 	private final static int threads = Runtime.getRuntime().availableProcessors();
 
-	static final int HORIZONTAL = 0;
-	static final int VERTICAL = 1;
 	boolean debug;
 	private final PApplet p;
 	PImage imageMask;
@@ -74,6 +76,15 @@ public final class PeasyGradients {
 	}
 
 	/**
+	 * Return RGB (OR LAB?) int grid (not PImage)
+	 * 
+	 * @return
+	 */
+	public int[] getRaw() {
+		return null; // TODO
+	}
+
+	/**
 	 * 
 	 * @param dimensions
 	 * @param centre
@@ -83,13 +94,16 @@ public final class PeasyGradients {
 	 * @param palette
 	 * @return
 	 * 
-	 * Preset: Several predefined configurations are provided in this menu for your use.
-Start Point: Use these controls to define the location of the start point of the gradient.
-Position: Sets the location for the start point, using X (horizontal) and Y (vertical) values.
-End Point: Use these controls to define the location of the end point of the gradient.
-Position: Sets the location for the end point, using X (horizontal) and Y (vertical) values.
-Ramp Scatter: Adds subtle noise into the gradient areas between colors, which can help to improve naturalness.
-Blend: Select the blend mode used to combine the gradient with the contents of the layer to which it is applied.
+	 *         Preset: Several predefined configurations are provided in this menu
+	 *         for your use. Start Point: Use these controls to define the location
+	 *         of the start point of the gradient. Position: Sets the location for
+	 *         the start point, using X (horizontal) and Y (vertical) values. End
+	 *         Point: Use these controls to define the location of the end point of
+	 *         the gradient. Position: Sets the location for the end point, using X
+	 *         (horizontal) and Y (vertical) values. Ramp Scatter: Adds subtle noise
+	 *         into the gradient areas between colors, which can help to improve
+	 *         naturalness. Blend: Select the blend mode used to combine the
+	 *         gradient with the contents of the layer to which it is applied.
 	 */
 	public PImage linearGradient(PVector dimensions, PVector centre, Gradient gradient) {
 

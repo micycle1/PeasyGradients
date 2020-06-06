@@ -1,7 +1,6 @@
 package peasyGradients.colourSpaces;
 
 import net.jafama.FastMath;
-import peasyGradients.utilities.FastPow;
 
 /**
  * The Hunter L, a, b color scale is more visually uniform than the CIE XYZ
@@ -30,18 +29,42 @@ public final class HUNTER_LAB {
 	}
 
 	public static double[] hlab2rgb(double[] lab) {
-		return XYZ.xyz2rgbQuick(hlab2xyz(lab));
+		return XYZ.xyz2rgb(hlab2xyz(lab));
+	}
+
+	public static double[] hlab2rgbQuick(double[] lab) {
+		return XYZ.xyz2rgbQuick(hlab2xyzQuick(lab));
 	}
 
 	private static double[] xyz2hlab(double[] xyz) {
-		return new double[] { 100.0 * FastMath.sqrt(xyz[1] / illuminantY),
-				(((xyz[0] / illuminantX) - (xyz[1] / illuminantY)) / FastMath.sqrt(xyz[1] / illuminantY)),
-				kb * (((xyz[1] / illuminantY) - (xyz[2] / illuminantZ)) / FastMath.sqrt(xyz[1] / illuminantY)) };
+
+		double L = 100.0 * FastMath.sqrt(xyz[1] / illuminantY);
+		double a = ka * ((xyz[0] / illuminantX - xyz[1] / illuminantY) / FastMath.sqrt(xyz[1] / illuminantY));
+		double b = kb * ((xyz[1] / illuminantY - xyz[2] / illuminantZ) / FastMath.sqrt(xyz[1] / illuminantY));
+
+		if (Double.isNaN(a)) {
+			a = 0;
+		}
+
+		if (Double.isNaN(b)) {
+			b = 0;
+		}
+
+		return new double[] { L, a, b };
 	}
 
 	private static double[] hlab2xyz(double[] lab) {
-		return new double[] { lab[0] = ((lab[0] * lab[0]) / (illuminantY * illuminantY)) * 100,
+		lab[0] = lab[0] * lab[0] * 0.01;
+		return new double[] {
+				((lab[1] / ka * FastMath.sqrt(lab[0] / illuminantY)) + (lab[0] / illuminantY)) * illuminantX, lab[0],
+				-(lab[2] / kb * FastMath.sqrt(lab[0] / illuminantY) - (lab[0] / illuminantY)) * illuminantZ };
+	}
+
+	private static double[] hlab2xyzQuick(double[] lab) {
+		lab[0] = lab[0] * lab[0] * 0.01;
+		return new double[] {
 				((lab[1] / ka * FastMath.sqrtQuick(lab[0] / illuminantY)) + (lab[0] / illuminantY)) * illuminantX,
+				lab[0],
 				-(lab[2] / kb * FastMath.sqrtQuick(lab[0] / illuminantY) - (lab[0] / illuminantY)) * illuminantZ };
 	}
 

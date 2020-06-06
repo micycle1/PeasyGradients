@@ -5,7 +5,6 @@ import static processing.core.PApplet.round;
 import java.util.Random;
 
 import net.jafama.FastMath;
-import peasyGradients.Interpolation;
 import processing.core.PApplet;
 import processing.core.PConstants;
 import processing.core.PVector;
@@ -25,7 +24,7 @@ public final class Functions {
 		stepMode = stepMode.next();
 	}
 
-	public static Interpolation stepMode = Interpolation.KPERLIN;
+	public static Interpolation stepMode = Interpolation.IDENTITY;
 
 	/**
 	 * Calculate the step by passing it to the selected smoothing function. Allows
@@ -41,7 +40,7 @@ public final class Functions {
 			case KPERLIN :
 				return step * step * step * (step * (step * 6 - 15) + 10);
 			case EXPONENTIAL :
-				return step == 1.0f ? step : 1.0f - (float) FastMath.powQuick(2, -10 * step);
+				return step == 1.0f ? step : 1.0f - FastPow.fastPow(2, -10 * step);
 			case CUBIC :
 				return step * step * step;
 			case BOUNCE :
@@ -60,26 +59,25 @@ public final class Functions {
 				}
 
 				return 7.5625f * (sPrime -= 0.95455f) * sPrime + 0.984375f;
-			case ELASTIC :
-				if (step <= 0) {
-					return 0.5f;
-				}
-
-				if (step >= 1) {
-					return 1;
-				}
-
-				float sPrime1 = 1 - step;
-				float p = 0.25f; // Period
-				float a = 1.05f; // Amplitude.
-				float s = 0.0501717f; // asin(1/a)*p/TWO_PI;
-
-				return (float) Math.min(1, 0.5 - a * FastMath.pow(2, -10 * sPrime1)
-						* FastMath.sinQuick((sPrime1 - s) * PConstants.TWO_PI / p));
 			case CIRCULAR :
 				return (float) FastMath.sqrtQuick((2.0 - step) * step);
 			case SINE :
 				return (float) FastMath.sinQuick(step);
+			case PARABOLA :
+				return FastPow.fastPow(4.0 * step * (1.0 - step), 0.5); // k = 0.8
+			case IDENTITY :
+				return step * step * (2.0f - step);
+			case SINC :
+				final double z = FastMath.PI * (5 * step - 1.0);
+				return (float) FastMath.abs((FastMath.sin(z) / z));
+			case GAIN1 :
+				final float c = (float) (0.5 * FastPow.fastPow(2.0 * ((step < 0.5) ? step : 1.0 - step), 0.3));
+				return (step < 0.5) ? c : 1.0f - c;
+			case GAIN2 :
+				final float d = (float) (0.5 * FastPow.fastPow(2.0 * ((step < 0.5) ? step : 1.0 - step), 3.3333));
+				return (step < 0.5) ? d : 1.0f - d;
+			case EXPIMPULSE :
+				return (float) (2 * step * FastMath.exp(1.0 - (2 * step)));
 			default :
 				return step;
 		}
@@ -196,8 +194,9 @@ public final class Functions {
 	 * @param in
 	 * @return
 	 */
-	public static int composeclr(float[] in) {
-		return composeclr(in[0], in[1], in[2], in[3]);
+	public static int composeclr(float[] RGBA) {
+		return (int) (RGBA[3] * 255) << 24 | (int) (RGBA[0] * 255) << 16 | (int) (RGBA[1] * 255) << 8
+				| (int) (RGBA[2] * 255);
 	}
 
 	/**
@@ -210,7 +209,7 @@ public final class Functions {
 	 * @return integer representation of RGBA
 	 */
 	public static int composeclr(float red, float green, float blue, float alpha) {
-		return round(alpha * 255) << 24 | round(red * 255) << 16 | round(green * 255) << 8 | round(blue * 255);
+		return (int) (alpha * 255) << 24 | (int) (red * 255) << 16 | (int) (green * 255) << 8 | (int) (red * 255);
 	}
 
 	public static int composeclr(float red, float green, float blue) {
@@ -235,20 +234,17 @@ public final class Functions {
 	}
 
 	/**
-	 * Decompose color integer (RGBA) into 4 separate components and scale between
+	 * Decompose color integer (ARGB) into 4 separate components and scale between
 	 * 0...1
 	 * 
 	 * @param clr
 	 * @param out
-	 * @return
+	 * @return [R,G,B,A] 0...1
 	 */
-	public static float[] decomposeclr(int clr, float[] out) {
+	public static float[] decomposeclr(int clr) {
 		// 1.0 / 255.0 = 0.003921569
-		out[3] = (clr >> 24 & 0xff) * 0.003921569f;
-		out[0] = (clr >> 16 & 0xff) * 0.003921569f;
-		out[1] = (clr >> 8 & 0xff) * 0.003921569f;
-		out[2] = (clr & 0xff) * 0.003921569f;
-		return out;
+		return new float[] { (clr >> 16 & 0xff) * 0.003921569f, (clr >> 8 & 0xff) * 0.003921569f,
+				(clr & 0xff) * 0.003921569f, (clr >> 24 & 0xff) * 0.003921569f };
 	}
 
 	/**
@@ -256,7 +252,7 @@ public final class Functions {
 	 * 
 	 * @param clr
 	 * @param out
-	 * @return
+	 * @return [R,G,B] 0...255
 	 */
 	public static float[] decomposeclrRGB(int clr) {
 		float[] out = new float[3];

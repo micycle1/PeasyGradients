@@ -1,6 +1,7 @@
-package peasyGradients.utilities;
+package peasyGradients.gradient;
 
 import peasyGradients.colourSpaces.HSB;
+import peasyGradients.utilities.Functions;
 import processing.core.PApplet;
 
 /**

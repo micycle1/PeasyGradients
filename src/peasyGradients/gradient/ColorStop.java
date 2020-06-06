@@ -1,23 +1,27 @@
-package peasyGradients;
+package peasyGradients.gradient;
 
 import peasyGradients.colourSpaces.CIE_LAB;
 import peasyGradients.colourSpaces.HCG;
 import peasyGradients.colourSpaces.HSB;
 import peasyGradients.colourSpaces.HUNTER_LAB;
+import peasyGradients.colourSpaces.ITP;
 import peasyGradients.colourSpaces.JAB;
-import peasyGradients.colourSpaces.LCH;
 import peasyGradients.colourSpaces.LUV;
 import peasyGradients.colourSpaces.RGB;
 import peasyGradients.colourSpaces.RYB;
 import peasyGradients.colourSpaces.TEMP;
 import peasyGradients.colourSpaces.XYZ;
+import peasyGradients.colourSpaces.YCoCg;
 import peasyGradients.colourSpaces.YUV;
+
 import peasyGradients.utilities.Functions;
+
 import processing.core.PApplet;
 import processing.core.PConstants;
 
 /**
- * A Gradient class is little more than a glorified list of ColorStops.
+ * A container for colour (in every colour space) and the percentage position
+ * that it occurs within gradient.
  * 
  * @author micycle1
  *
@@ -29,42 +33,35 @@ final class ColorStop implements Comparable<ColorStop> {
 	static boolean approxPercent(ColorStop cs, float tolerance) {
 		return PApplet.abs(cs.percent - cs.percent) < tolerance;
 	}
-	
-	final float originalPercent; // percent at which this stop occurs (0...1.0)
+
+	float originalPercent; // percent at which this stop occurs (0...1.0)
 	float percent; // percent, taking into account animation offset
-	final int clr; // colour int
+
+	int clr; // colour int
+
 	float[] clrRGB; // decomposed RGB colour
-	final float[] clrHSB; // decomposed HSB colour
-	final double[] clrLAB; // decomposed LAB colour
-	final double[] clrLUV;
-	final double[] clrHLAB;
-	final double[] clrLCH;
-	final float[] ckrHCG;
-	final float tempclr;
-	final float[] clrRYB;
-	final float[] clrYUV;
+	float[] clrHSB; // decomposed HSB colour
+	double[] clrLAB; // decomposed LAB colour
+	double[] clrLUV;
+	double[] clrHLAB;
+	float[] clrHCG;
+	float tempclr;
+	float[] clrRYB;
+	float[] clrYUV;
+	double[] clrXYZ;
+	double[] clrJAB;
+	double[] clrYCoCg;
+	double[] clrITP;
 
-	final double[] clrXYZ;
-	final double[] clrJAB;
-
+	/**
+	 * 
+	 * @param percent
+	 * @param clr     color int (bit shifted ARGB)
+	 */
 	protected ColorStop(float percent, int clr) {
 		this.originalPercent = PApplet.constrain(percent, 0.0f, 1.0f);
-		this.clr = clr;
-		clrRGB = new float[4];
-		Functions.decomposeclr(clr, clrRGB);
-		clrHSB = RGB.rgbToHsb(clr);
-		ckrHCG = HCG.rgb2hcg(Functions.decomposeclrRGB(clr));
-		clrLAB = CIE_LAB.rgb2lab(Functions.decomposeclrDouble(clr));
-		clrXYZ = XYZ.rgb2xyz(Functions.decomposeclrDouble(clr));
-		clrLUV = LUV.rgb2luv(Functions.decomposeclrDouble(clr));
-		clrHLAB = HUNTER_LAB.rgb2hlab(Functions.decomposeclrDouble(clr));
-		clrLCH = LCH.rgb2lch(Functions.decomposeclrDouble(clr));
-		tempclr = TEMP.rgb2temp(Functions.decomposeclrRGB(clr));
-		clrRYB = RYB.rgb2ryb(Functions.decomposeclrRGBA(clr));
-		clrYUV = YUV.rgb2yuv(Functions.decomposeclrRGBA(clr));
-		clrJAB = JAB.rgb2jab(Functions.decomposeclrDouble(clr));
-		
 		this.percent = originalPercent;
+		setColor(clr);
 	}
 
 	protected ColorStop(int colorMode, float percent, float x, float y, float z, float w) {
@@ -74,6 +71,26 @@ final class ColorStop implements Comparable<ColorStop> {
 
 	protected ColorStop(int colorMode, float percent, float[] arr) {
 		this(colorMode, percent, arr[0], arr[1], arr[2], arr.length == 4 ? arr[3] : 1.0f);
+	}
+
+	void setColor(int color) {
+		this.clr = color;
+		clrRGB = Functions.decomposeclr(clr);
+
+		double[] clrRGBDouble = Functions.decomposeclrDouble(clr);
+
+		clrHSB = RGB.rgbToHsb(clr);
+		clrHCG = HCG.rgb2hcg(Functions.decomposeclrRGB(clr));
+		clrLAB = CIE_LAB.rgb2lab(clrRGBDouble);
+		clrXYZ = XYZ.rgb2xyz(clrRGBDouble);
+		clrLUV = LUV.rgb2luv(clrRGBDouble);
+		clrHLAB = HUNTER_LAB.rgb2hlab(clrRGBDouble);
+		tempclr = TEMP.rgb2temp(Functions.decomposeclrRGB(clr));
+		clrRYB = RYB.rgb2ryb(Functions.decomposeclrRGBA(clr));
+		clrYUV = YUV.rgb2yuv(Functions.decomposeclrRGBA(clr));
+		clrJAB = JAB.rgb2jab(clrRGBDouble);
+		clrYCoCg = YCoCg.rgb2YCoCg(clrRGBDouble);
+		clrITP = ITP.rgb2itp(clrRGBDouble);
 	}
 
 	// Mandated by the interface Comparable<ColorStop>.

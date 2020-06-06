@@ -3,89 +3,75 @@ package peasyGradients.colourSpaces;
 import peasyGradients.utilities.Functions;
 
 /**
- * Hue, Colour, Greyness https://nicedoc.io/acterhd/hcg-color * hue.. [0..360]
- * chroma .. [0..1] grayness .. [0..1]
+ * Hue, Colour, Greyness
+ * 
+ * https://github.com/d3/d3-hcg/blob/master/src/hcg.js
  * 
  * @author micycle1
  *
  */
 public final class HCG {
 
+	/**
+	 * IN RGA 0...255
+	 * 
+	 * @param rgba
+	 * @return
+	 */
 	public static float[] rgb2hcg(float[] rgba) {
-		float r = rgba[0];
-		float g = rgba[1];
-		float b = rgba[2];
+		float r = rgba[0] / 255;
+		float g = rgba[1] / 255;
+		float b = rgba[2] / 255;
 
 		final float min = Functions.min(r, g, b);
 		final float max = Functions.max(r, g, b);
-		final float delta = max - min;
-		final float c = delta * 100 / 255;
-		final float _g = min / (255 - delta) * 100;
+		final float d = max - min;
+		float h = Float.NaN;
+		float gr = min / (1 - d);
 
-		float h = 0;
-		if (delta == 0) {
-			h = 0;
-		} else {
+		if (d != 0) {
 			if (r == max) {
-				h = (g - b) / delta;
-			}
-			if (g == max) {
-				h = 2 + (b - r) / delta;
-			}
-			if (b == max) {
-				h = 4 + (r - g) / delta;
+				h = (g - b) / d + (g < b ? 1 : 0) * 6;
+			} else if (g == max) {
+				h = (b - r) / d + 2;
+			} else {
+				h = (r - g) / d + 4;
 			}
 			h *= 60;
-			if (h < 0) {
-				h += 360;
-			}
 		}
-		return new float[] { h, c, _g };
+		return new float[] { h, d, gr };
 	}
 
 	public static float[] hcg2rgb(float[] hcg) {
-		float h = hcg[0];
+
+		float h = Float.isNaN(hcg[0]) ? 0 : hcg[0] % 360 + (hcg[0] < 0 ? 1 : 0) * 360;
 		final float c = hcg[1];
-		float _g = hcg[2];
-		float r = 0, g = 0, b = 0;
+		float g = Float.isNaN(hcg[2]) ? 0 : hcg[2];
 
-		_g *= 255;
+		float x = c * (1 - Math.abs((h / 60) % 2 - 1));
+		float m = g * (1 - c);
 
-		final float _c = c * 255;
+		// @formatter:off
+		return h < 60 ? hcg2rgb(c, x, 0, m)
+				: h < 120 ? hcg2rgb(x, c, 0, m)
+				: h < 180 ? hcg2rgb(0, c, x, m)
+				: h < 240 ? hcg2rgb(0, x, c, m)
+				: h < 300 ? hcg2rgb(x, 0, c, m)
+				: hcg2rgb(c, 0, x, m);
+		// @formatter:on
+	}
 
-		if (c == 0) {
-			r = g = b = _g;
-		} else {
-			if (h == 360)
-				h = 0;
-			if (h > 360)
-				h -= 360;
-			if (h < 0)
-				h += 360;
-			h /= 60;
-			final int i = (int) h;
-
-			final float f = h - i;
-			final float p = _g * (1 - c);
-			final float q = p + _c * (1 - f);
-			final float t = p + _c * f;
-			final float v = p + _c;
-			switch (i) {
-				case 0 :
-					return new float[] { v, t, p };
-				case 1 :
-					return new float[] { q, v, p };
-				case 2 :
-					return new float[] { p, v, t };
-				case 3 :
-					return new float[] { p, q, v };
-				case 4 :
-					return new float[] { t, p, v };
-				case 5 :
-					return new float[] { v, p, q };
-			}
-		}
-		return new float[] { r, g, b };
+	/**
+	 * out rgb 0...255
+	 * 
+	 * @param r
+	 * @param g
+	 * @param b
+	 * @param m
+	 * @return
+	 */
+	private static float[] hcg2rgb(float r, float g, float b, float m) {
+		return new float[] { (r + m) * 255, (g + m) * 255, (b + m) * 255, 1 }; // alpha = 1 TODO
 	}
 
 	public static float[] interpolate(float[] a, float[] b, float step, float[] out) {

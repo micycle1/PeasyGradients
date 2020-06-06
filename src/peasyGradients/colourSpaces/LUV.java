@@ -25,18 +25,18 @@ public final class LUV {
 	 * @return
 	 */
 	public static double[] rgb2luv(double rgb[]) {
-		return xyzToLuv(XYZ.rgb2xyz(rgb));
+		return xyz2luv(XYZ.rgb2xyz(rgb));
 	}
 
 	public static double[] luv2rgb(double luv[]) {
-		return XYZ.xyz2rgb(luvToXyz(luv));
+		return XYZ.xyz2rgb(luv2xyz(luv));
 	}
 
 	public static double[] luv2rgbQuick(double luv[]) {
-		return XYZ.xyz2rgbQuick(luvToXyzQuick(luv));
+		return XYZ.xyz2rgbQuick(luv2xyzQuick(luv));
 	}
 
-	private static double[] xyzToLuv(double[] tuple) {
+	private static double[] xyz2luv(double[] tuple) {
 		double X = tuple[0];
 		double Y = tuple[1];
 		double Z = tuple[2];
@@ -56,7 +56,7 @@ public final class LUV {
 		return new double[] { L, U, V };
 	}
 
-	private static double[] luvToXyz(double[] tuple) {
+	private static double[] luv2xyz(double[] tuple) {
 
 		if (tuple[0] == 0) {
 			return new double[] { 0, 0, 0 };
@@ -78,7 +78,7 @@ public final class LUV {
 		return new double[] { X, Y, Z };
 	}
 
-	private static double[] luvToXyzQuick(double[] tuple) {
+	private static double[] luv2xyzQuick(double[] tuple) {
 
 		double varU = tuple[1] / (13 * tuple[0]) + refU;
 		double varV = tuple[2] / (13 * tuple[0]) + refV;
