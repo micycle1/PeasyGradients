@@ -15,6 +15,18 @@ public enum Interpolation {
 	 */
 	LINEAR,
 	/**
+	 * Almost Unit Identity
+	 * 
+	 * This is another near-identiy function, but this one maps the unit interval to
+	 * itself. But it is special in that not only remaps 0 to 0 and 1 to 1, but has
+	 * a 0 derivative at the origin and a derivative of 1 at 1, making it ideal for
+	 * transitioning things from being stationary to being in motion as if they had
+	 * been in motion the whole time.
+	 * 
+	 * https://www.iquilezles.org/www/articles/functions/functions.htm
+	 */
+	IDENTITY,
+	/**
 	 * Ken Perlin’s smoother step, a simoid like function.
 	 * 
 	 * @param st step, between 0 and 1
@@ -35,18 +47,6 @@ public enum Interpolation {
 	 * 
 	 */
 	PARABOLA,
-	/**
-	 * Almost Unit Identity
-	 * 
-	 * This is another near-identiy function, but this one maps the unit interval to
-	 * itself. But it is special in that not only remaps 0 to 0 and 1 to 1, but has
-	 * a 0 derivative at the origin and a derivative of 1 at 1, making it ideal for
-	 * transitioning things from being stationary to being in motion as if they had
-	 * been in motion the whole time.
-	 * 
-	 * https://www.iquilezles.org/www/articles/functions/functions.htm
-	 */
-	IDENTITY,
 	/**
 	 * Sinc curve
 	 * 

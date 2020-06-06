@@ -32,6 +32,8 @@ import peasyGradients.utilities.Functions;
  * TODO dithering/banding/rgb depth TODO parallelStream for
  * iteration/calculation?
  * 
+ * TODO text masking
+ * 
  * API:
  * rectPane.applyLinearGradient(gradient).applyCircularGradient(gradient1).setColorspace(HSV).get().getRaw().applyRadialGradientMask().get()
  * 

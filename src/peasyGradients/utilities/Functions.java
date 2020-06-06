@@ -1,7 +1,5 @@
 package peasyGradients.utilities;
 
-import static processing.core.PApplet.round;
-
 import java.util.Random;
 
 import net.jafama.FastMath;
@@ -22,6 +20,10 @@ public final class Functions {
 
 	public static void nextStepMode() {
 		stepMode = stepMode.next();
+	}
+	
+	public static void prevStepMode() {
+		stepMode = stepMode.prev();
 	}
 
 	public static Interpolation stepMode = Interpolation.IDENTITY;

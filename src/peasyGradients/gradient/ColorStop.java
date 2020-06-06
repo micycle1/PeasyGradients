@@ -1,5 +1,7 @@
 package peasyGradients.gradient;
 
+import java.util.Arrays;
+
 import peasyGradients.colourSpaces.CIE_LAB;
 import peasyGradients.colourSpaces.HCG;
 import peasyGradients.colourSpaces.HSB;
@@ -22,6 +24,8 @@ import processing.core.PConstants;
 /**
  * A container for colour (in every colour space) and the percentage position
  * that it occurs within gradient.
+ * 
+ * TODO what happens if first stop not at zero?
  * 
  * @author micycle1
  *
@@ -101,7 +105,8 @@ final class ColorStop implements Comparable<ColorStop> {
 
 	@Override
 	public String toString() {
-		return clr + " at " + percent;
+		
+		return Arrays.toString(Functions.composeclrTo255(Functions.decomposeclrDouble(clr)));
 	}
 
 }

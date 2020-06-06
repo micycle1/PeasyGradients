@@ -1,7 +1,7 @@
 package peasyGradients.colourSpaces;
 
 /**
- * Defines how gradient should interpolate between colors (by performining
+ * Defines how gradient should interpolate between colors (by performing
  * interpolation on different color spaces).
  * 
  * https://www.easyrgb.com/en/math.php TODO
@@ -12,8 +12,8 @@ package peasyGradients.colourSpaces;
  */
 public enum ColourSpace {
 
-	RGB, YCoCg, HCG, HSB_SHORT, HSB_LONG, LUV, FAST_LUV, JAB, JAB_FAST, XYZ, ITP, LAB, FAST_LAB, VERY_FAST_LAB, HUNTER_LAB,
-	HUNTER_LAB_FAST, TEMP, RYB, YUV;
+	RGB, YCoCg, HCG, HSB_SHORT, HSB_LONG, LUV, FAST_LUV, JAB, JAB_FAST, XYZ, ITP, ITP_FAST, LAB, FAST_LAB,
+	VERY_FAST_LAB, HUNTER_LAB, HUNTER_LAB_FAST, TEMP, RYB, YUV;
 
 	private final static ColourSpace[] vals = values();
 
