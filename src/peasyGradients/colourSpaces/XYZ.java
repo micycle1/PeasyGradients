@@ -8,6 +8,8 @@ import peasyGradients.utilities.Functions;
  * aka CIE 1931, Java implementation of https://www.easyrgb.com/en/math.php
  * method
  * 
+ * TODO JBLAS http://jblas.org/ dgemm
+ * 
  * @author micycle1
  *
  */

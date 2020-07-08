@@ -1,9 +1,9 @@
 package peasyGradients.utilities;
 
 /**
- * Used to interpolate, not used in interpolating between 2 colours. Change the
- * rate at which colour changes throughout a gradient. Does not affect how two
- * colours are interpolated.
+ * Defines interpolation functions, which change the rate at which colour
+ * changes throughout a gradient. Does not affect how two colours are
+ * interpolated.
  * 
  * @author micycle1
  *

@@ -66,9 +66,15 @@ public final class Palette {
 		return generic(nColours, GRC);
 	}
 
+	/**
+	 * Generate an n-colour palette by cycling hue and varying saturation and brightness a little.
+	 * @param colours
+	 * @param increment
+	 * @return array of colours, represented by ARGB integers
+	 */
 	private static int[] generic(int colours, float increment) {
 		int[] out = new int[colours];
-		float h = Functions.randomFloat();
+		float h = Functions.randomFloat(); // 0...1
 		float s = Functions.random(sMin, 1);
 		float b = Functions.random(bMin, 1);
 

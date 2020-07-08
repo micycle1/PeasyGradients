@@ -58,8 +58,7 @@ public final class Gradient {
 		float percent;
 		for (int i = 0; i < numColors; ++i) {
 			percent = i == 0 ? 0 : i == numColors - 1 ? 1 : (float) Math.random();
-			temp[i] = new ColorStop(percent,
-					Functions.composeclr((float) Math.random(), (float) Math.random(), (float) Math.random(), 1));
+			temp[i] = new ColorStop(Functions.composeclr((float) Math.random(), (float) Math.random(), (float) Math.random(), 1), percent);
 		}
 		return new Gradient(temp);
 	}
@@ -87,19 +86,9 @@ public final class Gradient {
 		int sz = colors.length;
 		float szf = (sz <= 1.0f ? 1.0f : sz - 1.0f);
 		for (int i = 0; i < sz; i++) {
-			colorStops.add(new ColorStop(i / szf, colors[i]));
+			colorStops.add(new ColorStop(colors[i], i / szf));
 		}
 		numStops = sz;
-	}
-
-	// Creates equidistant color stops.
-	public Gradient(int colorMode, float[]... colors) {
-		int sz = colors.length;
-		float szf = sz <= 1.0f ? 1.0f : sz - 1.0f;
-		for (int i = 0; i < sz; i++) {
-			colorStops.add(new ColorStop(colorMode, i / szf, colors[i]));
-		}
-		numStops += sz;
 	}
 
 	public Gradient(ColorStop... colorStops) {
@@ -146,16 +135,8 @@ public final class Gradient {
 //		java.util.Collections.sort(colorStops);
 	}
 
-	void add(int colorMode, float percent, float[] arr) {
-		add(new ColorStop(colorMode, percent, arr));
-	}
-
-	void add(int colorMode, float percent, float x, float y, float z, float w) {
-		add(new ColorStop(colorMode, percent, x, y, z, w));
-	}
-
 	void add(final float percent, final int clr) {
-		add(new ColorStop(percent, clr));
+		add(new ColorStop(clr, percent));
 	}
 
 	void add(final ColorStop colorStop) {

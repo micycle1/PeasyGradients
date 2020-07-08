@@ -2,24 +2,8 @@ package peasyGradients.gradient;
 
 import java.util.Arrays;
 
-import peasyGradients.colourSpaces.CIE_LAB;
-import peasyGradients.colourSpaces.HCG;
-import peasyGradients.colourSpaces.HSB;
-import peasyGradients.colourSpaces.HUNTER_LAB;
-import peasyGradients.colourSpaces.ITP;
-import peasyGradients.colourSpaces.JAB;
-import peasyGradients.colourSpaces.LUV;
-import peasyGradients.colourSpaces.RGB;
-import peasyGradients.colourSpaces.RYB;
-import peasyGradients.colourSpaces.TEMP;
-import peasyGradients.colourSpaces.XYZ;
-import peasyGradients.colourSpaces.YCoCg;
-import peasyGradients.colourSpaces.YUV;
-
+import peasyGradients.colourSpaces.*;
 import peasyGradients.utilities.Functions;
-
-import processing.core.PApplet;
-import processing.core.PConstants;
 
 /**
  * A container for colour (in every colour space) and the percentage position
@@ -35,7 +19,7 @@ final class ColorStop implements Comparable<ColorStop> {
 	static final float TOLERANCE = 0.05f;
 
 	static boolean approxPercent(ColorStop cs, float tolerance) {
-		return PApplet.abs(cs.percent - cs.percent) < tolerance;
+		return Math.abs(cs.percent - cs.percent) < tolerance;
 	}
 
 	float originalPercent; // percent at which this stop occurs (0...1.0)
@@ -59,22 +43,13 @@ final class ColorStop implements Comparable<ColorStop> {
 
 	/**
 	 * 
-	 * @param percent
 	 * @param clr     color int (bit shifted ARGB)
+	 * @param percent
 	 */
-	protected ColorStop(float percent, int clr) {
-		this.originalPercent = PApplet.constrain(percent, 0.0f, 1.0f);
+	protected ColorStop(int clr, float percent) {
+		this.originalPercent = percent > 1 ? 1 : percent < 0 ? 0 : percent; // constrain 0...1
 		this.percent = originalPercent;
 		setColor(clr);
-	}
-
-	protected ColorStop(int colorMode, float percent, float x, float y, float z, float w) {
-		this(percent, colorMode == PConstants.HSB ? Functions.composeclr(HSB.hsbToRgb(x, y, z, w))
-				: Functions.composeclr(x, y, z, w));
-	}
-
-	protected ColorStop(int colorMode, float percent, float[] arr) {
-		this(colorMode, percent, arr[0], arr[1], arr[2], arr.length == 4 ? arr[3] : 1.0f);
 	}
 
 	void setColor(int color) {
@@ -105,7 +80,6 @@ final class ColorStop implements Comparable<ColorStop> {
 
 	@Override
 	public String toString() {
-		
 		return Arrays.toString(Functions.composeclrTo255(Functions.decomposeclrDouble(clr)));
 	}
 

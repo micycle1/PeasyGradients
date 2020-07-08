@@ -268,7 +268,7 @@ public final class PeasyGradients {
 		@Override
 		public Boolean call() {
 			for (int i = offset; i < offset + pixels; i++) {
-				float step = Functions.project(ox, oy, dx, dy, i % p.width, (i - i % p.width) / p.height);
+				float step = Functions.linearProject(ox, oy, dx, dy, i % p.width, (i - i % p.width) / p.height);
 				gradientPG.pixels[i] = gradient.evalRGB(step);
 			}
 			return true;

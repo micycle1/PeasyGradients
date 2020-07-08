@@ -8,11 +8,11 @@ import processing.core.PConstants;
 import processing.core.PVector;
 
 /**
- * HSB to RGB RGB to HSB
+ * This class contains static functions mostly related to colour/gradient
+ * processing.
  * 
- * @author Jeremy Behreand
  * @author micycle1
- *
+ * @author Jeremy Behreand
  */
 public final class Functions {
 
@@ -147,7 +147,7 @@ public final class Functions {
 
 	/**
 	 * Project a given pixel coordinate (x, y) onto the imaginary spine of the
-	 * gradient.
+	 * gradient (linear gradients only).
 	 * 
 	 * @param originX
 	 * @param originY
@@ -157,7 +157,7 @@ public final class Functions {
 	 * @param pointY
 	 * @return between 0...1
 	 */
-	public static float project(float originX, float originY, float destX, float destY, int pointX, int pointY) {
+	public static float linearProject(float originX, float originY, float destX, float destY, int pointX, int pointY) {
 		// Rise and run of line.
 		float odX = destX - originX;
 		float odY = destY - originY;
@@ -183,7 +183,7 @@ public final class Functions {
 	 * @return float θ in radians.
 	 */
 	public static float angleBetween(PVector tail, PVector head) {
-		float a = PApplet.atan2(tail.y - head.y, tail.x - head.x);
+		float a = (float) Math.atan2(tail.y - head.y, tail.x - head.x);
 		if (a < 0) {
 			a += PConstants.TWO_PI;
 		}
