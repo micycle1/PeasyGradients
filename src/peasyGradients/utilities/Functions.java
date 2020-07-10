@@ -3,6 +3,7 @@ package peasyGradients.utilities;
 import java.util.Random;
 
 import net.jafama.FastMath;
+
 import processing.core.PApplet;
 import processing.core.PConstants;
 import processing.core.PVector;
@@ -12,7 +13,7 @@ import processing.core.PVector;
  * processing.
  * 
  * @author micycle1
- * @author Jeremy Behreand
+ * @author Jeremy Behreand (colour composition methods)
  */
 public final class Functions {
 
@@ -21,7 +22,7 @@ public final class Functions {
 	public static void nextStepMode() {
 		stepMode = stepMode.next();
 	}
-	
+
 	public static void prevStepMode() {
 		stepMode = stepMode.prev();
 	}
@@ -66,7 +67,7 @@ public final class Functions {
 			case SINE :
 				return (float) FastMath.sinQuick(step);
 			case PARABOLA :
-				return FastPow.fastPow(4.0 * step * (1.0 - step), 0.5); // k = 0.8
+				return (float) FastMath.sqrt(4.0 * step * (1.0 - step));
 			case IDENTITY :
 				return step * step * (2.0f - step);
 			case SINC :
@@ -197,8 +198,7 @@ public final class Functions {
 	 * @return
 	 */
 	public static int composeclr(float[] RGBA) {
-		return (int) (RGBA[3] * 255) << 24 | (int) (RGBA[0] * 255) << 16 | (int) (RGBA[1] * 255) << 8
-				| (int) (RGBA[2] * 255);
+		return (int) (RGBA[3] * 255) << 24 | (int) (RGBA[0] * 255) << 16 | (int) (RGBA[1] * 255) << 8 | (int) (RGBA[2] * 255);
 	}
 
 	/**
@@ -231,8 +231,7 @@ public final class Functions {
 	}
 
 	public static int[] composeclrTo255(double[] in) {
-		return new int[] { (int) Math.round(in[0] * 255), (int) Math.round(in[1] * 255),
-				(int) Math.round(in[2] * 255) };
+		return new int[] { (int) Math.round(in[0] * 255), (int) Math.round(in[1] * 255), (int) Math.round(in[2] * 255) };
 	}
 
 	/**
@@ -245,8 +244,8 @@ public final class Functions {
 	 */
 	public static float[] decomposeclr(int clr) {
 		// 1.0 / 255.0 = 0.003921569
-		return new float[] { (clr >> 16 & 0xff) * 0.003921569f, (clr >> 8 & 0xff) * 0.003921569f,
-				(clr & 0xff) * 0.003921569f, (clr >> 24 & 0xff) * 0.003921569f };
+		return new float[] { (clr >> 16 & 0xff) * 0.003921569f, (clr >> 8 & 0xff) * 0.003921569f, (clr & 0xff) * 0.003921569f,
+				(clr >> 24 & 0xff) * 0.003921569f };
 	}
 
 	/**
@@ -338,8 +337,127 @@ public final class Functions {
 	 * @return a^b (roughly)
 	 */
 	public static double veryFastPow(final double a, final double b) {
-		return Double.longBitsToDouble(
-				((long) (b * ((Double.doubleToRawLongBits(a) >> 32) - 1072632447) + 1072632447)) << 32);
+		return Double.longBitsToDouble(((long) (b * ((Double.doubleToRawLongBits(a) >> 32) - 1072632447) + 1072632447)) << 32);
+	}
+
+	/**
+	 * Finds the two points of intersection between a rectange and a line, which
+	 * given by a point inside the rectangle and an angle.
+	 * <p>
+	 * A Java/Processing implementation of
+	 * <a href="https://gamedev.stackexchange.com/questions/124108/i-need-to-find-
+	 * intersection-point-of-a-vector-in-an-axis-aligned-rectangle">this SE Game Dev
+	 * answer</a>.
+	 * 
+	 * 
+	 * @param rectCoords a float[4] containing the rectangle corner coordinates
+	 *                   {UL,BL,BR,UR}
+	 * @param point      2D coordinates of point within rectangle (i.e. where the
+	 *                   line originates from)
+	 * @param angle      angle of line in radians (where 0 faces east). Increases in
+	 *                   a clockwise manner
+	 * @return PVector[2] containing the two points of intersection
+	 * @see #lineRectIntersection(float, float, PVector, float)
+	 */
+	public static PVector[] lineRectIntersection(PVector[] rect, PVector point, float angle) {
+		PVector[] output = new PVector[2];
+		output[0] = new PVector();
+		output[1] = new PVector();
+
+		float tanA = (float) Math.tan(PApplet.TWO_PI - angle); // TWO_PI - ... clockwise orientation
+
+		// Avoid division by zero
+		if (tanA == 0) {
+			output[0].x = rect[3].x;
+			output[0].y = point.y;
+			output[1].x = rect[3].x;
+			output[1].y = point.y;
+		} else {
+			// Transform input (make p relative to rectangle)
+			point.x -= rect[0].x;
+			point.y -= rect[0].y;
+
+			float w = rect[3].x - rect[0].x;
+			float h = rect[1].y - rect[0].y;
+			calcProjection(w, h, point, tanA, output);
+
+			// Transform result back to original coordinates
+			output[0].x += rect[0].x;
+			output[0].y += rect[0].y;
+			output[1].x += rect[0].x;
+			output[1].y += rect[0].y;
+		}
+		return output;
+	}
+
+	/**
+	 * An x-axis & y-axis aligned version of
+	 * {@link #lineRectIntersection(PVector[], PVector, float) this} method.
+	 * 
+	 * <p>
+	 * This method expects a rectangle that is defined solely by it's size (width
+	 * and height). Its top left corner lies on the origin [0,0]. The Y-axis of the
+	 * coordinate system expands downwards.
+	 * 
+	 * @param rectWidth
+	 * @param rectHeight
+	 * @param point      2D coordinates of point within rectangle (i.e. where the
+	 *                   line originates from)
+	 * @param angle      angle of line in radians (where 0 faces east). Increases in
+	 *                   a clockwise manner
+	 * @return PVector[2] containing the two points of intersection
+	 * @see #lineRectIntersection(PVector[], PVector, float)
+	 */
+	public static PVector[] lineRectIntersection(float rectWidth, float rectHeight, PVector point, float angle) {
+		final PVector[] rect = new PVector[4];
+		rect[0] = new PVector(0, 0);
+		rect[1] = new PVector(0, rectHeight);
+		rect[2] = new PVector(rectWidth, rectHeight);
+		rect[3] = new PVector(rectWidth, 0);
+		return lineRectIntersection(rect, point, angle);
+	}
+
+	/**
+	 * Projects a point onto imaginary sides CD and AB of an underlying rectangle
+	 * and checks for intersection.
+	 * 
+	 * @param w     rect width
+	 * @param h     rect height
+	 * @param point 2D coordinates of point within rectangle
+	 * @param tanA  tangent of the angle of the line within rectangle
+	 * @return points of intersection
+	 */
+	private static void calcProjection(float w, float h, PVector point, float tanA, PVector[] output) {
+
+		float yCD = point.y - (tanA * (w - point.x));
+		float yAB = point.y + (tanA * point.x);
+
+		if (tanA < 0) {
+			tanA = -tanA;
+		}
+
+		// First projection onto CD
+		if (yCD < 0) {
+			output[0].x = w + (yCD / tanA);
+		} else if (yCD > h) {
+			float opposite = yCD - h;
+			output[0].x = w - (opposite / tanA);
+			output[0].y = h;
+		} else {
+			output[0].x = w;
+			output[0].y = yCD;
+		}
+
+		// Second projection onto AB
+		if (yAB < 0) {
+			output[1].x = -yAB / tanA;
+		} else if (yAB > h) {
+			float opposite = yAB - h;
+			output[1].x = opposite / tanA;
+			output[1].y = h;
+		} else {
+			output[1].y = yAB;
+		}
 	}
 
 }
