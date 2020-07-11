@@ -7,9 +7,6 @@ import processing.core.PImage;
 import processing.core.PShape;
 import processing.core.PVector;
 
-import static processing.core.PConstants.PI;
-
-import java.util.HashSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -45,14 +42,18 @@ import peasyGradients.utilities.Functions;
 public final class PeasyGradients {
 
 	private final static int threads = Runtime.getRuntime().availableProcessors();
+	private static final float INV_TWO_PI = 1f/PConstants.TWO_PI;
 
-	boolean debug;
+	private boolean debug;
 	private final PApplet p;
-	PImage imageMask;
-	PShape shapeMask;
+	private PImage imageMask;
+	private PShape shapeMask;
 	int colorMode = PConstants.RGB;
-	PGraphics gradientPG;
-	ExecutorService exec;
+	private PGraphics gradientPG;
+	private ExecutorService exec;
+	private int quality = 1; // calc every pixel
+
+	private boolean PGPrimed = false;
 
 	public PeasyGradients(PApplet p) {
 		this.p = p;
@@ -66,6 +67,16 @@ public final class PeasyGradients {
 	 */
 	public void setMask(PImage mask) {
 
+	}
+
+	public void setCanvas(int width, int height) {
+		if (!(width >= 0 && height >= 0)) {
+			System.err.println("Dimensions must each be greater than 0.");
+			return;
+		}
+
+		gradientPG = p.createGraphics(width, height);
+		PGPrimed = true;
 	}
 
 	/**
@@ -88,13 +99,16 @@ public final class PeasyGradients {
 
 	/**
 	 * 
-	 * @param dimensions
-	 * @param centre
-	 * @param angle
-	 * @param smoothing  coefficient to lerp from centrepoint to edges (that
-	 *                   intersect with angle) TODO
-	 * @param palette
+	 * @param gradient    colour source
+	 * @param centerPoint gradient midpoint
+	 * @param angle       radians
+	 * @param length      coefficient to lerp from centrepoint to edges (that
+	 *                    intersect with angle). default = 1: (first and last
+	 *                    colours will be exactly on edge); <1: colours will be
+	 *                    sqashed; >1 colours spread out (outermost colours will
+	 *                    leave the view).
 	 * @return
+	 * 
 	 * 
 	 *         Preset: Several predefined configurations are provided in this menu
 	 *         for your use. Start Point: Use these controls to define the location
@@ -107,93 +121,115 @@ public final class PeasyGradients {
 	 *         naturalness. Blend: Select the blend mode used to combine the
 	 *         gradient with the contents of the layer to which it is applied.
 	 */
-	public PImage linearGradient(PVector dimensions, PVector centre, Gradient gradient) {
+	public PImage linearGradient(Gradient gradient, PVector centerPoint, float angle, float length) {
 
-		if (!(dimensions.x >= 0 && dimensions.y >= 0)) {
-			System.err.println("Gradient dimensions must be greater than 0.");
+		if (!PGPrimed) {
+			System.err.println("First use setCanvas() to create a plane to render into");
 			return null;
 		}
 
-		float theta = Functions.angleBetween(new PVector(p.mouseX, p.mouseY), centre);
-		float dist = PApplet.dist(p.mouseX, p.mouseY, centre.x, centre.y);
+		// get edge-line intersection points
+		PVector[] o = Functions.lineRectIntersection(gradientPG.width, gradientPG.height, centerPoint, angle);
+		o[0].lerp(centerPoint, 1 - length); // mutate length
+		o[1].lerp(centerPoint, 1 - length); // mutate length
 
-		float xo = (float) (Math.cos(theta + PI) * dist);
-		float yo = (float) (Math.sin(theta + PI) * dist);
-
-		float ox = p.mouseX;
-		float oy = p.mouseY;
-		float dx = centre.x + xo;
-		float dy = centre.y + yo;
-
-		final int threadCount = 4;
-		gradientPG = p.createGraphics((int) dimensions.x, (int) dimensions.y);
+		gradient.prime(); // prime curr color stop
 
 		gradientPG.beginDraw();
 		gradientPG.loadPixels();
-		final int pixels = gradientPG.pixels.length / threadCount;
-		HashSet<LinearThread> threads = new HashSet<>(threadCount);
-		for (int i = 0; i < threadCount; i++) {
-			threads.add(new LinearThread(i * pixels, pixels, ox, oy, dx, dy, gradient));
-		}
 
-		try {
-			exec.invokeAll(threads); // run threads, block until all finished
-		} catch (InterruptedException e) {
-			e.printStackTrace();
+		int recentPixel = 0;
+		for (int i = 0, y = 0, x; y < gradientPG.height; ++y) {
+			for (x = 0; x < gradientPG.width; ++x, ++i) {
+				if ((i & quality) == 0) { // faster modulo
+					float step = Functions.linearProject(o[0].x, o[0].y, o[1].x, o[1].y, x, y);
+					recentPixel = gradient.evalRGB(step);
+				}
+				gradientPG.pixels[i] = recentPixel;
+			}
 		}
-
 		gradientPG.updatePixels();
+
+		if (debug) {
+			gradientPG.ellipseMode(PConstants.CENTER);
+			gradientPG.fill(250);
+			gradientPG.ellipse(o[0].x, o[0].y, 50, 50);
+			gradientPG.fill(0);
+			gradientPG.ellipse(o[1].x, o[1].y, 50, 50);
+			gradientPG.ellipse(centerPoint.x, centerPoint.y, 10, 10);
+		}
+
 		gradientPG.endDraw();
 
-//		float m = (float) Math.tan(angle);
-//
-//		float c = centre.y - (m * centre.x); // y = mx+c >> y-mx = c
-//
-//		// find points of intersection with PImage boundary
-//		// solves 2 of 4 possible points
-//		// | x = c
-//		//
-//
-//		float y1 = c; // x = 0
-////		float y1x = 
-//
-//		float y2 = (dimensions.x - c) / m;
-//
-//		float x1 = -c / m; // y=0
-//		float x2 = (dimensions.y - c) / m;
-
-//		float dist = dist(mouseX, mouseY, midPoint.x, midPoint.y);
-//
-//		float xo = (float) (Math.cos(angle + PI) * dist);
-//		float yo = (float) (Math.sin(angle + PI) * dist);
-//
-//		float ox = centre.x;
-//		float oy = centre.y;
-//		float dx = centre.x + xo;
-//		float dy = centre.y + yo;
-
-//		for (int i = 0, y = 0, x; y < g.height; ++y) {
-//			for (x = 0; x < g.width; ++x, ++i) {
-//				float step = project(ox, oy, dx, dy, x, y);
-//				g.pixels[i] = lerpColors(palette, step, colorMode);
-//			}
+//		if (mask) { // TODO
+//		 /// apply mask
 //		}
-//
-//		if (debug) {
-//			g.strokeWeight(1);
-//			g.stroke(255);
-//			g.line(ox, oy, dx, dy);
-//		}
-
 		return gradientPG.get();
 	}
 
-	public PImage conicGradient(PVector dimensions, Gradient gradient, float angle) {
-		return null;
+	public PImage radialGradient(Gradient gradient, PVector midPoint, float zoom) {
+
+		float hypotSq = (gradientPG.width * gradientPG.width) + (gradientPG.height * gradientPG.height);
+		float rise, run, distSq, dist;
+		zoom = 1/zoom;
+		
+		gradient.prime();
+		
+		gradientPG.beginDraw();
+		gradientPG.loadPixels();
+
+		for (int i = 0, y = 0, x; y < gradientPG.height; ++y) {
+			rise = midPoint.y - y;
+			rise *= rise;
+
+			for (x = 0; x < gradientPG.width; ++x, ++i) {
+				run = midPoint.x - x;
+				run *= run;
+
+				distSq = run + rise;
+				dist = zoom*4.0f * distSq / hypotSq;
+				if (dist > 1) {
+					dist = 1; // constrain
+				}
+				gradientPG.pixels[i] = gradient.evalRGB(dist);
+			}
+		}
+		gradientPG.updatePixels();
+		gradientPG.endDraw();
+		
+		return gradientPG.get();
 	}
 
-	public PImage conicGradient(PVector headPos, PVector tailPos, Gradient gradient) {
-		return null;
+	public PImage conicGradient(Gradient gradient, PVector midPoint, float angle, float zoom) {
+		
+		float rise, run;
+		
+		gradientPG.beginDraw();
+		gradientPG.loadPixels();
+		
+		gradient.prime();
+		
+		double t;
+		for (int i = 0, y = 0, x; y < gradientPG.height; ++y) {
+			rise = midPoint.y - y;
+			for (x = 0; x < gradientPG.width; ++x, ++i) {
+				run = midPoint.x - x;
+				
+				t = Functions.fastAtan2(rise, run) - angle;
+
+				// Ensure a positive value if angle is negative.
+				t = Functions.floorMod(t, PConstants.TWO_PI);
+
+				// Divide by TWO_PI to get value in range 0...1
+				t *= INV_TWO_PI;
+
+				gradientPG.pixels[i] = gradient.evalRGB((float) t);
+			}
+		}
+		gradientPG.updatePixels();
+		gradientPG.endDraw();
+
+		return gradientPG.get();
 	}
 
 	public void lineGradient() {
@@ -202,12 +238,12 @@ public final class PeasyGradients {
 	/**
 	 * Draws a bezier curve with a gradient.
 	 */
-	public void drawBezierCurveWithGradient(PVector headPos, PVector tailPos, Gradient gradient, float curviness,
-			int curveDirection, int strokeWeight) {
+	public void drawBezierCurveWithGradient(PVector headPos, PVector tailPos, Gradient gradient, float curviness, int curveDirection,
+			int strokeWeight) {
 		final float theta2 = Functions.angleBetween(tailPos, headPos);
-		final PVector midPoint = new PVector((headPos.x + tailPos.x) / 2, (headPos.y + tailPos.y) / 2);
-		final PVector bezierCPoint = new PVector(midPoint.x + (PApplet.sin(-theta2) * (curviness * 2 * curveDirection)),
-				midPoint.y + (PApplet.cos(-theta2) * (curviness * 2 * curveDirection)));
+		final PVector centerPoint = new PVector((headPos.x + tailPos.x) / 2, (headPos.y + tailPos.y) / 2);
+		final PVector bezierCPoint = new PVector(centerPoint.x + (PApplet.sin(-theta2) * (curviness * 2 * curveDirection)),
+				centerPoint.y + (PApplet.cos(-theta2) * (curviness * 2 * curveDirection)));
 
 		PVector point = headPos.copy(); // initial point
 
@@ -233,20 +269,15 @@ public final class PeasyGradients {
 	}
 
 	/**
-	 * 5 = best (redner every pixel) 4 = every 2, etc. 1 = render every
+	 * 5 = best (redner every pixel) 4 = every 2, etc. 1 = calc every 16th
 	 * 
 	 * @param quality
 	 */
 	public void setQuality(int quality) {
-		quality = (quality > 5) ? 5 : (quality < 1 ? 1 : quality); // clamp to 1...5
-//		quality = 2^(6-quality) // TODO
-	}
-
-	public static boolean withinRegion(PVector point, PVector UL, PVector BR) {
-		return (point.x >= UL.x && point.y >= UL.y) && (point.x <= BR.x && point.y <= BR.y) // SE
-				|| (point.x >= BR.x && point.y >= BR.y) && (point.x <= UL.x && point.y <= UL.y) // NW
-				|| (point.x <= UL.x && point.x >= BR.x) && (point.y >= UL.y && point.y <= BR.y) // SW
-				|| (point.x <= BR.x && point.x >= UL.x) && (point.y >= BR.y && point.y <= UL.y); // NE
+		this.quality = (quality > 5) ? 5 : (quality < 1 ? 1 : quality); // clamp to 1...5
+		quality = 1 << (5 - quality); // 2^(5-quality)
+		quality--; // subtract 1 here for the faster modulo
+		// TODO calc every nth, but linear interpolate between?)
 	}
 
 	public class LinearThread implements Callable<Boolean> {

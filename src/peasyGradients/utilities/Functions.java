@@ -16,6 +16,10 @@ import processing.core.PVector;
  * @author Jeremy Behreand (colour composition methods)
  */
 public final class Functions {
+	
+	private static final float PI = (float) Math.PI;
+	private static final float HALF_PI = (float) (0.5f * Math.PI);
+	private static final float QRTR_PI = (float) (0.25f * Math.PI);
 
 	private static final Random random = new Random();
 
@@ -313,7 +317,17 @@ public final class Functions {
 	public static float max(float a, float b, float c) {
 		return (a > b) ? ((a > c) ? a : c) : ((b > c) ? b : c);
 	}
+	
+	public static double floorMod(double t, double b) {
+		return (t - b * Math.floor(t / b));
+	}
 
+	/**
+	 * Returns a pseudorandom, uniformly distributed float value between the given range.
+	 * @param min range min
+	 * @param max range max
+	 * @return
+	 */
 	public static float random(float min, float max) {
 		return min + random.nextFloat() * (max - min);
 	}
@@ -338,6 +352,63 @@ public final class Functions {
 	 */
 	public static double veryFastPow(final double a, final double b) {
 		return Double.longBitsToDouble(((long) (b * ((Double.doubleToRawLongBits(a) >> 32) - 1072632447) + 1072632447)) << 32);
+	}
+	
+	/**
+	 * Polynomial approximating arctangenet on the range -1, 1.
+	 * Implementation of function in 'Efficient Approximations for the Arctangent Function' by Rajan et al.
+	 * Maximum absolute error of 0.0038 rad (0.22º) 
+	 * 
+	 * @param z
+	 * @return
+	 */
+	public static float fastAtan(float z) {
+		return QRTR_PI * z + 0.273f * z * (1 - Math.abs(z));
+	}
+
+	/**
+	 * atan2 Approximation. Maximum absolute error of 0.0038 rad (0.22º)
+	 * Source: https://www.dsprelated.com/showarticle/1052.php
+	 * @param y
+	 * @param x
+	 * @return
+	 * @see #fastAtan(float)
+	 */
+	public static float fastAtan2(float y, float x) {
+		if (x != 0.0f) {
+			if (Math.abs(x) > Math.abs(y)) {
+				final float z = y / x;
+				if (x > 0.0) {
+					// atan2(y,x) = atan(y/x) if x > 0
+					return fastAtan(z);
+				} else if (y >= 0.0) {
+					// atan2(y,x) = atan(y/x) + PI if x < 0, y >= 0
+					return fastAtan(z) + PI;
+				} else {
+					// atan2(y,x) = atan(y/x) - PI if x < 0, y < 0
+					return fastAtan(z) - PI;
+				}
+			} else // Use property atan(y/x) = PI/2 - atan(x/y) if |y/x| > 1.
+			{
+				final float z = x / y;
+				if (y > 0.0) {
+					// atan2(y,x) = PI/2 - atan(x/y) if |y/x| > 1, y > 0
+					return -fastAtan(z) + HALF_PI;
+				} else {
+					// atan2(y,x) = -PI/2 - atan(x/y) if |y/x| > 1, y < 0
+					return -fastAtan(z) - HALF_PI;
+				}
+			}
+		} else {
+			if (y > 0.0f) // x = 0, y > 0
+			{
+				return HALF_PI;
+			} else if (y < 0.0f) // x = 0, y < 0
+			{
+				return -HALF_PI;
+			}
+		}
+		return 0.0f; // x,y = 0. Could return NaN instead.
 	}
 
 	/**
