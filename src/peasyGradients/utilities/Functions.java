@@ -3,7 +3,8 @@ package peasyGradients.utilities;
 import java.util.Random;
 
 import net.jafama.FastMath;
-
+import peasyGradients.utilities.fastLog.DFastLog;
+import peasyGradients.utilities.fastLog.FastLog;
 import processing.core.PApplet;
 import processing.core.PConstants;
 import processing.core.PVector;
@@ -17,6 +18,7 @@ import processing.core.PVector;
  */
 public final class Functions {
 	
+	private static final FastLog fastLog = new DFastLog(12);
 	private static final float PI = (float) Math.PI;
 	private static final float HALF_PI = (float) (0.5f * Math.PI);
 	private static final float QRTR_PI = (float) (0.25f * Math.PI);
@@ -341,19 +343,58 @@ public final class Functions {
 	public static float randomFloat() {
 		return random.nextFloat();
 	}
-
+	
 	/**
-	 * Very fast, but with appreciable inaccuracy.
-	 * https://martin.ankerl.com/2007/10/04/optimized-pow-approximation-for-java-and-c-c/
+	 * Very fast and fairly accurate (for its speed).
+	 * @param f1 base
+	 * @param f2 exponent
+	 * @return approximate value
+	 */
+	public static double veryFastPow(double f1, double f2) {
+		double rv, ln, am1;
+
+		ln = fastLog.log(f1);
+		am1 = f2 - 1.0;
+		rv = f1 * ln * am1;
+
+		ln *= ln;
+		am1 *= am1;
+
+		rv += .5 * f1 * ln * am1;
+
+		rv += f1;
+
+		return rv;
+	}
+	
+	/**
+	 * pow approximation with exponentiation by squaring. Very fast, but with
+	 * appreciable inaccuracy. https://pastebin.com/ZW95gEyr
 	 * 
 	 * @param a base
 	 * @param b exponent
 	 * @return a^b (roughly)
 	 */
-	public static double veryFastPow(final double a, final double b) {
-		return Double.longBitsToDouble(((long) (b * ((Double.doubleToRawLongBits(a) >> 32) - 1072632447) + 1072632447)) << 32);
+	public static double veryVeryFastPow(final double a, final double b) {
+		// exponentiation by squaring
+		double r = 1.0;
+		int exp = (int) b;
+		double base = a;
+		while (exp != 0) {
+			if ((exp & 1) != 0) {
+				r *= base;
+			}
+			base *= base;
+			exp >>= 1;
+		}
+
+		// use the IEEE 754 trick for the fraction of the exponent
+		final double b_faction = b - (int) b;
+		final long tmp = Double.doubleToLongBits(a);
+		final long tmp2 = (long) (b_faction * (tmp - 4606921280493453312L)) + 4606921280493453312L;
+		return r * Double.longBitsToDouble(tmp2);
 	}
-	
+		
 	/**
 	 * Polynomial approximating arctangenet on the range -1, 1.
 	 * Implementation of function in 'Efficient Approximations for the Arctangent Function' by Rajan et al.
@@ -363,7 +404,7 @@ public final class Functions {
 	 * @return
 	 */
 	public static float fastAtan(float z) {
-		return QRTR_PI * z + 0.273f * z * (1 - Math.abs(z));
+		return z * (QRTR_PI + 0.273f * (1 - Math.abs(z)));
 	}
 
 	/**
@@ -377,7 +418,7 @@ public final class Functions {
 	public static float fastAtan2(float y, float x) {
 		if (x != 0.0f) {
 			if (Math.abs(x) > Math.abs(y)) {
-				final float z = y / x;
+				float z = y / x;
 				if (x > 0.0) {
 					// atan2(y,x) = atan(y/x) if x > 0
 					return fastAtan(z);
@@ -400,17 +441,15 @@ public final class Functions {
 				}
 			}
 		} else {
-			if (y > 0.0f) // x = 0, y > 0
-			{
+			if (y > 0.0f) { // x = 0, y > 0
 				return HALF_PI;
-			} else if (y < 0.0f) // x = 0, y < 0
-			{
+			} else if (y < 0.0f) { // x = 0, y < 0
 				return -HALF_PI;
 			}
 		}
 		return 0.0f; // x,y = 0. Could return NaN instead.
 	}
-
+	
 	/**
 	 * Finds the two points of intersection between a rectange and a line, which
 	 * given by a point inside the rectangle and an angle.

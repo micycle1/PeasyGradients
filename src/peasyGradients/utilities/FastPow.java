@@ -1,9 +1,12 @@
 package peasyGradients.utilities;
 
 import net.jafama.FastMath;
+import peasyGradients.utilities.fastLog.DFastLog;
+import peasyGradients.utilities.fastLog.FastLog;
+import peasyGradients.utilities.fastLog.TurboLog;
 
 /**
- * Java implementation of' Fast pow() With Adjustable Accuracy' by Harrison
+ * Java implementation of 'Fast pow() With Adjustable Accuracy' by Harrison
  * Ainsworth from
  * http://www.hxa7241.org/articles/content/fast-pow-adjustable_hxa7241_2007.html
  * <p>
@@ -24,7 +27,9 @@ import net.jafama.FastMath;
 public final class FastPow {
 
 	private static final float _2p23 = 8388608.0f;
-	private static final float ln2 = (float) Math.log(2);
+	private static final float _2p23b = (127.0f * _2p23);
+	private static final float ln2_INV = (float) (1 / Math.log(2));
+	private static FastLog fastLog;
 
 	private static int[] table;
 	private static int precision;
@@ -48,6 +53,10 @@ public final class FastPow {
 
 			zeroToOne += 1.0f / (float) (1 << precision);
 		}
+
+		fastLog = new DFastLog(precision);
+//		fastLog = new TurboLog(precision);
+
 	}
 
 	/**
@@ -58,7 +67,7 @@ public final class FastPow {
 	 * @return
 	 * @see #fastPow(double, double)
 	 */
-	public static float fastPow(final float baseRepresentation, final float exponent) {
+	public static float fastPowConstantBase(final float baseRepresentation, final float exponent) {
 		final int i = (int) ((exponent * (_2p23 * baseRepresentation)) + (127.0f * _2p23));
 
 		/* replace mantissa with lookup */
@@ -68,14 +77,14 @@ public final class FastPow {
 		return Float.intBitsToFloat(it); // Calls a JNI binding
 	}
 
-	/**
-	 * Calcuate representation of the given radix for use in {@link #fastPow(float, float)}.
-	 * @param radix
-	 * @return
-	 * @see #fastPow(float, float)
-	 */
-	public static float getBaseRepresentation(float radix) {
-		return (float) FastMath.log(radix) / ln2;
+	public static float fastPow(final float base, final float exponent) {
+		final int i = (int) ((exponent * (_2p23 * fastLog.fastLog2(base))) + _2p23b);
+
+		/* replace mantissa with lookup */
+		final int it = (i & 0xFF800000) | table[(i & 0x7FFFFF) >> (23 - precision)];
+
+		/* convert bits to float */
+		return Float.intBitsToFloat(it); // Calls a JNI binding
 	}
 
 	/**
@@ -88,7 +97,7 @@ public final class FastPow {
 	 */
 	public static float fastPow(final double base, final double exponent) {
 
-		final int i = (int) ((exponent * (_2p23 * (FastMath.logQuick(base) / ln2))) + (127.0f * _2p23));
+		final int i = (int) (exponent * (_2p23 * fastLog.fastLog2(base)) + _2p23b);
 
 		/* replace mantissa with lookup */
 		final int it = (i & 0xFF800000) | table[(i & 0x7FFFFF) >> (23 - precision)];
@@ -98,11 +107,15 @@ public final class FastPow {
 	}
 
 	/**
-	 * @deprecated Seems about as fast as Jafama.FastMath.logQuick() but less
-	 *             accurate
+	 * Calcuate representation of the given radix for use in
+	 * {@link #fastPow(float, float)}.
+	 * 
+	 * @param radix
+	 * @return
+	 * @see #fastPow(float, float)
 	 */
-	private static double log(double x) {
-		return 6 * (x - 1) / (x + 1 + 4 * (Math.sqrt(x)));
+	public static float getBaseRepresentation(float radix) {
+		return (float) FastMath.log(radix) * ln2_INV;
 	}
 
 }
