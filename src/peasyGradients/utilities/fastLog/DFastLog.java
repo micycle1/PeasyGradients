@@ -115,7 +115,6 @@ public class DFastLog extends FastLog {
 	@Override
 	public float log2(double x) {
 		final long bits = Double.doubleToRawLongBits(x);
-
 		// Note the documentation from Double.longBitsToDouble(int):
 		// int s = ((bits >> 63) == 0) ? 1 : -1;
 		// int e = (int)((bits >>> 52) & 0x7ffL);

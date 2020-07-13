@@ -11,7 +11,7 @@ package peasyGradients.utilities;
 public enum Interpolation {
 
 	/**
-	 * No transformation, linear gradient
+	 * No transformation; completely linear
 	 */
 	LINEAR,
 	/**
@@ -71,7 +71,7 @@ public enum Interpolation {
 	 * 
 	 * Great for triggering behaviours or making envelopes for music or animation,
 	 * and for anything that grows fast and then slowly decays. Use k to control the
-	 * stretching of the function. Btw, its maximum, which is 1, happens at exactly
+	 * stretching of the function. Its maximum, which is 1, happens at exactly
 	 * x = 1/k.
 	 */
 	EXPIMPULSE;

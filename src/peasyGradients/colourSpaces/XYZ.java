@@ -1,6 +1,7 @@
 package peasyGradients.colourSpaces;
 
 import net.jafama.FastMath;
+
 import peasyGradients.utilities.FastPow;
 import peasyGradients.utilities.Functions;
 
@@ -29,17 +30,17 @@ public final class XYZ {
 		double z = rgb[2];
 
 		if (x > 0.04045) {
-			x = FastMath.pow((x + 0.055) / 1.055, 2.4);
+			x = Math.pow((x + 0.055) / 1.055, 2.4);
 		} else {
 			x /= 12.92;
 		}
 		if (y > 0.04045) {
-			y = FastMath.pow((y + 0.055) / 1.055, 2.4);
+			y = Math.pow((y + 0.055) / 1.055, 2.4);
 		} else {
 			y /= 12.92;
 		}
 		if (z > 0.04045) {
-			z = FastMath.pow((z + 0.055) / 1.055, 2.4);
+			z = Math.pow((z + 0.055) / 1.055, 2.4);
 		} else {
 			z /= 12.92;
 		}
@@ -90,7 +91,7 @@ public final class XYZ {
 	}
 
 	/**
-	 * Fast, negligible visual effect.
+	 * Fast, negligible visual effect inaccuracy.
 	 * 
 	 * @param xyz [X,Y,Z]
 	 * @return [R,G,B] where values are 0...1.0
@@ -99,9 +100,9 @@ public final class XYZ {
 
 		double r, g, b;
 
-		xyz[0] /= 100;
-		xyz[1] /= 100;
-		xyz[2] /= 100;
+		xyz[0] *= 0.01;
+		xyz[1] *= 0.01;
+		xyz[2] *= 0.01;
 
 		r = xyz[0] * 3.2406 + xyz[1] * -1.5372 + xyz[2] * -0.4986;
 		g = xyz[0] * -0.9689 + xyz[1] * 1.8758 + xyz[2] * 0.0415;
@@ -161,5 +162,4 @@ public final class XYZ {
 
 		return new double[] { r, g, b };
 	}
-
 }

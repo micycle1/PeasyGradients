@@ -3,7 +3,6 @@ package peasyGradients.utilities;
 import net.jafama.FastMath;
 import peasyGradients.utilities.fastLog.DFastLog;
 import peasyGradients.utilities.fastLog.FastLog;
-import peasyGradients.utilities.fastLog.TurboLog;
 
 /**
  * Java implementation of 'Fast pow() With Adjustable Accuracy' by Harrison
@@ -55,8 +54,6 @@ public final class FastPow {
 		}
 
 		fastLog = new DFastLog(precision);
-//		fastLog = new TurboLog(precision);
-
 	}
 
 	/**

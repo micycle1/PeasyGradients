@@ -122,15 +122,10 @@ public final class JAB {
 		LMSp[2] = iab0 - 0.096019242026319 * jab[1] - 0.811891896056039 * jab[2];
 
 		double[] LMS = new double[3];
-		LMS[0] = FastPow.fastPow(
-				(c1 - FastMath.powQuick(LMSp[0], pInverse)) / ((c3 * FastMath.powQuick(LMSp[0], pInverse)) - c2),
-				nInverse);
-		LMS[1] = FastPow.fastPow(
-				(c1 - FastMath.powQuick(LMSp[1], pInverse)) / ((c3 * FastMath.powQuick(LMSp[1], pInverse)) - c2),
-				nInverse);
-		LMS[2] = FastPow.fastPow(
-				(c1 - FastMath.powQuick(LMSp[2], pInverse)) / ((c3 * FastMath.powQuick(LMSp[2], pInverse)) - c2),
-				nInverse);
+		// nested fastpow calls require larger LUT to retain accuracy
+		LMS[0] = FastPow.fastPow((c1 - FastPow.fastPow(LMSp[0], pInverse)) / ((c3 * FastPow.fastPow(LMSp[0], pInverse)) - c2), nInverse);
+		LMS[1] = FastPow.fastPow((c1 - FastPow.fastPow(LMSp[1], pInverse)) / ((c3 * FastPow.fastPow(LMSp[1], pInverse)) - c2), nInverse);
+		LMS[2] = FastPow.fastPow((c1 - FastPow.fastPow(LMSp[2], pInverse)) / ((c3 * FastPow.fastPow(LMSp[2], pInverse)) - c2), nInverse);
 
 		double[] XYZp = new double[3];
 		XYZp[0] = 1.924226435787607 * LMS[0] - 1.004792312595365 * LMS[1] + 0.037651404030618 * LMS[2];

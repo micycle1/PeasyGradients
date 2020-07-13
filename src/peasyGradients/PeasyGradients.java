@@ -8,9 +8,6 @@ import processing.core.PShape;
 import processing.core.PVector;
 
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 import peasyGradients.gradient.Gradient;
 import peasyGradients.utilities.Functions;
 
@@ -23,7 +20,7 @@ import peasyGradients.utilities.Functions;
  * TODO interpolation mode in this class! gradient
  * Shape.applycolorgradient(gradient).applyopacitygradient(shape.applyopacity))
  * 
- * TODO conic & sweep gradietn
+ * TODO conic & sweep gradietn (roration angle)
  * (https://css-tricks.com/snippets/css/css-conic-gradient/)
  * 
  * TODO dithering/banding/rgb depth TODO parallelStream for
@@ -35,6 +32,10 @@ import peasyGradients.utilities.Functions;
  * rectPane.applyLinearGradient(gradient).applyCircularGradient(gradient1).setColorspace(HSV).get().getRaw().applyRadialGradientMask().get()
  * 
  * gradient.mask(shape).mask(opacity)
+ * 
+ * <p>
+ * Algorithms for linear/radial/conic gradient calculation are based on <a href=
+ * "https://medium.com/@behreajj/color-gradients-in-processing-v-2-0-e5c0b87cdfd2">this</a> work by Jeremy Behreandt
  * 
  * @author micycle1
  *
@@ -50,14 +51,12 @@ public final class PeasyGradients {
 	private PShape shapeMask;
 	int colorMode = PConstants.RGB;
 	private PGraphics gradientPG;
-	private ExecutorService exec;
-	private int quality = 1; // calc every pixel
+	private int quality = 0; // default: calc every pixel
 
 	private boolean PGPrimed = false;
 
 	public PeasyGradients(PApplet p) {
 		this.p = p;
-		exec = Executors.newFixedThreadPool(threads);
 	}
 
 	/**
@@ -96,6 +95,21 @@ public final class PeasyGradients {
 	public int[] getRaw() {
 		return null; // TODO
 	}
+	
+	public PImage linearGradient(Gradient gradient, float angle) {
+		
+		PVector centerPoint = new PVector(gradientPG.width / 2, gradientPG.height / 2);
+		// get edge-line intersection points
+		PVector[] o = Functions.lineRectIntersection(gradientPG.width, gradientPG.height, centerPoint, angle);
+		return linearGradient(gradient, centerPoint, o[0], o[1], angle);
+	}
+	
+	public PImage linearGradient(Gradient gradient, PVector centerPoint, float angle) {
+		
+		// get edge-line intersection points
+		PVector[] o = Functions.lineRectIntersection(gradientPG.width, gradientPG.height, centerPoint, angle);
+		return linearGradient(gradient, centerPoint, o[0], o[1], angle);
+	}
 
 	/**
 	 * 
@@ -107,8 +121,21 @@ public final class PeasyGradients {
 	 *                    colours will be exactly on edge); <1: colours will be
 	 *                    sqashed; >1 colours spread out (outermost colours will
 	 *                    leave the view).
-	 * @return
+	 */
+	public PImage linearGradient(Gradient gradient, PVector centerPoint, float angle, float length) {
+
+		// get edge-line intersection points
+		PVector[] o = Functions.lineRectIntersection(gradientPG.width, gradientPG.height, centerPoint, angle);
+		o[0].lerp(centerPoint, 1 - length); // mutate length
+		o[1].lerp(centerPoint, 1 - length); // mutate length
+		return linearGradient(gradient, centerPoint, o[0], o[1], angle);
+	}
+	
+	/**
+	 * User defined control points. try to make on a line.
 	 * 
+	 * 	 * It’s called “linear” because the colors flow from left-to-right,
+	 * top-to-bottom, or at any angle you chose in a single direction.
 	 * 
 	 *         Preset: Several predefined configurations are provided in this menu
 	 *         for your use. Start Point: Use these controls to define the location
@@ -120,29 +147,51 @@ public final class PeasyGradients {
 	 *         into the gradient areas between colors, which can help to improve
 	 *         naturalness. Blend: Select the blend mode used to combine the
 	 *         gradient with the contents of the layer to which it is applied.
+	 *         
+	 * @param gradient
+	 * @param centerPoint
+	 * @param controlPoint1
+	 * @param controlPoint2
+	 * @param angle
+	 * @return
 	 */
-	public PImage linearGradient(Gradient gradient, PVector centerPoint, float angle, float length) {
-
+	public PImage linearGradient(Gradient gradient, PVector centerPoint, PVector controlPoint1, PVector controlPoint2, float angle) {
 		if (!PGPrimed) {
 			System.err.println("First use setCanvas() to create a plane to render into");
 			return null;
 		}
 
-		// get edge-line intersection points
-		PVector[] o = Functions.lineRectIntersection(gradientPG.width, gradientPG.height, centerPoint, angle);
-		o[0].lerp(centerPoint, 1 - length); // mutate length
-		o[1].lerp(centerPoint, 1 - length); // mutate length
-
 		gradient.prime(); // prime curr color stop
 
 		gradientPG.beginDraw();
 		gradientPG.loadPixels();
+		
+		/**
+		 * Pre-compute vals for linearprojection
+		 */
+		float odX = controlPoint2.x - controlPoint1.x; // Rise and run of line.
+		float odY = controlPoint2.y - controlPoint1.y; // Rise and run of line.
+		float odSqInverse = 1 / (odX * odX + odY * odY); // Distance-squared of line.
+		float v1 = -controlPoint1.x * odX;
+		float v2 = -controlPoint1.y * odY;
+		float opXod = v1 + v2;
 
 		int recentPixel = 0;
+		float step;
+		
+//		if (quality == 3) {
+//			for (int i = 1; i < gradientPG.pixels.length; i+=2) {
+//				step = Functions.linearProjectQuick(odX, odY, odSqInverse, opXod, gradientPG.width%i, Math.floorDiv(i, gradientPG.width));
+//				recentPixel = gradient.evalRGB(step);
+//				gradientPG.pixels[i] = recentPixel;
+//				gradientPG.pixels[i-1] = recentPixel;
+//			}
+//		}
+		
 		for (int i = 0, y = 0, x; y < gradientPG.height; ++y) {
 			for (x = 0; x < gradientPG.width; ++x, ++i) {
 				if ((i & quality) == 0) { // faster modulo
-					float step = Functions.linearProject(o[0].x, o[0].y, o[1].x, o[1].y, x, y);
+					step = Functions.linearProjectQuick(odX, odY, odSqInverse, opXod, x, y);
 					recentPixel = gradient.evalRGB(step);
 				}
 				gradientPG.pixels[i] = recentPixel;
@@ -153,9 +202,9 @@ public final class PeasyGradients {
 		if (debug) {
 			gradientPG.ellipseMode(PConstants.CENTER);
 			gradientPG.fill(250);
-			gradientPG.ellipse(o[0].x, o[0].y, 50, 50);
+			gradientPG.ellipse(controlPoint1.x, controlPoint1.y, 50, 50);
 			gradientPG.fill(0);
-			gradientPG.ellipse(o[1].x, o[1].y, 50, 50);
+			gradientPG.ellipse(controlPoint2.x, controlPoint2.y, 50, 50);
 			gradientPG.ellipse(centerPoint.x, centerPoint.y, 10, 10);
 		}
 
@@ -167,6 +216,15 @@ public final class PeasyGradients {
 		return gradientPG.get();
 	}
 
+	/**
+	 * A radial gradient differs from a linear gradient in that it starts at a
+	 * single point and emanates outward.
+	 * 
+	 * @param gradient
+	 * @param midPoint
+	 * @param zoom
+	 * @return
+	 */
 	public PImage radialGradient(Gradient gradient, PVector midPoint, float zoom) {
 
 		float hypotSq = (gradientPG.width * gradientPG.width) + (gradientPG.height * gradientPG.height);
@@ -200,6 +258,24 @@ public final class PeasyGradients {
 		return gradientPG.get();
 	}
 
+	/**
+	 * A conic gradient is similar to a radial gradient. Both are circular and use
+	 * the center of the element as the source point for color stops. However, where
+	 * the color stops of a radial gradient emerge from the center of the circle, a
+	 * conic gradient places them around the circle.
+	 * 
+	 * <p>
+	 * They’re called “conic” because they tend to look like the shape of a cone
+	 * that is being viewed from above. Well, at least when there is a distinct
+	 * angle provided and the contrast between the color values is great enough to
+	 * tell a difference.
+	 * 
+	 * @param gradient
+	 * @param midPoint
+	 * @param angle
+	 * @param zoom
+	 * @return
+	 */
 	public PImage conicGradient(Gradient gradient, PVector midPoint, float angle, float zoom) {
 		
 		float rise, run;
@@ -274,9 +350,11 @@ public final class PeasyGradients {
 	 * @param quality
 	 */
 	public void setQuality(int quality) {
-		this.quality = (quality > 5) ? 5 : (quality < 1 ? 1 : quality); // clamp to 1...5
-		quality = 1 << (5 - quality); // 2^(5-quality)
+		final int max = 5;
+		quality = (quality > max) ? max : (quality < 1 ? 1 : quality); // clamp to 1...max
+		quality = 1 << (quality-1); // 2^(5-quality)
 		quality--; // subtract 1 here for the faster modulo
+		this.quality = quality;
 		// TODO calc every nth, but linear interpolate between?)
 	}
 

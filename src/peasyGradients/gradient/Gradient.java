@@ -16,6 +16,9 @@ import processing.core.PImage;
  * sine()) -- the function governing how the gradient's colour transtions (the
  * step used during interpolation).
  * 
+ * <p>
+ * Use a {@link #peasyGradients.PeasyGradients} instance to render Gradients.
+ * 
  * @author micycle1
  *
  */
@@ -35,7 +38,7 @@ public final class Gradient {
 
 	PImage cacheLastImage; // TODO, last PImage output (cache and return if args haven't changed)
 
-	public ColourSpace colourSpace = ColourSpace.RGB; // TODO
+	public ColourSpace colourSpace = ColourSpace.XYZ_FAST; // TODO
 
 //	Interpolation interpolation = Interpolation.PARABOLA;
 
@@ -107,8 +110,11 @@ public final class Gradient {
 		remove();
 	}
 
-	/*
+	/**
 	 * Set a given color stop colour
+	 * 
+	 * @param stopIndex
+	 * @param col ARGB colour integer representation
 	 */
 	public void setColorStopCol(int stopIndex, int col) {
 		if (stopIndex < colorStops.size()) {
@@ -247,6 +253,9 @@ public final class Gradient {
 			case XYZ :
 				interpolateLinear(currStop.clrXYZ, prevStop.clrXYZ, smoothStep, rsltclrD);
 				return Functions.composeclr(XYZ.xyz2rgb(rsltclrD));
+			case XYZ_FAST :
+				interpolateLinear(currStop.clrXYZ_FAST, prevStop.clrXYZ_FAST, smoothStep, rsltclrD);
+				return Functions.composeclr(XYZ_FAST.xyz2rgbVeryQuick(rsltclrD));
 			case ITP :
 				interpolateLinear(currStop.clrITP, prevStop.clrITP, smoothStep, rsltclrD);
 				return Functions.composeclr(ITP.itp2rgb(rsltclrD));

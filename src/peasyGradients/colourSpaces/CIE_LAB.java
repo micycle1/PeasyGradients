@@ -42,15 +42,15 @@ public class CIE_LAB {
 		double Z = xyz[2] / illuminantZ;
 
 		if (X > 0.008856)
-			X = FastMath.pow(X, third);
+			X = Math.pow(X, third);
 		else
 			X = (7.787 * X) + (16 / 116);
 		if (Y > 0.008856)
-			Y = FastMath.pow(Y, third);
+			Y = Math.pow(Y, third);
 		else
 			Y = (7.787 * Y) + (16 / 116);
 		if (Z > 0.008856)
-			Z = FastMath.pow(Z, third);
+			Z = Math.pow(Z, third);
 		else
 			Z = (7.787 * Z) + (16 / 116);
 

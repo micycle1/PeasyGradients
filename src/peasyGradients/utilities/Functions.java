@@ -25,15 +25,15 @@ public final class Functions {
 
 	private static final Random random = new Random();
 
-	public static void nextStepMode() {
-		stepMode = stepMode.next();
+	public static void nextInterpolationMode() {
+		interpolationMode = interpolationMode.next();
 	}
 
-	public static void prevStepMode() {
-		stepMode = stepMode.prev();
+	public static void prevInterpolationMode() {
+		interpolationMode = interpolationMode.prev();
 	}
 
-	public static Interpolation stepMode = Interpolation.IDENTITY;
+	public static Interpolation interpolationMode = Interpolation.IDENTITY;
 
 	/**
 	 * Calculate the step by passing it to the selected smoothing function. Allows
@@ -43,7 +43,7 @@ public final class Functions {
 	 * @return the new step (mapped to a
 	 */
 	public static float functStep(float step) {
-		switch (stepMode) {
+		switch (interpolationMode) {
 			case LINEAR :
 				return step;
 			case KPERLIN :
@@ -80,10 +80,10 @@ public final class Functions {
 				final double z = FastMath.PI * (5 * step - 1.0);
 				return (float) FastMath.abs((FastMath.sin(z) / z));
 			case GAIN1 :
-				final float c = (float) (0.5 * FastPow.fastPow(2.0 * ((step < 0.5) ? step : 1.0 - step), 0.3));
+				final float c = 0.5f * FastPow.fastPow(2.0f * ((step < 0.5f) ? step : 1.0f - step), 0.3f);
 				return (step < 0.5) ? c : 1.0f - c;
 			case GAIN2 :
-				final float d = (float) (0.5 * FastPow.fastPow(2.0 * ((step < 0.5) ? step : 1.0 - step), 3.3333));
+				final float d =  0.5f * FastPow.fastPow(2.0f * ((step < 0.5f) ? step : 1.0f - step), 3.3333f);
 				return (step < 0.5) ? d : 1.0f - d;
 			case EXPIMPULSE :
 				return (float) (2 * step * FastMath.exp(1.0 - (2 * step)));
@@ -179,6 +179,15 @@ public final class Functions {
 
 		// Normalize and clamp range.
 		float div = opXod / odSq;
+		return (div < 0) ? 0 : (div > 1 ? 1 : div);
+	}
+	
+	public static float linearProjectQuick(float odX, float odY, float odSqInverse, float opXod, int pointX, int pointY) {
+		// Rise and run of projection.
+		opXod += (pointX * odX) + (pointY * odY);
+
+		// Normalize and clamp range.
+		float div = opXod * odSqInverse;
 		return (div < 0) ? 0 : (div > 1 ? 1 : div);
 	}
 
@@ -406,7 +415,7 @@ public final class Functions {
 	public static float fastAtan(float z) {
 		return z * (QRTR_PI + 0.273f * (1 - Math.abs(z)));
 	}
-
+	
 	/**
 	 * atan2 Approximation. Maximum absolute error of 0.0038 rad (0.22º)
 	 * Source: https://www.dsprelated.com/showarticle/1052.php
@@ -474,7 +483,7 @@ public final class Functions {
 		output[0] = new PVector();
 		output[1] = new PVector();
 
-		float tanA = (float) Math.tan(PApplet.TWO_PI - angle); // TWO_PI - ... clockwise orientation
+		float tanA = (float) Math.tan(PApplet.TWO_PI - angle); // 'TWO_PI - ___' for clockwise orientation
 
 		// Avoid division by zero
 		if (tanA == 0) {
