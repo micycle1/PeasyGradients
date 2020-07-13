@@ -35,11 +35,9 @@ final class ColorStop implements Comparable<ColorStop> {
 	float[] clrHCG;
 	float tempclr;
 	float[] clrRYB;
-	float[] clrYUV;
 	double[] clrXYZ;
 	double[] clrXYZ_FAST;
 	double[] clrJAB;
-	double[] clrYCoCg;
 	double[] clrITP;
 
 	/**
@@ -60,7 +58,6 @@ final class ColorStop implements Comparable<ColorStop> {
 		double[] clrRGBDouble = Functions.decomposeclrDouble(clr);
 
 		clrHSB = RGB.rgbToHsb(clr);
-		clrHCG = HCG.rgb2hcg(Functions.decomposeclrRGB(clr));
 		clrLAB = CIE_LAB.rgb2lab(clrRGBDouble);
 		clrXYZ = XYZ.rgb2xyz(clrRGBDouble);
 		clrXYZ_FAST = XYZ_FAST.rgb2xyz(clrRGBDouble);
@@ -68,9 +65,7 @@ final class ColorStop implements Comparable<ColorStop> {
 		clrHLAB = HUNTER_LAB.rgb2hlab(clrRGBDouble);
 		tempclr = TEMP.rgb2temp(Functions.decomposeclrRGB(clr));
 		clrRYB = RYB.rgb2ryb(Functions.decomposeclrRGBA(clr));
-		clrYUV = YUV.rgb2yuv(Functions.decomposeclrRGBA(clr));
 		clrJAB = JAB.rgb2jab(clrRGBDouble);
-		clrYCoCg = YCoCg.rgb2YCoCg(clrRGBDouble);
 		clrITP = ITP.rgb2itp(clrRGBDouble);
 	}
 

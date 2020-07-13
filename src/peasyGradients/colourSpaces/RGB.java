@@ -3,7 +3,8 @@ package peasyGradients.colourSpaces;
 import processing.core.PApplet;
 
 /***
- * Standard RGB (1996), not to be confused with CIERGB (1931)
+ * Standard RGB (1996), not to be confused with CIERGB (1931).
+ * Effectively the same as interpolating in the YCoCg and YCbCr spaces.
  * @author micycle1
  *
  */

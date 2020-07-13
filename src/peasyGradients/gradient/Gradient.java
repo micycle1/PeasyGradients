@@ -223,9 +223,6 @@ public final class Gradient {
 			case HUNTER_LAB_FAST :
 				interpolateLinear(currStop.clrHLAB, prevStop.clrHLAB, smoothStep, rsltclrD);
 				return Functions.composeclr(HUNTER_LAB.hlab2rgbQuick(rsltclrD));
-			case YCoCg :
-				interpolateLinear(currStop.clrYCoCg, prevStop.clrYCoCg, smoothStep, rsltclrD);
-				return Functions.composeclr(YCoCg.YCoCg2rgb(rsltclrD));
 			case LUV :
 				interpolateLinear(currStop.clrLUV, prevStop.clrLUV, smoothStep, rsltclrD);
 				return Functions.composeclr(LUV.luv2rgb(rsltclrD));
@@ -238,18 +235,12 @@ public final class Gradient {
 			case JAB_FAST :
 				interpolateLinear(currStop.clrJAB, prevStop.clrJAB, smoothStep, rsltclrD);
 				return Functions.composeclr(JAB.jab2rgbQuick(rsltclrD));
-			case HCG :
-				HCG.interpolate(currStop.clrHCG, prevStop.clrHCG, smoothStep, rsltclrF);
-				return Functions.composeclr(HCG.hcg2rgb(rsltclrF));
 			case TEMP :
 				float kelvin = TEMP.interpolate(currStop.tempclr, prevStop.tempclr, smoothStep);
 				return Functions.composeclr(TEMP.temp2rgb(kelvin));
 			case RYB :
 				interpolateLinear(currStop.clrRYB, prevStop.clrRYB, smoothStep, rsltclrF);
 				return Functions.composeclr(RYB.ryb2rgb(rsltclrF));
-			case YUV :
-				interpolateLinear(currStop.clrYUV, prevStop.clrYUV, smoothStep, rsltclrF);
-				return Functions.composeclr(YUV.yuv2rgb(rsltclrF));
 			case XYZ :
 				interpolateLinear(currStop.clrXYZ, prevStop.clrXYZ, smoothStep, rsltclrD);
 				return Functions.composeclr(XYZ.xyz2rgb(rsltclrD));

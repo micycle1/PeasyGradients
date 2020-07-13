@@ -111,6 +111,12 @@ public final class JAB {
 		return xyz;
 	}
 
+	/**
+	 * TODO
+	 * https://stackoverflow.com/questions/6475373/optimizations-for-pow-with-const-non-integer-exponent
+	 * @param jab
+	 * @return
+	 */
 	private static double[] jab2xyzQuick(double[] jab) {
 		double[] xyz = new double[3];
 
