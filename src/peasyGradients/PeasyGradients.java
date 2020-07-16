@@ -1,5 +1,7 @@
 package peasyGradients;
 
+import static processing.core.PConstants.PI;
+
 import processing.core.PApplet;
 import processing.core.PConstants;
 import processing.core.PGraphics;
@@ -8,6 +10,7 @@ import processing.core.PShape;
 import processing.core.PVector;
 
 import java.util.concurrent.Callable;
+
 import peasyGradients.gradient.Gradient;
 import peasyGradients.utilities.Functions;
 
@@ -20,13 +23,14 @@ import peasyGradients.utilities.Functions;
  * TODO interpolation mode in this class! gradient
  * Shape.applycolorgradient(gradient).applyopacitygradient(shape.applyopacity))
  * 
- * TODO conic & sweep gradietn (roration angle)
- * (https://css-tricks.com/snippets/css/css-conic-gradient/)
- * 
  * TODO dithering/banding/rgb depth TODO parallelStream for
  * iteration/calculation?
  * 
  * TODO text masking
+ * 
+ * TODO JBLAS for multiplication
+ * 
+ * TODO linear gradients: calculate lines, not pixels
  * 
  * API:
  * rectPane.applyLinearGradient(gradient).applyCircularGradient(gradient1).setColorspace(HSV).get().getRaw().applyRadialGradientMask().get()
@@ -44,6 +48,7 @@ public final class PeasyGradients {
 
 	private final static int threads = Runtime.getRuntime().availableProcessors();
 	private static final float INV_TWO_PI = 1f/PConstants.TWO_PI;
+	private static final float THREE_QRTR_PI = (float) (Math.PI*3/4);
 
 	private boolean debug;
 	private final PApplet p;
@@ -52,6 +57,7 @@ public final class PeasyGradients {
 	int colorMode = PConstants.RGB;
 	private PGraphics gradientPG;
 	private int quality = 0; // default: calc every pixel
+	int[] pixels;
 
 	private boolean PGPrimed = false;
 
@@ -73,7 +79,7 @@ public final class PeasyGradients {
 			System.err.println("Dimensions must each be greater than 0.");
 			return;
 		}
-
+		pixels = new int[width*height];
 		gradientPG = p.createGraphics(width, height);
 		PGPrimed = true;
 	}
@@ -101,14 +107,22 @@ public final class PeasyGradients {
 		PVector centerPoint = new PVector(gradientPG.width / 2, gradientPG.height / 2);
 		// get edge-line intersection points
 		PVector[] o = Functions.lineRectIntersection(gradientPG.width, gradientPG.height, centerPoint, angle);
-		return linearGradient(gradient, centerPoint, o[0], o[1], angle);
+		if (angle > PConstants.HALF_PI && angle <= PConstants.HALF_PI * 3) {
+			return linearGradient(gradient, centerPoint, o[1], o[0]);
+		} else {
+			return linearGradient(gradient, centerPoint, o[0], o[1]);
+		}
 	}
 	
 	public PImage linearGradient(Gradient gradient, PVector centerPoint, float angle) {
 		
 		// get edge-line intersection points
 		PVector[] o = Functions.lineRectIntersection(gradientPG.width, gradientPG.height, centerPoint, angle);
-		return linearGradient(gradient, centerPoint, o[0], o[1], angle);
+		if (angle > PConstants.HALF_PI && angle <= PConstants.HALF_PI * 3) {
+			return linearGradient(gradient, centerPoint, o[1], o[0]);
+		} else {
+			return linearGradient(gradient, centerPoint, o[0], o[1]);
+		}
 	}
 
 	/**
@@ -123,12 +137,15 @@ public final class PeasyGradients {
 	 *                    leave the view).
 	 */
 	public PImage linearGradient(Gradient gradient, PVector centerPoint, float angle, float length) {
-
 		// get edge-line intersection points
 		PVector[] o = Functions.lineRectIntersection(gradientPG.width, gradientPG.height, centerPoint, angle);
 		o[0].lerp(centerPoint, 1 - length); // mutate length
 		o[1].lerp(centerPoint, 1 - length); // mutate length
-		return linearGradient(gradient, centerPoint, o[0], o[1], angle);
+		if (angle > PConstants.HALF_PI && angle <= PConstants.HALF_PI * 3) {
+			return linearGradient(gradient, centerPoint, o[1], o[0]);
+		} else {
+			return linearGradient(gradient, centerPoint, o[0], o[1]);
+		}
 	}
 	
 	/**
@@ -155,7 +172,7 @@ public final class PeasyGradients {
 	 * @param angle
 	 * @return
 	 */
-	public PImage linearGradient(Gradient gradient, PVector centerPoint, PVector controlPoint1, PVector controlPoint2, float angle) {
+	public PImage linearGradient(Gradient gradient, PVector centerPoint, PVector controlPoint1, PVector controlPoint2) {
 		if (!PGPrimed) {
 			System.err.println("First use setCanvas() to create a plane to render into");
 			return null;
@@ -164,20 +181,66 @@ public final class PeasyGradients {
 		gradient.prime(); // prime curr color stop
 
 		gradientPG.beginDraw();
-		gradientPG.loadPixels();
 		
 		/**
 		 * Pre-compute vals for linearprojection
 		 */
-		float odX = controlPoint2.x - controlPoint1.x; // Rise and run of line.
-		float odY = controlPoint2.y - controlPoint1.y; // Rise and run of line.
-		float odSqInverse = 1 / (odX * odX + odY * odY); // Distance-squared of line.
-		float v1 = -controlPoint1.x * odX;
-		float v2 = -controlPoint1.y * odY;
-		float opXod = v1 + v2;
+		final float odX = controlPoint2.x - controlPoint1.x; // Rise and run of line.
+		final float odY = controlPoint2.y - controlPoint1.y; // Rise and run of line.
+		final float odSqInverse = 1 / (odX * odX + odY * odY); // Distance-squared of line.
+		float opXod = -controlPoint1.x * odX + -controlPoint1.y * odY;
 
 		int recentPixel = 0;
-		float step;
+		
+		int xOff = 0;
+		float step = 0;
+		
+		/**
+		 * Usually, we'd call Functions.linearProject() to calculate step, but the
+		 * function is inlined here to optimise speed.
+		 */
+		
+		if (quality >= 3) {
+			float angle = Functions.angleBetween(controlPoint1, centerPoint);
+			if (angle % (PI) < PI / 4 || angle % (PI) > THREE_QRTR_PI) { // gradient more horizontal
+				for (int i = 0, x = 0, y; x < gradientPG.width; ++x) {
+					opXod += odY;
+					xOff = 0;
+					for (y = 0; y < gradientPG.height; ++y, ++i) {
+						if ((i & quality) == 0) { // & instead of % is faster
+							step = (opXod + xOff) * odSqInverse; // get position of point on 1D gradient and normalise
+							recentPixel = gradient.evalRGB((step < 0) ? 0 : (step > 1 ? 1 : step)); // get colour of that point
+							xOff += odX * (quality + 1);
+						}
+						pixels[i] = recentPixel;
+					}
+				}
+			} else { // gradient more vertical
+				for (int i = 0, y = 0, x; y < gradientPG.height; ++y) { 
+					opXod += odY;
+					xOff = 0;
+					for (x = 0; x < gradientPG.width; ++x, ++i) {
+						if ((i & quality) == 0) { // & instead of % is faster
+							step = (opXod + xOff) * odSqInverse; // get position of point on 1D gradient and normalise
+							recentPixel = gradient.evalRGB((step < 0) ? 0 : (step > 1 ? 1 : step)); // get colour of that point
+							xOff += odX * (quality + 1);
+						}
+						pixels[i] = recentPixel;
+					}
+				}
+			} 
+		} else { // end quality >=
+			for (int i = 0, y = 0, x; y < gradientPG.height; ++y) { // loop for quality = 0 (every pixel)
+				opXod += odY;
+				xOff = 0;
+				for (x = 0; x < gradientPG.width; ++x, ++i) {
+					step = (opXod + xOff) * odSqInverse; // get position of point on 1D gradient and normalise
+					pixels[i] = gradient.evalRGB((step < 0) ? 0 : (step > 1 ? 1 : step)); // get colour of that point
+					xOff += odX * (quality + 1);
+				}
+			}
+		}
+		
 		
 //		if (quality == 3) {
 //			for (int i = 1; i < gradientPG.pixels.length; i+=2) {
@@ -188,15 +251,22 @@ public final class PeasyGradients {
 //			}
 //		}
 		
-		for (int i = 0, y = 0, x; y < gradientPG.height; ++y) {
-			for (x = 0; x < gradientPG.width; ++x, ++i) {
-				if ((i & quality) == 0) { // faster modulo
-					step = Functions.linearProjectQuick(odX, odY, odSqInverse, opXod, x, y);
-					recentPixel = gradient.evalRGB(step);
-				}
-				gradientPG.pixels[i] = recentPixel;
-			}
-		}
+//		switch (quality) {
+//			case 2 :
+////				recentPixel = 0;
+//				for (int y = 0, x; y < gradientPG.height; y++) {
+//					for (x = 1; x < gradientPG.width; x+=2) {
+//						
+//					}
+//				}
+//				break;
+//
+//			default :
+//				break;
+//		}
+		
+
+		gradientPG.pixels = pixels;
 		gradientPG.updatePixels();
 
 		if (debug) {
@@ -236,25 +306,29 @@ public final class PeasyGradients {
 		gradientPG.beginDraw();
 		gradientPG.loadPixels();
 
+		int recentPixel = 0;
 		for (int i = 0, y = 0, x; y < gradientPG.height; ++y) {
 			rise = midPoint.y - y;
 			rise *= rise;
 
 			for (x = 0; x < gradientPG.width; ++x, ++i) {
-				run = midPoint.x - x;
-				run *= run;
+				if ((i & quality) == 0) { // faster modulo
+					run = midPoint.x - x;
+					run *= run;
 
-				distSq = run + rise;
-				dist = zoom*4.0f * distSq / hypotSq;
-				if (dist > 1) {
-					dist = 1; // constrain
+					distSq = run + rise;
+					dist = zoom * 4.0f * distSq / hypotSq;
+					if (dist > 1) {
+						dist = 1; // constrain
+					}
+					recentPixel = gradient.evalRGB(dist); // get colour of that point
 				}
-				gradientPG.pixels[i] = gradient.evalRGB(dist);
+				gradientPG.pixels[i] = recentPixel;
 			}
 		}
 		gradientPG.updatePixels();
 		gradientPG.endDraw();
-		
+
 		return gradientPG.get();
 	}
 
@@ -270,42 +344,73 @@ public final class PeasyGradients {
 	 * angle provided and the contrast between the color values is great enough to
 	 * tell a difference.
 	 * 
+	 * <p>
+	 * This method creates a hard stop where the last and first colors bump right up
+	 * to one another.
+	 * 
 	 * @param gradient
 	 * @param midPoint
 	 * @param angle
 	 * @param zoom
 	 * @return
+	 * @see #conicGradientSmooth(Gradient, PVector, float, float)
 	 */
 	public PImage conicGradient(Gradient gradient, PVector midPoint, float angle, float zoom) {
-		
-		float rise, run;
-		
+				
 		gradientPG.beginDraw();
 		gradientPG.loadPixels();
 		
 		gradient.prime();
 		
-		double t;
+		float rise, run;
+		double t = 0;
+		int recentPixel = 0;
+		
 		for (int i = 0, y = 0, x; y < gradientPG.height; ++y) {
 			rise = midPoint.y - y;
 			for (x = 0; x < gradientPG.width; ++x, ++i) {
-				run = midPoint.x - x;
-				
-				t = Functions.fastAtan2(rise, run) - angle;
+				if ((i & quality) == 0) { // faster modulo
+					run = midPoint.x - x;
 
-				// Ensure a positive value if angle is negative.
-				t = Functions.floorMod(t, PConstants.TWO_PI);
+					t = Functions.fastAtan2(rise, run) - angle;
 
-				// Divide by TWO_PI to get value in range 0...1
-				t *= INV_TWO_PI;
+					// Ensure a positive value if angle is negative.
+					t = Functions.floorMod(t, PConstants.TWO_PI);
 
-				gradientPG.pixels[i] = gradient.evalRGB((float) t);
+					// Divide by TWO_PI to get value in range 0...1
+					t *= INV_TWO_PI;
+					recentPixel = gradient.evalRGB((float) t);
+				}
+				gradientPG.pixels[i] = recentPixel;
 			}
 		}
 		gradientPG.updatePixels();
 		gradientPG.endDraw();
 
 		return gradientPG.get();
+	}
+	
+	/**
+	 * Renders a conic gradient with a smooth transition between the first and last
+	 * colours (unlike {@link #conicGradient(Gradient, PVector, float, float) this}
+	 * where there is a hard transition). For this reason, this method generally
+	 * gives nice looking (more gradient-like) results.
+	 * 
+	 * TODO offset angle: https://css-tricks.com/snippets/css/css-conic-gradient/
+	 * 
+	 * @param gradient
+	 * @param midPoint
+	 * @param angle
+	 * @param zoom
+	 * @param offset
+	 * @return
+	 * @see #conicGradient(Gradient, PVector, float, float)
+	 */
+	public PImage conicGradientSmooth(Gradient gradient, PVector midPoint, float angle, float zoom) {
+		gradient.push(gradient.colourAt(0)); // add copy of first colour to end
+		PImage out = conicGradient(gradient, midPoint, angle, zoom);
+		gradient.removeLast(); // remove colour copy
+		return out;
 	}
 
 	public void lineGradient() {
@@ -350,7 +455,7 @@ public final class PeasyGradients {
 	 * @param quality
 	 */
 	public void setQuality(int quality) {
-		final int max = 5;
+		final int max = 10;
 		quality = (quality > max) ? max : (quality < 1 ? 1 : quality); // clamp to 1...max
 		quality = 1 << (quality-1); // 2^(5-quality)
 		quality--; // subtract 1 here for the faster modulo

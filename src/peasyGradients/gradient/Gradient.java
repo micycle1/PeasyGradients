@@ -3,6 +3,7 @@ package peasyGradients.gradient;
 import static peasyGradients.utilities.Functions.interpolateLinear;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import peasyGradients.colourSpaces.*;
 import peasyGradients.utilities.Functions;
@@ -30,7 +31,6 @@ public final class Gradient {
 	private double[] rsltclrD = new double[4];
 
 	public float animate = 0; // animation colour offset
-	private int numStops = 0;
 
 	private int lastCurrStopIndex;
 	private ColorStop currStop, prevStop;
@@ -41,44 +41,6 @@ public final class Gradient {
 	public ColourSpace colourSpace = ColourSpace.XYZ_FAST; // TODO
 
 //	Interpolation interpolation = Interpolation.PARABOLA;
-
-	public void nextColSpace() {
-		colourSpace = colourSpace.next();
-	}
-
-	public void prevColSpace() {
-		colourSpace = colourSpace.prev();
-	}
-
-	/**
-	 * Return randomised gradient (random colors and stop positions).
-	 * 
-	 * @param numColors
-	 * @return
-	 */
-	public static Gradient randomGradientWithStops(int numColors) {
-		ColorStop[] temp = new ColorStop[numColors];
-		float percent;
-		for (int i = 0; i < numColors; ++i) {
-			percent = i == 0 ? 0 : i == numColors - 1 ? 1 : (float) Math.random();
-			temp[i] = new ColorStop(Functions.composeclr((float) Math.random(), (float) Math.random(), (float) Math.random(), 1), percent);
-		}
-		return new Gradient(temp);
-	}
-
-	/**
-	 * Return randomised gradient (random colors; equidistant stops).
-	 * 
-	 * @param numColors
-	 * @return
-	 */
-	public static Gradient randomGradient(int numColors) {
-		int[] temp = new int[numColors];
-		for (int i = 0; i < numColors; ++i) {
-			temp[i] = Functions.composeclr((float) Math.random(), (float) Math.random(), (float) Math.random(), 1);
-		}
-		return new Gradient(temp);
-	}
 
 	public Gradient() {
 		this(0xff000000, 0xffffffff); // default: black-->white
@@ -91,7 +53,6 @@ public final class Gradient {
 		for (int i = 0; i < sz; i++) {
 			colorStops.add(new ColorStop(colors[i], i / szf));
 		}
-		numStops = sz;
 	}
 
 	public Gradient(ColorStop... colorStops) {
@@ -101,7 +62,6 @@ public final class Gradient {
 		}
 		java.util.Collections.sort(this.colorStops);
 		remove();
-		numStops += sz;
 	}
 
 	public Gradient(ArrayList<ColorStop> colorStops) {
@@ -114,7 +74,7 @@ public final class Gradient {
 	 * Set a given color stop colour
 	 * 
 	 * @param stopIndex
-	 * @param col ARGB colour integer representation
+	 * @param col       ARGB colour integer representation
 	 */
 	public void setColorStopCol(int stopIndex, int col) {
 		if (stopIndex < colorStops.size()) {
@@ -131,35 +91,86 @@ public final class Gradient {
 		animate = amt;
 		for (ColorStop colorStop : colorStops) {
 			float newAmt = colorStop.originalPercent + amt;
-			newAmt %= 1;
+			if (newAmt != 1) {
+				newAmt %= 1;
+			}
 			colorStop.percent = newAmt;
+			System.out.println(newAmt);
+			// TODO sort now?
 //			float x_min = 0;
 //			float x_max = 1;
 //
 //			colorStop.percent = (((newAmt - x_min) % (x_max - x_min)) + (x_max - x_min)) % (x_max - x_min) + x_min;
 		}
-//		java.util.Collections.sort(colorStops);
+		java.util.Collections.sort(colorStops);
 	}
 
+	/**
+	 * Push a new colorstop to the end (and shuffle the rest).
+	 * 
+	 * @param colour
+	 * @return
+	 * @see #removeLast()
+	 */
+	public void push(int colour) {
+		for (ColorStop colorStop : colorStops) {
+			colorStop.percent *= ((colorStops.size() - 1) / (float) colorStops.size()); // scale down existing stop positions
+		}
+		add(1, colour);
+	}
+
+	/**
+	 * Remove last colour stop from the gradient and scale the rest to fill
+	 * gradient.
+	 * 
+	 * @see #push(int)
+	 */
+	public void removeLast() {
+		colorStops.remove(colorStops.size() - 1);
+		// scale up remaining stop positions
+		for (ColorStop colorStop : colorStops) {
+			colorStop.percent *= ((colorStops.size()) / (float) (colorStops.size() - 1f)); // scale down existing stop positions
+		}
+	}
+
+	/**
+	 * Returns colour of the colourstop at a given index.
+	 * 
+	 * @param colorStopIndex
+	 * @return
+	 */
+	public int colourAt(int colorStopIndex) {
+		return colorStops.get(colorStopIndex).clr;
+	}
+
+	public int lastColor() {
+		return colorStops.get(colorStops.size() - 1).clr;
+	}
+
+	/**
+	 * Add a specific colourstop at a given percentage
+	 * 
+	 * @param percent 0...1
+	 * @param clr
+	 */
 	void add(final float percent, final int clr) {
 		add(new ColorStop(clr, percent));
 	}
 
 	void add(final ColorStop colorStop) {
-		for (int sz = colorStops.size(), i = sz - 1; i > 0; --i) {
-			ColorStop current = colorStops.get(i);
-			if (ColorStop.approxPercent(colorStop, ColorStop.TOLERANCE)) {
-				System.out.println(current.toString() + " will be replaced by " + colorStop.toString()); // TODO
-				colorStops.remove(current);
-			}
-		}
+//		for (int sz = colorStops.size(), i = sz - 1; i > 0; --i) {
+//			ColorStop current = colorStops.get(i);
+//			if (ColorStop.approxPercent(colorStop, ColorStop.TOLERANCE)) {
+//				System.out.println(current.toString() + " will be replaced by " + colorStop.toString()); // TODO
+//				colorStops.remove(current);
+//			}
+//		}
 		colorStops.add(colorStop);
 		java.util.Collections.sort(colorStops); // sort colorstops by value
-		numStops++;
 	}
 
 	public void prime() {
-		lastCurrStopIndex = 1;
+		lastCurrStopIndex = 0;
 		currStop = colorStops.get(lastCurrStopIndex);
 		prevStop = colorStops.get(0);
 	}
@@ -189,6 +200,7 @@ public final class Gradient {
 		} else if (step < prevStop.percent) {
 			do {
 				prevStop = colorStops.get(--lastCurrStopIndex - 1); // decrement
+//				prevStop = colorStops.get(Math.floorMod(--lastCurrStopIndex - 1, colorStops.size())); // decrement
 			} while (step < prevStop.percent); // sometimes step might jump back more than 1 colour
 
 			currStop = colorStops.get(lastCurrStopIndex);
@@ -236,7 +248,7 @@ public final class Gradient {
 				interpolateLinear(currStop.clrJAB, prevStop.clrJAB, smoothStep, rsltclrD);
 				return Functions.composeclr(JAB.jab2rgbQuick(rsltclrD));
 			case TEMP :
-				float kelvin = TEMP.interpolate(currStop.tempclr, prevStop.tempclr, smoothStep);
+				float kelvin = TEMP.interpolate(currStop.clrTEMP, prevStop.clrTEMP, smoothStep);
 				return Functions.composeclr(TEMP.temp2rgb(kelvin));
 			case RYB :
 				interpolateLinear(currStop.clrRYB, prevStop.clrRYB, smoothStep, rsltclrF);
@@ -254,7 +266,7 @@ public final class Gradient {
 				interpolateLinear(currStop.clrITP, prevStop.clrITP, smoothStep, rsltclrD);
 				return Functions.composeclr(ITP.itp2rgbQuick(rsltclrD));
 			default :
-				return colorStops.get(numStops - 1).clr;
+				return colorStops.get(colorStops.size() - 1).clr;
 		}
 	}
 
@@ -266,6 +278,14 @@ public final class Gradient {
 	 */
 	int evalRaw() {
 		return 0;
+	}
+
+	public void nextColSpace() {
+		colourSpace = colourSpace.next();
+	}
+
+	public void prevColSpace() {
+		colourSpace = colourSpace.prev();
 	}
 
 	boolean remove(ColorStop colorStop) {
@@ -287,8 +307,53 @@ public final class Gradient {
 				removed++;
 			}
 		}
-		numStops--;
 		return removed;
+	}
+
+	/**
+	 * Return randomised gradient (random colors and stop positions).
+	 * 
+	 * @param numColors
+	 * @return
+	 */
+	public static Gradient randomGradientWithStops(int numColors) {
+		ColorStop[] temp = new ColorStop[numColors];
+		float percent;
+		for (int i = 0; i < numColors; ++i) {
+			percent = i == 0 ? 0 : i == numColors - 1 ? 1 : (float) Math.random();
+			temp[i] = new ColorStop(Functions.composeclr((float) Math.random(), (float) Math.random(), (float) Math.random(), 1), percent);
+		}
+		return new Gradient(temp);
+	}
+
+	/**
+	 * Return randomised gradient (random colors; equidistant stops). TODO use
+	 * palette instead?
+	 * 
+	 * @param numColors
+	 * @return
+	 */
+	public static Gradient randomGradient(int numColors) {
+		int[] temp = new int[numColors];
+		for (int i = 0; i < numColors; ++i) {
+			temp[i] = Functions.composeclr((float) Math.random(), (float) Math.random(), (float) Math.random(), 1);
+		}
+		return new Gradient(temp);
+	}
+
+	/**
+	 * Returns colorStop info for the Gradient.
+	 */
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("Colour Stops:\n");
+		sb.append(String.format("%-10s%-25s%-15s%-20s\n", "Percent", "RGB", "clrInteger", "clrXYZ"));
+		for (ColorStop colorStop : colorStops) {
+			sb.append(String.format("%-10s%-25s%-15s%-20s\n", colorStop.originalPercent,
+					Arrays.toString(Functions.decomposeclrRGB(colorStop.clr)), colorStop.clr, Arrays.toString(colorStop.clrXYZ)));
+		}
+		return sb.toString();
 	}
 
 }

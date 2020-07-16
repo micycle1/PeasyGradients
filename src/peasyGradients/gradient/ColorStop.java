@@ -18,23 +18,19 @@ final class ColorStop implements Comparable<ColorStop> {
 
 	static final float TOLERANCE = 0.05f;
 
-	static boolean approxPercent(ColorStop cs, float tolerance) {
-		return Math.abs(cs.percent - cs.percent) < tolerance;
-	}
-
 	float originalPercent; // percent at which this stop occurs (0...1.0)
-	float percent; // percent, taking into account animation offset
+	float percent; // percent, taking into account animation offset, etc.
 
 	int clr; // colour int
 
 	float[] clrRGB; // decomposed RGB colour
 	float[] clrHSB; // decomposed HSB colour
+	float[] clrHCG;
+	float[] clrRYB;
+	float clrTEMP;
 	double[] clrLAB; // decomposed LAB colour
 	double[] clrLUV;
 	double[] clrHLAB;
-	float[] clrHCG;
-	float tempclr;
-	float[] clrRYB;
 	double[] clrXYZ;
 	double[] clrXYZ_FAST;
 	double[] clrJAB;
@@ -43,7 +39,7 @@ final class ColorStop implements Comparable<ColorStop> {
 	/**
 	 * 
 	 * @param clr     color int (bit shifted ARGB)
-	 * @param percent
+	 * @param percent 0...1
 	 */
 	protected ColorStop(int clr, float percent) {
 		this.originalPercent = percent > 1 ? 1 : percent < 0 ? 0 : percent; // constrain 0...1
@@ -55,7 +51,7 @@ final class ColorStop implements Comparable<ColorStop> {
 		this.clr = color;
 		clrRGB = Functions.decomposeclr(clr);
 
-		double[] clrRGBDouble = Functions.decomposeclrDouble(clr);
+		final double[] clrRGBDouble = Functions.decomposeclrDouble(clr);
 
 		clrHSB = RGB.rgbToHsb(clr);
 		clrLAB = CIE_LAB.rgb2lab(clrRGBDouble);
@@ -63,14 +59,16 @@ final class ColorStop implements Comparable<ColorStop> {
 		clrXYZ_FAST = XYZ_FAST.rgb2xyz(clrRGBDouble);
 		clrLUV = LUV.rgb2luv(clrRGBDouble);
 		clrHLAB = HUNTER_LAB.rgb2hlab(clrRGBDouble);
-		tempclr = TEMP.rgb2temp(Functions.decomposeclrRGB(clr));
+		clrTEMP = TEMP.rgb2temp(Functions.decomposeclrRGB(clr));
 		clrRYB = RYB.rgb2ryb(Functions.decomposeclrRGBA(clr));
 		clrJAB = JAB.rgb2jab(clrRGBDouble);
 		clrITP = ITP.rgb2itp(clrRGBDouble);
 	}
 
-	// Mandated by the interface Comparable<ColorStop>.
-	// Permits color stops to be sorted by Collections.sort via pairwise comparison.
+	/**
+	 * Mandated by the interface Comparable<ColorStop>.
+	 * Permits color stops to be sorted by Collections.sort via pairwise comparison.
+	 */
 	public int compareTo(ColorStop cs) {
 		return percent > cs.percent ? 1 : percent < cs.percent ? -1 : 0;
 	}
@@ -78,6 +76,11 @@ final class ColorStop implements Comparable<ColorStop> {
 	@Override
 	public String toString() {
 		return Arrays.toString(Functions.composeclrTo255(Functions.decomposeclrDouble(clr)));
+	}
+	
+	static boolean approxPercent(ColorStop cs, float tolerance) {
+//		return Math.abs(cs.percent - cs.percent) < tolerance;
+		return false;
 	}
 
 }
