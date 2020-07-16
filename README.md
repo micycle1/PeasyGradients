@@ -5,6 +5,9 @@
 PeasyGradients for Processing
 A library make drawing gradients in Processing easy-peasy.
 
+## Overview
+Linear, conic, radial, quad gradients in ~10 colour spaces.
+
 ## Interpolation: Colour Spaces
 By their very nature, gradients must interpolate between colours. With PeasyGradients you can... In RGB, calculate a new colour by interpolating between each of the red, green and blue components of the gradient colours. Colours can be represented in different colour spaces (so colours comprise of different components) -- when we interpolate 
 
@@ -13,3 +16,8 @@ Easing explained: Gradient with 2 colours and we want to find colour in the midd
 
 ## PShape Masking
 Filling a PShape with a gradient
+
+## Optimisation
+PeasyGradients has been written in Java CPU code (as opposed to using OPENGL/shaders) as to not be dependent on OPENGL libraries. There have been many internal optimisations to make the library suitable for dynamic animation and interaction, rather than just static rendering (>30fps at reasonable resolutions).
+
+`setQuality(x)` can be used to halve the pixels calculated. @x=4 (meaning every 1 in 4 pixels is calculated) (roughly 4x speedup) is mostly inperceptable. x@2 certainly is. 
