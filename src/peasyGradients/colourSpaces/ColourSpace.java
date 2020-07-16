@@ -12,8 +12,8 @@ package peasyGradients.colourSpaces;
  */
 public enum ColourSpace {
 
-	RGB, HSB_SHORT, HSB_LONG, LUV, FAST_LUV, JAB, JAB_FAST, XYZ, XYZ_FAST, ITP, ITP_FAST, LAB, FAST_LAB,
-	VERY_FAST_LAB, HUNTER_LAB, HUNTER_LAB_FAST, TEMP, RYB;
+	RGB, XYZ, XYZ_FAST, LAB, FAST_LAB, VERY_FAST_LAB, ITP, ITP_FAST, HUNTER_LAB, HUNTER_LAB_FAST, LUV, FAST_LUV, JAB, JAB_FAST, RYB,
+	HSB_SHORT, HSB_LONG, TEMP;
 
 	private final static ColourSpace[] vals = values();
 

@@ -1,7 +1,5 @@
 package peasyGradients.colourSpaces;
 
-import net.jafama.FastMath;
-
 /**
  * A uniform (Opponent color scale) color space in which colors are located
  * within a threedimensional rectangular coordinate system; the three dimensions

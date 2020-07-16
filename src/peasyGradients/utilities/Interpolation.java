@@ -26,6 +26,7 @@ public enum Interpolation {
 	 * https://www.iquilezles.org/www/articles/functions/functions.htm
 	 */
 	IDENTITY,
+	SMOOTH_STEP,
 	/**
 	 * Ken Perlin’s smoother step, a simoid like function.
 	 * 
@@ -34,7 +35,7 @@ public enum Interpolation {
 	 *         sigmoid-like function (eg: [0.5 -> 0.5], [0.25 -> 0.104], [0.65
 	 *         ->0.765])
 	 */
-	KPERLIN, EXPONENTIAL, CUBIC,
+	SMOOTHER_STEP, EXPONENTIAL, CUBIC,
 	/**
 	 * Provides a reversible parabolic bouncing easing out function. From t=0 value
 	 * starts with an accelerating motion until destination reached then it bounces
@@ -47,15 +48,6 @@ public enum Interpolation {
 	 * 
 	 */
 	PARABOLA,
-	/**
-	 * Sinc curve
-	 * 
-	 * A phase shifted sinc curve can be useful if it starts at zero and ends at
-	 * zero, for some bouncing behaviors (suggested by Hubert-Jan). Give k different
-	 * integer values to tweak the amount of bounces. It peaks at 1.0, but that take
-	 * negative values, which can make it unusable in some applications.
-	 */
-	SINC,
 	/**
 	 * Remapping the unit interval into the unit interval by expanding the sides and
 	 * compressing the center, and keeping 1/2 mapped to 1/2, that can be done with

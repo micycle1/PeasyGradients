@@ -99,9 +99,9 @@ public final class ITP {
 	 * https://colour.readthedocs.io/en/develop/_modules/colour/models/rgb/transfer_functions/st_2084.html#eotf_inverse_ST2084
 	 */
 	private static double inverseEOTF(double F) {
-		double Y = FastMath.pow(F, m1); // reference implementation is F / 10000
+		double Y = Math.pow(F, m1); // reference implementation is F / 10000
 		
-		return FastMath.pow(((c1 + c2 * Y) / (1 + c3 * Y)), m2);
+		return Math.pow(((c1 + c2 * Y) / (1 + c3 * Y)), m2);
 	}
 
 	private static double EOTF(double N) {
@@ -117,7 +117,7 @@ public final class ITP {
 	 * Quicker EOTF that uses a pre-computed LUT to return values.
 	 * @param N (is between 0...1)
 	 * @return
-	 * @deprecated LUT called directly in {@link #itp2rgbQuick(double[])}
+	 * @deprecated LUT called inline in {@link #itp2rgbQuick(double[])} instead
 	 */
 	private static double EOTFQuick(double N) {
 		return LUT[(int) (N*LUT_SIZE)];

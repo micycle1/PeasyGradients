@@ -1,8 +1,9 @@
 package peasyGradients.colourSpaces;
 
 /**
- * Fast XYZ, suitable to be used standalone. If used to convert other
- * colourspaces through to RGB, error may become too great.
+ * Fast XYZ, suitable to be used standalone for gradient colour interpolation.
+ * Unsuitable to be used to convert from into other colourspaces, as underlying
+ * XYZ_FAST values are not divided by certain constants.
  * 
  * @author micycle1
  *
@@ -11,8 +12,9 @@ public final class XYZ_FAST {
 
 	/**
 	 * 
-	 * @param rgb [R,G,B] where values are 0...1.0
-	 * @return
+	 * @param sRGB [R,G,B] where values are 0...1.0
+	 * @return XYZ representation (where values have same relative difference as
+	 *         real XYZ values)
 	 */
 	public static double[] rgb2xyz(double[] rgb) {
 
@@ -35,7 +37,7 @@ public final class XYZ_FAST {
 	}
 
 	/**
-	 * @param xyz [X,Y,Z]
+	 * @param XYZ representation [X,Y,Z]
 	 * @return [R,G,B] where values are 0...1.0
 	 */
 	public static double[] xyz2rgbVeryQuick(final double[] xyz) {

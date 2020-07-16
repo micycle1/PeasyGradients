@@ -1,11 +1,7 @@
 package peasyGradients.colourSpaces;
 
-import net.jafama.FastMath;
-import peasyGradients.utilities.FastPow;
-
 /**
- * CIE-L*uv TODO >>CIELUV<< https://en.wikipedia.org/wiki/CIELUV
- * https://www.hsluv.org/comparison/
+ * CIE-L*uv
  * 
  * @author micycle1
  *
@@ -100,7 +96,7 @@ public final class LUV {
 		if (Y <= epsilon) {
 			return (Y / refY) * kappa;
 		} else {
-			return 116 * FastMath.pow(Y / refY, 1.0 / 3.0) - 16;
+			return 116 * Math.pow(Y / refY, 1.0 / 3.0) - 16;
 		}
 	}
 
