@@ -18,6 +18,4 @@ Easing explained: Gradient with 2 colours and we want to find colour in the midd
 Filling a PShape with a gradient
 
 ## Optimisation
-PeasyGradients has been written in Java CPU code (as opposed to using OPENGL/shaders) as to not be dependent on OPENGL libraries. There have been many internal optimisations to make the library suitable for dynamic animation and interaction, rather than just static rendering (>30fps at reasonable resolutions).
-
-`setQuality(x)` can be used to halve the pixels calculated. @x=4 (meaning every 1 in 4 pixels is calculated) (roughly 4x speedup) is mostly inperceptable. x@2 certainly is. 
+PeasyGradients has been written to target the CPU (as opposed to the GPU, using OPENGL/shaders) as to not be dependent on OPENGL libraries. To this end, there have been many internal optimisations to make the library suitable for dynamic animation and interaction, rather than just static rendering (>30fps at reasonable resolutions).

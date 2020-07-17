@@ -5,8 +5,6 @@ import java.util.Random;
 import net.jafama.FastMath;
 import peasyGradients.utilities.fastLog.DFastLog;
 import peasyGradients.utilities.fastLog.FastLog;
-import processing.core.PApplet;
-import processing.core.PConstants;
 import processing.core.PVector;
 
 /**
@@ -20,6 +18,7 @@ public final class Functions {
 	
 	private static final FastLog fastLog = new DFastLog(12);
 	private static final float PI = (float) Math.PI;
+	private static final float TWO_PI = (float) (2*Math.PI);
 	private static final float HALF_PI = (float) (0.5f * Math.PI);
 	private static final float QRTR_PI = (float) (0.25f * Math.PI);
 
@@ -33,20 +32,24 @@ public final class Functions {
 		interpolationMode = interpolationMode.prev();
 	}
 
-	public static Interpolation interpolationMode = Interpolation.IDENTITY;
+	public static Interpolation interpolationMode = Interpolation.SMOOTH_STEP;
 
 	/**
 	 * Calculate the step by passing it to the selected smoothing function. Allows
 	 * gradient renderer to easily change how the gradient is smoothed.
 	 * 
-	 * @param step
-	 * @return the new step (mapped to a
+	 * @param step 0...1
+	 * @return the new step
 	 */
 	public static float functStep(float step) {
 		switch (interpolationMode) {
 			case LINEAR :
 				return step;
-			case KPERLIN :
+			case IDENTITY :
+				return step * step * (2.0f - step);
+			case SMOOTH_STEP:
+				return 3*step*step - 2*step*step*step; // polynomial approximation of (0.5-FastMath.cos(PI*step)/2)
+			case SMOOTHER_STEP :
 				return step * step * step * (step * (step * 6 - 15) + 10);
 			case EXPONENTIAL :
 				return step == 1.0f ? step : 1.0f - FastPow.fastPow(2, -10 * step);
@@ -66,27 +69,27 @@ public final class Functions {
 				{
 					return 7.5625f * (sPrime -= 0.81818f) * sPrime + 0.9375f;
 				}
-
 				return 7.5625f * (sPrime -= 0.95455f) * sPrime + 0.984375f;
 			case CIRCULAR :
-				return (float) FastMath.sqrtQuick((2.0 - step) * step);
+				return (float) FastMath.sqrt((2.0 - step) * step);
 			case SINE :
 				return (float) FastMath.sinQuick(step);
 			case PARABOLA :
 				return (float) FastMath.sqrt(4.0 * step * (1.0 - step));
-			case IDENTITY :
-				return step * step * (2.0f - step);
-			case SINC :
-				final double z = FastMath.PI * (5 * step - 1.0);
-				return (float) FastMath.abs((FastMath.sin(z) / z));
 			case GAIN1 :
-				final float c = 0.5f * FastPow.fastPow(2.0f * ((step < 0.5f) ? step : 1.0f - step), 0.3f);
-				return (step < 0.5) ? c : 1.0f - c;
+				if (step < 0.5f) {
+					return 0.5f * FastPow.fastPow(2.0f * step, 0.3f);
+				} else {
+					return 1 - 0.5f * FastPow.fastPow(2.0f * (1 - step), 0.3f);
+				}
 			case GAIN2 :
-				final float d =  0.5f * FastPow.fastPow(2.0f * ((step < 0.5f) ? step : 1.0f - step), 3.3333f);
-				return (step < 0.5) ? d : 1.0f - d;
+				if (step < 0.5f) {
+					return 0.5f * FastPow.fastPow(2.0f * step, 3.3333f);
+				} else {
+					return 1 - 0.5f * FastPow.fastPow(2.0f * (1 - step), 3.3333f);
+				}
 			case EXPIMPULSE :
-				return (float) (2 * step * FastMath.exp(1.0 - (2 * step)));
+				return (float) (2 * step * FastMath.expQuick(1.0 - (2 * step)));
 			default :
 				return step;
 		}
@@ -162,7 +165,7 @@ public final class Functions {
 	 * @param destY
 	 * @param pointX
 	 * @param pointY
-	 * @return between 0...1
+	 * @return percent that the point occurs on in a gradient [0...1]
 	 */
 	public static float linearProject(float originX, float originY, float destX, float destY, int pointX, int pointY) {
 		// Rise and run of line.
@@ -182,15 +185,6 @@ public final class Functions {
 		return (div < 0) ? 0 : (div > 1 ? 1 : div);
 	}
 	
-	public static float linearProjectQuick(float odX, float odY, float odSqInverse, float opXod, int pointX, int pointY) {
-		// Rise and run of projection.
-		opXod += (pointX * odX) + (pointY * odY);
-
-		// Normalize and clamp range.
-		float div = opXod * odSqInverse;
-		return (div < 0) ? 0 : (div > 1 ? 1 : div);
-	}
-
 	/**
 	 * East = 0; North = -1/2PI; West = -PI; South = -3/2PI | 1/2PI
 	 * 
@@ -201,7 +195,7 @@ public final class Functions {
 	public static float angleBetween(PVector tail, PVector head) {
 		float a = (float) Math.atan2(tail.y - head.y, tail.x - head.x);
 		if (a < 0) {
-			a += PConstants.TWO_PI;
+			a += TWO_PI;
 		}
 		return a;
 	}
@@ -329,6 +323,12 @@ public final class Functions {
 		return (a > b) ? ((a > c) ? a : c) : ((b > c) ? b : c);
 	}
 	
+	/**
+	 * Floor modulo for doubles.
+	 * @param t
+	 * @param b
+	 * @return
+	 */
 	public static double floorMod(double t, double b) {
 		return (t - b * Math.floor(t / b));
 	}
@@ -402,6 +402,15 @@ public final class Functions {
 		final long tmp = Double.doubleToLongBits(a);
 		final long tmp2 = (long) (b_faction * (tmp - 4606921280493453312L)) + 4606921280493453312L;
 		return r * Double.longBitsToDouble(tmp2);
+	}
+	
+	/**
+	 * More accurate for smaller values of z
+	 * @param z
+	 * @return
+	 */
+	public static float fastSin(float z) {
+		return z - 0.166666667f * z + 0.008833333333f * (z * z * z * z * z);
 	}
 		
 	/**
@@ -479,11 +488,12 @@ public final class Functions {
 	 * @see #lineRectIntersection(float, float, PVector, float)
 	 */
 	public static PVector[] lineRectIntersection(PVector[] rect, PVector point, float angle) {
+		
 		PVector[] output = new PVector[2];
 		output[0] = new PVector();
 		output[1] = new PVector();
 
-		float tanA = (float) Math.tan(PApplet.TWO_PI - angle); // 'TWO_PI - ___' for clockwise orientation
+		float tanA = (float) Math.tan(TWO_PI - angle); // 'TWO_PI - ___' for clockwise orientation
 
 		// Avoid division by zero
 		if (tanA == 0) {
@@ -498,13 +508,12 @@ public final class Functions {
 
 			float w = rect[3].x - rect[0].x;
 			float h = rect[1].y - rect[0].y;
+			
 			calcProjection(w, h, point, tanA, output);
-
+			
 			// Transform result back to original coordinates
-			output[0].x += rect[0].x;
-			output[0].y += rect[0].y;
-			output[1].x += rect[0].x;
-			output[1].y += rect[0].y;
+			output[0].add(rect[0]);
+			output[1].add(rect[0]);
 		}
 		return output;
 	}

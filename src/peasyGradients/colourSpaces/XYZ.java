@@ -8,9 +8,7 @@ import peasyGradients.utilities.Functions;
 /**
  * aka CIE 1931, Java implementation of https://www.easyrgb.com/en/math.php
  * method
- * 
- * TODO JBLAS http://jblas.org/ dgemm
- * 
+ *
  * @author micycle1
  *
  */
@@ -49,8 +47,9 @@ public final class XYZ {
 		y *= 100;
 		z *= 100;
 
-		return new double[] { x * 0.4124 + y * 0.3576 + z * 0.1805, x * 0.2126 + y * 0.7152 + z * 0.0722,
-				x * 0.0193 + y * 0.1192 + z * 0.9505 };
+		return new double[] { x * 0.41239079926595 + y * 0.35758433938387 + z * 0.18048078840183,
+				x * 0.21263900587151 + y * 0.71516867876775 + z * 0.072192315360733,
+				x * 0.019330818715591 + y * 0.11919477979462 + z * 0.95053215224966 };
 
 	}
 
