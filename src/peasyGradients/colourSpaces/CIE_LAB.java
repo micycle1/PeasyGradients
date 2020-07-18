@@ -13,7 +13,7 @@ package peasyGradients.colourSpaces;
  * @author micycle1
  *
  */
-public class CIE_LAB {
+public final class CIE_LAB {
 
 	/**
 	 * D65/2° Illuminants: Daylight, sRGB, Adobe-RGB

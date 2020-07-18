@@ -3,7 +3,11 @@ package peasyGradients.utilities;
 /**
  * Defines interpolation functions, which change the rate at which colour
  * changes throughout a gradient. Does not affect how two colours are
- * interpolated.
+ * interpolated. Changes how the colour between two control points is lerped to
+ * as a function of the the position between them. For example, in linear mode,
+ * a point mid-way between two control points will use 50% of the left and 50%
+ * of the right; in exponential interpolation, the same point be an average of
+ * x% of left colour and y% of right colour.
  * 
  * @author micycle1
  *
@@ -11,7 +15,7 @@ package peasyGradients.utilities;
 public enum Interpolation {
 
 	/**
-	 * No transformation; completely linear
+	 * No transformation; completely linear.
 	 */
 	LINEAR,
 	/**
@@ -26,6 +30,9 @@ public enum Interpolation {
 	 * https://www.iquilezles.org/www/articles/functions/functions.htm
 	 */
 	IDENTITY,
+	/*
+	 * 
+	 */
 	SMOOTH_STEP,
 	/**
 	 * Ken Perlin’s smoother step, a simoid like function.
@@ -35,7 +42,15 @@ public enum Interpolation {
 	 *         sigmoid-like function (eg: [0.5 -> 0.5], [0.25 -> 0.104], [0.65
 	 *         ->0.765])
 	 */
-	SMOOTHER_STEP, EXPONENTIAL, CUBIC,
+	SMOOTHER_STEP,
+	/*
+	 * 
+	 */
+	EXPONENTIAL,
+	/*
+	 * 
+	 */
+	CUBIC,
 	/**
 	 * Provides a reversible parabolic bouncing easing out function. From t=0 value
 	 * starts with an accelerating motion until destination reached then it bounces
@@ -43,7 +58,15 @@ public enum Interpolation {
 	 * <code>direction</code> parameter is negative, the direction of the function
 	 * is reversed. This can be useful for oscillating animations.
 	 */
-	BOUNCE, CIRCULAR, SINE,
+	BOUNCE,
+	/*
+	 * 
+	 */
+	CIRCULAR,
+	/**
+	 * 
+	 */
+	SINE,
 	/**
 	 * 
 	 */
@@ -70,10 +93,18 @@ public enum Interpolation {
 
 	private final static Interpolation[] vals = values();
 
+	/**
+	 * Switches to the next interpolation mode.
+	 * @return
+	 */
 	public Interpolation next() {
 		return vals[(ordinal() + 1) % vals.length];
 	}
 
+	/**
+	 * Switches to the previous interpolation mode.
+	 * @return
+	 */
 	public Interpolation prev() {
 		return vals[Math.floorMod((ordinal() - 1), vals.length)];
 	}

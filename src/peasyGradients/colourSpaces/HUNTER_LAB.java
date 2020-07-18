@@ -33,7 +33,7 @@ public final class HUNTER_LAB {
 	static {
 		LUT = new double[LUT_SIZE];
 		for (int i = 0; i < LUT.length; i++) {
-			LUT[i] =Math.sqrt((1d / LUT_SIZE) * i);
+			LUT[i] = Math.sqrt((1d / LUT_SIZE) * i);
 		}
 	}
 

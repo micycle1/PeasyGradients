@@ -17,10 +17,14 @@ import processing.core.PVector;
 public final class Functions {
 	
 	private static final FastLog fastLog = new DFastLog(12);
+	
 	private static final float PI = (float) Math.PI;
 	private static final float TWO_PI = (float) (2*Math.PI);
 	private static final float HALF_PI = (float) (0.5f * Math.PI);
 	private static final float QRTR_PI = (float) (0.25f * Math.PI);
+	
+	private static final int fullAlpha = 255 << 24; // fully opaque
+	private static final float INV_255 = 1f/255f; // used to normalise RGB values
 
 	private static final Random random = new Random();
 
@@ -96,7 +100,7 @@ public final class Functions {
 	}
 
 	/**
-	 * Linearly interpolate between 2 colours (color-space independent)
+	 * Linearly interpolate between 2 colours (color-space independent) using the given step.
 	 * 
 	 * @param a    double[3] (col 1)
 	 * @param b    double[3] (col 2)
@@ -227,8 +231,6 @@ public final class Functions {
 		return 255 << 24 | (int) red << 16 | (int) green << 8 | (int) blue;
 	}
 
-	private static int fullAlpha = 255 << 24;
-
 	/**
 	 * sRGB (0...1) in
 	 * 
@@ -253,8 +255,8 @@ public final class Functions {
 	 */
 	public static float[] decomposeclr(int clr) {
 		// 1.0 / 255.0 = 0.003921569
-		return new float[] { (clr >> 16 & 0xff) * 0.003921569f, (clr >> 8 & 0xff) * 0.003921569f, (clr & 0xff) * 0.003921569f,
-				(clr >> 24 & 0xff) * 0.003921569f };
+		return new float[] { (clr >> 16 & 0xff) * INV_255, (clr >> 8 & 0xff) * INV_255, (clr & 0xff) * INV_255,
+				(clr >> 24 & 0xff) * INV_255 };
 	}
 
 	/**
@@ -288,10 +290,10 @@ public final class Functions {
 
 	public static float[] decomposeclrRGBA(int clr) {
 		float[] out = new float[4];
-		out[3] = (clr >> 24 & 0xff) * 0.003921569f;
-		out[0] = (clr >> 16 & 0xff) * 0.003921569f;
-		out[1] = (clr >> 8 & 0xff) * 0.003921569f;
-		out[2] = (clr & 0xff) * 0.003921569f;
+		out[3] = (clr >> 24 & 0xff) * INV_255;
+		out[0] = (clr >> 16 & 0xff) * INV_255;
+		out[1] = (clr >> 8 & 0xff) * INV_255;
+		out[2] = (clr & 0xff) * INV_255;
 		return out;
 	}
 
@@ -303,9 +305,9 @@ public final class Functions {
 	 */
 	public static double[] decomposeclrDouble(int clr) {
 		double[] out = new double[3];
-		out[0] = (clr >> 16 & 0xff) * 0.003921569f;
-		out[1] = (clr >> 8 & 0xff) * 0.003921569f;
-		out[2] = (clr & 0xff) * 0.003921569f;
+		out[0] = (clr >> 16 & 0xff) * INV_255;
+		out[1] = (clr >> 8 & 0xff) * INV_255;
+		out[2] = (clr & 0xff) * INV_255;
 		return out;
 	}
 

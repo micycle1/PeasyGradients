@@ -5,7 +5,7 @@ import peasyGradients.utilities.Functions;
 import processing.core.PApplet;
 
 /**
- * Generate random color palettes to use gradients. Generates palettes in HSB
+ * Generate random color palettes to use in gradients. Generates palettes in HSB
  * colour space and outputs to sRGB integers.
  * 
  * // TODO implement
@@ -19,8 +19,8 @@ public final class Palette {
 
 	private static final float sMin = 0.75f; // min saturation
 	private static final float bMin = 0.75f; // min brightness
-	private static final float sVarMax = 0.1f; // max variance
-	private static final float bVarMax = 0.1f; // max variance
+	private static final float sVarMax = 0.1f; // max saturation variance
+	private static final float bVarMax = 0.1f; // max brightness variance
 	/**
 	 * https://martin.ankerl.com/2009/12/09/how-to-create-random-colors-programmatically/
 	 */
