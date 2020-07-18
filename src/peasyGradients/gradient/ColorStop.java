@@ -9,16 +9,14 @@ import peasyGradients.utilities.Functions;
  * A container for colour (in every colour space) and the percentage position
  * that it occurs within gradient.
  * 
- * TODO what happens if first stop not at zero?
- * 
  * @author micycle1
  *
  */
-final class ColorStop implements Comparable<ColorStop> {
+public final class ColorStop implements Comparable<ColorStop> {
 
 	static final float TOLERANCE = 0.05f;
 
-	float originalPercent; // percent at which this stop occurs (0...1.0)
+//	float originalPercent; // percent at which this stop occurs (0...1.0)
 	float percent; // percent, taking into account animation offset, etc.
 
 	int clr; // colour int
@@ -38,12 +36,13 @@ final class ColorStop implements Comparable<ColorStop> {
 
 	/**
 	 * 
-	 * @param clr     color int (bit shifted ARGB)
-	 * @param percent 0...1
+	 * @param clr      color int (bit shifted ARGB)
+	 * @param fraction decimal fraction between 0...1 (otherwise constrained)
+	 *                 defining how far along the gradient the colour defined by
+	 *                 this stop is at.
 	 */
-	protected ColorStop(int clr, float percent) {
-		this.originalPercent = percent > 1 ? 1 : percent < 0 ? 0 : percent; // constrain 0...1
-		this.percent = originalPercent;
+	public ColorStop(int clr, float fraction) {
+		percent = fraction > 1 ? 1 : fraction < 0 ? 0 : fraction; // constrain 0...1
 		setColor(clr);
 	}
 
@@ -66,8 +65,8 @@ final class ColorStop implements Comparable<ColorStop> {
 	}
 
 	/**
-	 * Mandated by the interface Comparable<ColorStop>.
-	 * Permits color stops to be sorted by Collections.sort via pairwise comparison.
+	 * Mandated by the interface Comparable<ColorStop>. Permits color stops to be
+	 * sorted by Collections.sort via pairwise comparison.
 	 */
 	public int compareTo(ColorStop cs) {
 		return percent > cs.percent ? 1 : percent < cs.percent ? -1 : 0;
@@ -77,7 +76,7 @@ final class ColorStop implements Comparable<ColorStop> {
 	public String toString() {
 		return Arrays.toString(Functions.composeclrTo255(Functions.decomposeclrDouble(clr)));
 	}
-	
+
 	static boolean approxPercent(ColorStop cs, float tolerance) {
 //		return Math.abs(cs.percent - cs.percent) < tolerance;
 		return false;

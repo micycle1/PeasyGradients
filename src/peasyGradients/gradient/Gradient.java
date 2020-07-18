@@ -7,7 +7,6 @@ import java.util.Arrays;
 
 import peasyGradients.colourSpaces.*;
 import peasyGradients.utilities.Functions;
-import processing.core.PImage;
 
 /**
  * A gradient comprises of {@link #colorStops}, which each specify a colour and
@@ -25,23 +24,24 @@ import processing.core.PImage;
  */
 public final class Gradient {
 
-	public ArrayList<ColorStop> colorStops = new ArrayList<ColorStop>();
+	private ArrayList<ColorStop> colorStops = new ArrayList<ColorStop>();
 
-	private float[] rsltclrF = new float[4];
-	private double[] rsltclrD = new double[4];
+	private float[] rsltclrF = new float[4]; // define once here
+	private double[] rsltclrD = new double[4]; // define once here
 
-	public float animate = 0; // animation colour offset
+	private float offset = 0; // animation colour offset
 
 	private int lastCurrStopIndex;
 	private ColorStop currStop, prevStop;
 	private float denom;
 
-	PImage cacheLastImage; // TODO, last PImage output (cache and return if args haven't changed)
+	double[] colorOut; // TODO color (in Gradient's current colourspace)
 
-	public ColourSpace colourSpace = ColourSpace.XYZ_FAST; // TODO
+	public ColourSpace colourSpace = ColourSpace.XYZ_FAST; // TODO public for testing
 
-//	Interpolation interpolation = Interpolation.PARABOLA;
-
+	/**
+	 * 
+	 */
 	public Gradient() {
 		this(0xff000000, 0xffffffff); // default: black-->white
 	}
@@ -83,30 +83,38 @@ public final class Gradient {
 	}
 
 	/**
+	 * Increases the gradient offset (for animation) by the amount given.
 	 * 
-	 * @param amt 0...1 (smaller faster) recommended: 0.01
+	 * @param amt 0...1 smaller is less change
 	 */
 	public void animate(float amt) {
-//		amt = (amt < -1) ? -1 : (amt > 1 ? 1 : amt); // clamp between -1...1
-		animate = amt;
-		for (ColorStop colorStop : colorStops) {
-			float newAmt = colorStop.originalPercent + amt;
-			if (newAmt != 1) {
-				newAmt %= 1;
-			}
-			colorStop.percent = newAmt;
-			System.out.println(newAmt);
-			// TODO sort now?
-//			float x_min = 0;
-//			float x_max = 1;
-//
-//			colorStop.percent = (((newAmt - x_min) % (x_max - x_min)) + (x_max - x_min)) % (x_max - x_min) + x_min;
-		}
-		java.util.Collections.sort(colorStops);
+		offset += amt;
+	}
+	
+	public void setOffset(float offset) {
+		offset = offset;
+	}
+
+	public void mutateColour(float amt) {
+
 	}
 
 	/**
-	 * Push a new colorstop to the end (and shuffle the rest).
+	 * Prime for animation
+	 */
+	public void primeAnimation() {
+		float offset = colorStops.get(1).percent; // get where first colour stop ends
+		offset /= 2;
+
+		for (int i = 1; i < colorStops.size(); i++) { // shift all stops down
+			colorStops.get(i).percent -= offset;
+		}
+		add(1, colourAt(0));
+	}
+
+	/**
+	 * Push a new colorstop to the end (and shuffle the rest proportional to where
+	 * they were before).
 	 * 
 	 * @param colour
 	 * @return
@@ -185,31 +193,54 @@ public final class Gradient {
 	 */
 	public int evalRGB(float step) {
 
-		/**
-		 * First calculate whether the current step has gone beyond the existing
-		 * colourstop boundary (either above or below).
-		 */
-		if (step > currStop.percent) {
-			do {
-				currStop = colorStops.get(++lastCurrStopIndex); // increment
-			} while (step > currStop.percent); // sometimes step might jump more than 1 colour
-
-			prevStop = colorStops.get(lastCurrStopIndex - 1);
-
-			denom = 1 / (prevStop.percent - currStop.percent); // compute denominator inverse
-		} else if (step < prevStop.percent) {
-			do {
-				prevStop = colorStops.get(--lastCurrStopIndex - 1); // decrement
-//				prevStop = colorStops.get(Math.floorMod(--lastCurrStopIndex - 1, colorStops.size())); // decrement
-			} while (step < prevStop.percent); // sometimes step might jump back more than 1 colour
-
-			currStop = colorStops.get(lastCurrStopIndex);
-
-			denom = 1 / (prevStop.percent - currStop.percent); // compute denominator inverse
+		step += offset;
+		if (step != 1) {
+			step %= 1;
+			if (step < 0) {
+				step += 1;
+			}
 		}
 
-		final float smoothStep = Functions.functStep((step - currStop.percent) * denom); // apply function to scaled
-																							// step
+		/**
+		 * First calculate whether the current step has gone beyond the existing
+		 * colourstop boundary (either above or below). If the first colour stop is at a
+		 * position > 0 or last colour stop at a position < 1, then when step >
+		 * currStop.percent or step < currStop.percent is true, we don't want to
+		 * inc/decrement currStop.
+		 */
+		if (step > currStop.percent) { // if at end, stay, otherwise next
+			if (lastCurrStopIndex == (colorStops.size() - 1)) {
+				prevStop = colorStops.get(lastCurrStopIndex);
+				denom = 1;
+			} else {
+				do {
+					lastCurrStopIndex++; // increment
+					currStop = colorStops.get(lastCurrStopIndex);
+				} while (step > currStop.percent && lastCurrStopIndex < (colorStops.size() - 1)); // sometimes step might jump more than 1
+																									// colour
+				prevStop = colorStops.get(lastCurrStopIndex - 1);
+
+				denom = 1 / (prevStop.percent - currStop.percent); // compute denominator inverse
+			}
+
+		} else if (step < prevStop.percent) {
+			if (lastCurrStopIndex == 0) { // if at zero stay, otherwise prev
+				denom = 1;
+				currStop = colorStops.get(0);
+			} else {
+				do {
+					lastCurrStopIndex--; // decrement
+					prevStop = colorStops.get(Math.max(lastCurrStopIndex - 1, 0));
+				} while (step < prevStop.percent); // sometimes step might jump back more than 1 colour
+
+				currStop = colorStops.get(lastCurrStopIndex);
+
+				denom = 1 / (prevStop.percent - currStop.percent); // compute denominator inverse
+			}
+		}
+
+		float smoothStep = Functions.functStep((step - currStop.percent) * denom); // apply interpolation function
+
 		switch (colourSpace) {
 			case HSB_SHORT :
 				HSB.interpolateShort(currStop.clrHSB, prevStop.clrHSB, smoothStep, rsltclrF);
@@ -296,6 +327,11 @@ public final class Gradient {
 		return colorStops.remove(i);
 	}
 
+	/**
+	 * Remove points if they are within a certain tolerance of each other.
+	 * 
+	 * @return number of removed points
+	 */
 	int remove() {
 		int removed = 0;
 		for (int sz = colorStops.size(), i = sz - 1; i > 0; --i) {
@@ -347,10 +383,12 @@ public final class Gradient {
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("Colour Stops:\n");
-		sb.append(String.format("%-10s%-25s%-15s%-20s\n", "Percent", "RGB", "clrInteger", "clrXYZ"));
+		sb.append("Gradient\n");
+		sb.append("Offset: " + offset + "\n");
+		sb.append("Colour Stops (" + colorStops.size() + "):\n");
+		sb.append(String.format("    " + "%-10s%-25s%-15s%-20s\n", "Percent", "RGB", "clrInteger", "clrXYZ"));
 		for (ColorStop colorStop : colorStops) {
-			sb.append(String.format("%-10s%-25s%-15s%-20s\n", colorStop.originalPercent,
+			sb.append(String.format("    " + "%-10s%-25s%-15s%-20s\n", colorStop.percent,
 					Arrays.toString(Functions.decomposeclrRGB(colorStop.clr)), colorStop.clr, Arrays.toString(colorStop.clrXYZ)));
 		}
 		return sb.toString();
