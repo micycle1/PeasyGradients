@@ -1,5 +1,7 @@
 package peasyGradients.utilities;
 
+import java.text.DecimalFormat;
+import java.util.Arrays;
 import java.util.Random;
 
 import net.jafama.FastMath;
@@ -15,16 +17,16 @@ import processing.core.PVector;
  * @author Jeremy Behreand (colour composition methods)
  */
 public final class Functions {
-	
+
 	private static final FastLog fastLog = new DFastLog(12);
-	
+
 	private static final float PI = (float) Math.PI;
-	private static final float TWO_PI = (float) (2*Math.PI);
+	private static final float TWO_PI = (float) (2 * Math.PI);
 	private static final float HALF_PI = (float) (0.5f * Math.PI);
 	private static final float QRTR_PI = (float) (0.25f * Math.PI);
-	
+
 	private static final int fullAlpha = 255 << 24; // fully opaque
-	private static final float INV_255 = 1f/255f; // used to normalise RGB values
+	private static final float INV_255 = 1f / 255f; // used to normalise RGB values
 
 	private static final Random random = new Random();
 
@@ -51,8 +53,8 @@ public final class Functions {
 				return step;
 			case IDENTITY :
 				return step * step * (2.0f - step);
-			case SMOOTH_STEP:
-				return 3*step*step - 2*step*step*step; // polynomial approximation of (0.5-FastMath.cos(PI*step)/2)
+			case SMOOTH_STEP :
+				return 3 * step * step - 2 * step * step * step; // polynomial approximation of (0.5-FastMath.cos(PI*step)/2)
 			case SMOOTHER_STEP :
 				return step * step * step * (step * (step * 6 - 15) + 10);
 			case EXPONENTIAL :
@@ -100,7 +102,8 @@ public final class Functions {
 	}
 
 	/**
-	 * Linearly interpolate between 2 colours (color-space independent) using the given step.
+	 * Linearly interpolate between 2 colours (color-space independent) using the
+	 * given step.
 	 * 
 	 * @param a    double[3] (col 1)
 	 * @param b    double[3] (col 2)
@@ -188,7 +191,7 @@ public final class Functions {
 		float div = opXod / odSq;
 		return (div < 0) ? 0 : (div > 1 ? 1 : div);
 	}
-	
+
 	/**
 	 * East = 0; North = -1/2PI; West = -PI; South = -3/2PI | 1/2PI
 	 * 
@@ -290,8 +293,9 @@ public final class Functions {
 
 	/**
 	 * Unpack a 32-Bit ARGB int, normalising to 0..1
+	 * 
 	 * @param clr
-	 * @return  sRGB representing the argb color
+	 * @return sRGB representing the argb color
 	 */
 	public static float[] decomposeclrRGBA(int clr) {
 		float[] out = new float[4];
@@ -324,14 +328,29 @@ public final class Functions {
 	}
 
 	/**
+	 * Min of 3 doubles
+	 */
+	public static double min(double a, double b, double c) {
+		return (a < b) ? ((a < c) ? a : c) : ((b < c) ? b : c);
+	}
+
+	/**
 	 * Max of 3 floats
 	 */
 	public static float max(float a, float b, float c) {
 		return (a > b) ? ((a > c) ? a : c) : ((b > c) ? b : c);
 	}
-	
+
+	/*
+	 * Max of 3 doubles
+	 */
+	public static double max(double a, double b, double c) {
+		return (a > b) ? ((a > c) ? a : c) : ((b > c) ? b : c);
+	}
+
 	/**
 	 * Floor modulo for doubles.
+	 * 
 	 * @param t
 	 * @param b
 	 * @return
@@ -341,7 +360,9 @@ public final class Functions {
 	}
 
 	/**
-	 * Returns a pseudorandom, uniformly distributed float value between the given range.
+	 * Returns a pseudorandom, uniformly distributed float value between the given
+	 * range.
+	 * 
 	 * @param min range min
 	 * @param max range max
 	 * @return
@@ -359,7 +380,7 @@ public final class Functions {
 	public static float randomFloat() {
 		return random.nextFloat();
 	}
-	
+
 	/**
 	 * Returns a pseudorandom, uniformly distributed int value between min
 	 * (inclusive) and max (inclusive),
@@ -373,7 +394,40 @@ public final class Functions {
 	}
 
 	/**
+	 * Returns of string representation of the input array, array values are
+	 * formatted to n decimal places, and padded with zeros (optional).
+	 * 
+	 * @param array
+	 * @param decimalPlaces
+	 * @param padding default 3 when decimal places = 0
+	 * @return
+	 */
+	public static String formatArray(double[] array, int decimalPlaces, int padding) {
+		double[] out = array.clone();
+
+		int i = 0;
+		if (decimalPlaces == 0) { // assuming array values > 1
+			String outString = "[" + String.format("%03d",Math.round(out[0])) + ", ";
+
+			for (int j = 1; j < out.length - 1; j++) {
+				outString += String.format("%03d", Math.round(out[j])) + ", ";
+			}
+			outString += String.format("%03d",Math.round(out[out.length - 1])) + "]";
+			return outString;
+		} else {
+			DecimalFormat df = new DecimalFormat(
+					"0" + new String(new char[padding]).replace("\0", "0") + "." + new String(new char[decimalPlaces]).replace("\0", "0"));
+			for (double d : out) {
+				out[i] = Double.valueOf(df.format(d));
+				i++;
+			}
+		}
+		return Arrays.toString(out);
+	}
+
+	/**
 	 * Very fast and fairly accurate (for its speed).
+	 * 
 	 * @param f1 base
 	 * @param f2 exponent
 	 * @return approximate value
@@ -394,7 +448,7 @@ public final class Functions {
 
 		return rv;
 	}
-	
+
 	/**
 	 * pow approximation with exponentiation by squaring. Very fast, but with
 	 * appreciable inaccuracy. https://pastebin.com/ZW95gEyr
@@ -422,20 +476,21 @@ public final class Functions {
 		final long tmp2 = (long) (b_faction * (tmp - 4606921280493453312L)) + 4606921280493453312L;
 		return r * Double.longBitsToDouble(tmp2);
 	}
-	
+
 	/**
 	 * More accurate for smaller values of z
+	 * 
 	 * @param z
 	 * @return
 	 */
 	public static float fastSin(float z) {
 		return z - 0.166666667f * z + 0.008833333333f * (z * z * z * z * z);
 	}
-		
+
 	/**
-	 * Polynomial approximating arctangenet on the range -1, 1.
-	 * Implementation of function in 'Efficient Approximations for the Arctangent Function' by Rajan et al.
-	 * Maximum absolute error of 0.0038 rad (0.22º) 
+	 * Polynomial approximating arctangenet on the range -1, 1. Implementation of
+	 * function in 'Efficient Approximations for the Arctangent Function' by Rajan
+	 * et al. Maximum absolute error of 0.0038 rad (0.22º)
 	 * 
 	 * @param z
 	 * @return
@@ -443,10 +498,11 @@ public final class Functions {
 	public static float fastAtan(float z) {
 		return z * (QRTR_PI + 0.273f * (1 - Math.abs(z)));
 	}
-	
+
 	/**
-	 * atan2 Approximation. Maximum absolute error of 0.0038 rad (0.22º)
-	 * Source: https://www.dsprelated.com/showarticle/1052.php
+	 * atan2 Approximation. Maximum absolute error of 0.0038 rad (0.22º) Source:
+	 * https://www.dsprelated.com/showarticle/1052.php
+	 * 
 	 * @param y
 	 * @param x
 	 * @return
@@ -486,7 +542,7 @@ public final class Functions {
 		}
 		return 0.0f; // x,y = 0. Could return NaN instead.
 	}
-	
+
 	/**
 	 * Finds the two points of intersection between a rectange and a line, which
 	 * given by a point inside the rectangle and an angle.
@@ -507,7 +563,7 @@ public final class Functions {
 	 * @see #lineRectIntersection(float, float, PVector, float)
 	 */
 	public static PVector[] lineRectIntersection(PVector[] rect, PVector point, float angle) {
-		
+
 		PVector[] output = new PVector[2];
 		output[0] = new PVector();
 		output[1] = new PVector();
@@ -527,9 +583,9 @@ public final class Functions {
 
 			float w = rect[3].x - rect[0].x;
 			float h = rect[1].y - rect[0].y;
-			
+
 			calcProjection(w, h, point, tanA, output);
-			
+
 			// Transform result back to original coordinates
 			output[0].add(rect[0]);
 			output[1].add(rect[0]);

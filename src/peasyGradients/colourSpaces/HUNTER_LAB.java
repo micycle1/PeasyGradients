@@ -12,7 +12,7 @@ import net.jafama.FastMath;
  * @author micycle1
  *
  */
-public final class HUNTER_LAB {
+public final class HUNTER_LAB implements ColourSpace {
 
 	/**
 	 * D65/2° Illuminants: Daylight, sRGB, Adobe-RGB
@@ -36,12 +36,15 @@ public final class HUNTER_LAB {
 			LUT[i] = Math.sqrt((1d / LUT_SIZE) * i);
 		}
 	}
+	
+	public HUNTER_LAB() {
+	}
 
-	public static double[] rgb2hlab(double rgb[]) {
+	public double[] fromRGB(double rgb[]) {
 		return xyz2hlab(XYZ.rgb2xyz(rgb));
 	}
 
-	public static double[] hlab2rgb(double[] lab) {
+	public double[] toRGB(double[] lab) {
 		return XYZ.xyz2rgb(hlab2xyz(lab));
 	}
 

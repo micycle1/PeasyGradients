@@ -13,7 +13,7 @@ package peasyGradients.colourSpaces;
  * @author micycle1
  *
  */
-public final class CIE_LAB {
+public final class LAB implements ColourSpace {
 
 	/**
 	 * D65/2° Illuminants: Daylight, sRGB, Adobe-RGB
@@ -23,13 +23,24 @@ public final class CIE_LAB {
 	protected static final double illuminantZ = 108.883;
 
 	private static final double third = 1 / 3d;
+	
+	public LAB() {
+	}
+	
+	public double[] fromRGB(double[] rgb) {
+		return rgb2lab(rgb);
+	}
+	
+	public double[] toRGB(double[] lab) {
+		return lab2rgb(lab);
+	}
 
 	/**
 	 * 
 	 * @param rgb [R,G,B] where values are 0...1.0
 	 * @return [L,A,B]
 	 */
-	public static double[] rgb2lab(double[] rgb) {
+	static double[] rgb2lab(double[] rgb) {
 		double[] xyz = XYZ.rgb2xyz(rgb); // RGB --> XYZ
 
 		/**
@@ -60,7 +71,7 @@ public final class CIE_LAB {
 	 * @param lab [L,A,B]
 	 * @return [R,G,B] where values are 0...1.0
 	 */
-	public static double[] lab2rgb(double[] lab) {
+	static double[] lab2rgb(double[] lab) {
 		return XYZ.xyz2rgb(lab2xyz(lab));
 	}
 

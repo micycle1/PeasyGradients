@@ -1,82 +1,108 @@
 package peasyGradients.colourSpaces;
 
+import peasyGradients.utilities.Functions;
+
 /**
  * Same as HSV
  * @author micycle1
  *
  */
-public final class HSB {
-
-	public static float[] hsbToRgb(float[] in) {
-		float[] out = new float[] { 0, 0, 0, 1 };
-		return hsbToRgb(in[0], in[1], in[2], in[3], out);
-	}
+public final class HSB implements ColourSpace {
 
 	/**
 	 * 
 	 * @param hue 0...1
 	 * @param sat
 	 * @param bri
-	 * @param alpha
+	 * @param out
 	 * @return
 	 */
-	public static float[] hsbToRgb(float hue, float sat, float bri, float alpha) {
-		float[] out = new float[] { 0, 0, 0, 1 };
-		return hsbToRgb(hue, sat, bri, alpha, out);
-	}
-
-	private static float[] hsbToRgb(float hue, float sat, float bri, float alpha, float[] out) {
-		if (sat == 0.0) {
+	public double[] toRGB(double[] HSB) {
+		double[] RGB = new double[3];
+		
+		if (HSB[1] == 0.0) {
 			// 0.0 saturation is grayscale, so all values are equal.
-			out[0] = out[1] = out[2] = bri;
+			RGB[0] = RGB[1] = RGB[2] = HSB[2];
 		} else {
 
 			// Divide color wheel into 6 sectors.
 			// Scale up hue to 6, convert to sector index.
-			float h = hue * 6;
+			double h = HSB[0] * 6;
 			int sector = (int) h;
 
 			// Depending on the sector, three tints will
 			// be distributed among R, G, B channels.
-			float tint1 = bri * (1 - sat);
-			float tint2 = bri * (1 - sat * (h - sector));
-			float tint3 = bri * (1 - sat * (1 + sector - h));
+			double tint1 = HSB[2] * (1 - HSB[1]);
+			double tint2 = HSB[2] * (1 - HSB[1] * (h - sector));
+			double tint3 = HSB[2] * (1 - HSB[1] * (1 + sector - h));
 
 			switch (sector) {
 				case 1 :
-					out[0] = tint2;
-					out[1] = bri;
-					out[2] = tint1;
+					RGB[0] = tint2;
+					RGB[1] = HSB[2];
+					RGB[2] = tint1;
 					break;
 				case 2 :
-					out[0] = tint1;
-					out[1] = bri;
-					out[2] = tint3;
+					RGB[0] = tint1;
+					RGB[1] = HSB[2];
+					RGB[2] = tint3;
 					break;
 				case 3 :
-					out[0] = tint1;
-					out[1] = tint2;
-					out[2] = bri;
+					RGB[0] = tint1;
+					RGB[1] = tint2;
+					RGB[2] = HSB[2];
 					break;
 				case 4 :
-					out[0] = tint3;
-					out[1] = tint1;
-					out[2] = bri;
+					RGB[0] = tint3;
+					RGB[1] = tint1;
+					RGB[2] = HSB[2];
 					break;
 				case 5 :
-					out[0] = bri;
-					out[1] = tint1;
-					out[2] = tint2;
+					RGB[0] = HSB[2];
+					RGB[1] = tint1;
+					RGB[2] = tint2;
 					break;
 				default :
-					out[0] = bri;
-					out[1] = tint3;
-					out[2] = tint1;
+					RGB[0] = HSB[2];
+					RGB[1] = tint3;
+					RGB[2] = tint1;
+			}
+		}
+		return RGB;
+	}
+	
+	@Override
+	public double[] fromRGB(double[] RGB) {
+		double[] HSB = new double[3];
+		
+		// Find highest and lowest values.
+		double max = Functions.max(RGB[0], RGB[1], RGB[2]);
+		double min = Functions.min(RGB[0], RGB[1], RGB[2]);
+
+		// Find the difference between max and min.
+		double delta = max - min;
+
+		// Calculate hue.
+		double hue = 0;
+		if (delta != 0.0) {
+			if (RGB[0] == max) {
+				hue = (RGB[1] - RGB[2]) / delta;
+			} else if (RGB[1] == max) {
+				hue = 2 + (RGB[2] - RGB[0]) / delta;
+			} else {
+				hue = 4 + (RGB[0] - RGB[1]) / delta;
+			}
+
+			hue /= 6.0;
+			if (hue < 0.0) {
+				hue += 1.0;
 			}
 		}
 
-		out[3] = alpha;
-		return out;
+		HSB[0] = hue;
+		HSB[1] = max == 0 ? 0 : (max - min) / max;
+		HSB[2] = max;
+		return HSB;
 	}
 
 	/**
@@ -92,12 +118,12 @@ public final class HSB {
 	 * @param out  The new interpolated color, represented by a [H,S,B,A] array.
 	 * @return
 	 */
-	public static float[] interpolateShort(float[] a, float[] b, float st, float[] out) {
+	public double[] interpolateLinear(double[] a, double[] b, double st, double[] out) {
 
 		// Find difference in hues.
-		float huea = a[0];
-		float hueb = b[0];
-		float delta = hueb - huea;
+		double huea = a[0];
+		double hueb = b[0];
+		double delta = hueb - huea;
 
 		// Prefer shortest distance.
 		if (delta < -0.5) {
@@ -114,25 +140,4 @@ public final class HSB {
 		out[3] = a[3] + st * (b[3] - a[3]);
 		return out;
 	}
-
-	/**
-	 * Like {@link #interpolateShort(float[], float[], float, float[])
-	 * interpolateShort()}, but does not use the shortest path between hues.
-	 * 
-	 * @param a
-	 * @param b
-	 * @param st
-	 * @param out
-	 * @return
-	 */
-	public static float[] interpolateLong(float[] a, float[] b, float st, float[] out) {
-		// The two hues may be outside of 0 .. 1 range,
-		// so modulate by 1.
-		out[0] = (a[0] + st * (b[0] - a[0])) % 1;
-		out[1] = a[1] + st * (b[1] - a[1]);
-		out[2] = a[2] + st * (b[2] - a[2]);
-		out[3] = a[3] + st * (b[3] - a[3]);
-		return out;
-	}
-
 }

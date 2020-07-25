@@ -1,10 +1,7 @@
 package peasyGradients.gradient;
 
-import static peasyGradients.utilities.Functions.interpolateLinear;
-
 import java.util.ArrayList;
 import java.util.Arrays;
-
 import peasyGradients.colourSpaces.*;
 import peasyGradients.utilities.Functions;
 
@@ -26,10 +23,9 @@ public final class Gradient {
 
 	private ArrayList<ColorStop> colorStops = new ArrayList<ColorStop>();
 
-	private float[] rsltclrF = new float[4]; // define once here
-	private double[] rsltclrD = new double[4]; // define once here
+	private double[] interpolatedColourOUT = new double[4]; // define once here
 
-	private float offset = 0; // animation colour offset
+	private float offset = 0; // animation colour offset 0...1
 
 	private int lastCurrStopIndex;
 	private ColorStop currStop, prevStop;
@@ -37,7 +33,8 @@ public final class Gradient {
 
 	double[] colorOut; // TODO color (in Gradient's current colourspace)
 
-	public ColourSpace colourSpace = ColourSpace.XYZ; // TODO public for testing
+	public ColourSpaces colourSpace = ColourSpaces.XYZ; // TODO public for testing
+	ColourSpace colourSpaceInstance = colourSpace.getColourSpace(); // call toRGB on this instance
 
 	/**
 	 * 
@@ -53,6 +50,7 @@ public final class Gradient {
 		for (int i = 0; i < sz; i++) {
 			colorStops.add(new ColorStop(colors[i], i / szf));
 		}
+		this.colorStops.forEach(c -> c.setColourSpace(colourSpace));
 	}
 
 	public Gradient(ColorStop... colorStops) {
@@ -62,12 +60,14 @@ public final class Gradient {
 		}
 		java.util.Collections.sort(this.colorStops);
 		remove();
+		this.colorStops.forEach(c -> c.setColourSpace(colourSpace));
 	}
 
 	public Gradient(ArrayList<ColorStop> colorStops) {
 		this.colorStops = colorStops;
 		java.util.Collections.sort(this.colorStops);
 		remove();
+		this.colorStops.forEach(c -> c.setColourSpace(colourSpace));
 	}
 
 	/**
@@ -90,7 +90,7 @@ public final class Gradient {
 	public void animate(float amt) {
 		offset += amt;
 	}
-	
+
 	public void setOffset(float offset) {
 		this.offset = offset;
 	}
@@ -189,10 +189,10 @@ public final class Gradient {
 	public int evalRGB(float step) {
 
 		step += offset;
-		if (step != 1) {
+		if (step != 1) { // 1 % 1 == 0, which we want to avoid
 			step %= 1;
-			if (step < 0) {
-				step += 1;
+			if (step < 0) { // (if animation offset negative)
+				step += 1; // equivalent to floormod function
 			}
 		}
 
@@ -236,67 +236,13 @@ public final class Gradient {
 
 		float smoothStep = Functions.functStep((step - currStop.percent) * denom); // apply interpolation function
 
-		switch (colourSpace) {
-			case HSB_SHORT :
-				HSB.interpolateShort(currStop.clrHSB, prevStop.clrHSB, smoothStep, rsltclrF);
-				return Functions.composeclr(HSB.hsbToRgb(rsltclrF)); // TODO return with interpolated alpha (add alpha to RGB 24 bit)
-			case HSB_LONG :
-				HSB.interpolateLong(currStop.clrHSB, prevStop.clrHSB, smoothStep, rsltclrF);
-				return Functions.composeclr(HSB.hsbToRgb(rsltclrF));
-			case RGB :
-				interpolateLinear(currStop.clrRGB, prevStop.clrRGB, smoothStep, rsltclrF);
-				return Functions.composeclr(rsltclrF);
-			case LAB :
-				interpolateLinear(currStop.clrLAB, prevStop.clrLAB, smoothStep, rsltclrD);
-				return Functions.composeclr(CIE_LAB.lab2rgb(rsltclrD));
-			case FAST_LAB :
-				interpolateLinear(currStop.clrLAB, prevStop.clrLAB, smoothStep, rsltclrD);
-				return Functions.composeclr(CIE_LAB.lab2rgbQuick(rsltclrD));
-			case VERY_FAST_LAB :
-				interpolateLinear(currStop.clrLAB, prevStop.clrLAB, smoothStep, rsltclrD);
-				return Functions.composeclr(CIE_LAB.lab2rgbVeryQuick(rsltclrD));
-			case DIN99:
-				interpolateLinear(currStop.clrDIN99, prevStop.clrDIN99, smoothStep, rsltclrD);
-				return Functions.composeclr(DIN99.din2rgb(rsltclrD));
-			case HUNTER_LAB :
-				interpolateLinear(currStop.clrHLAB, prevStop.clrHLAB, smoothStep, rsltclrD);
-				return Functions.composeclr(HUNTER_LAB.hlab2rgb(rsltclrD));
-			case HUNTER_LAB_FAST :
-				interpolateLinear(currStop.clrHLAB, prevStop.clrHLAB, smoothStep, rsltclrD);
-				return Functions.composeclr(HUNTER_LAB.hlab2rgbQuick(rsltclrD));
-			case LUV :
-				interpolateLinear(currStop.clrLUV, prevStop.clrLUV, smoothStep, rsltclrD);
-				return Functions.composeclr(LUV.luv2rgb(rsltclrD));
-			case FAST_LUV :
-				interpolateLinear(currStop.clrLUV, prevStop.clrLUV, smoothStep, rsltclrD);
-				return Functions.composeclr(LUV.luv2rgbQuick(rsltclrD));
-			case JAB :
-				interpolateLinear(currStop.clrJAB, prevStop.clrJAB, smoothStep, rsltclrD);
-				return Functions.composeclr(JAB.jab2rgb(rsltclrD));
-			case JAB_FAST :
-				interpolateLinear(currStop.clrJAB, prevStop.clrJAB, smoothStep, rsltclrD);
-				return Functions.composeclr(JAB.jab2rgbQuick(rsltclrD));
-			case TEMP :
-				float kelvin = TEMP.interpolate(currStop.clrTEMP, prevStop.clrTEMP, smoothStep);
-				return Functions.composeclr(TEMP.temp2rgb(kelvin));
-			case RYB :
-				interpolateLinear(currStop.clrRYB, prevStop.clrRYB, smoothStep, rsltclrF);
-				return Functions.composeclr(RYB.ryb2rgb(rsltclrF));
-			case XYZ :
-				interpolateLinear(currStop.clrXYZ, prevStop.clrXYZ, smoothStep, rsltclrD);
-				return Functions.composeclr(XYZ.xyz2rgb(rsltclrD));
-			case XYZ_FAST :
-				interpolateLinear(currStop.clrXYZ_FAST, prevStop.clrXYZ_FAST, smoothStep, rsltclrD);
-				return Functions.composeclr(XYZ_FAST.xyz2rgbVeryQuick(rsltclrD));
-			case ITP :
-				interpolateLinear(currStop.clrITP, prevStop.clrITP, smoothStep, rsltclrD);
-				return Functions.composeclr(ITP.itp2rgb(rsltclrD));
-			case ITP_FAST :
-				interpolateLinear(currStop.clrITP, prevStop.clrITP, smoothStep, rsltclrD);
-				return Functions.composeclr(ITP.itp2rgbQuick(rsltclrD));
-			default :
-				return colorStops.get(colorStops.size() - 1).clr;
-		}
+		// interpolate in given colourspace
+		colourSpaceInstance.interpolateLinear(currStop.colorOut, prevStop.colorOut, smoothStep, interpolatedColourOUT);
+
+		// convert current colourspace value to ARGB int
+		return Functions.composeclr(colourSpaceInstance.toRGB(interpolatedColourOUT));
+		// TODO return with interpolated alpha (add alpha to RGB 24 bit)
+
 	}
 
 	/**
@@ -311,10 +257,14 @@ public final class Gradient {
 
 	public void nextColSpace() {
 		colourSpace = colourSpace.next();
+		colourSpaceInstance = colourSpace.getColourSpace();
+		colorStops.forEach(c -> c.setColourSpace(colourSpace));
 	}
 
 	public void prevColSpace() {
 		colourSpace = colourSpace.prev();
+		colourSpaceInstance = colourSpace.getColourSpace();
+		colorStops.forEach(c -> c.setColourSpace(colourSpace));
 	}
 
 	boolean remove(ColorStop colorStop) {
@@ -384,10 +334,11 @@ public final class Gradient {
 		sb.append("Gradient\n");
 		sb.append("Offset: " + offset + "\n");
 		sb.append("Colour Stops (" + colorStops.size() + "):\n");
-		sb.append(String.format("    " + "%-10s%-25s%-15s%-20s\n", "Percent", "RGB", "clrInteger", "clrXYZ"));
+		sb.append(String.format("    " + "%-10s%-18s%-12s%-20s\n", "Percent", "RGB", "clrInteger", "clrCurrentColSpace"));
 		for (ColorStop colorStop : colorStops) {
-			sb.append(String.format("    " + "%-10s%-25s%-15s%-20s\n", colorStop.percent,
-					Arrays.toString(Functions.decomposeclrRGB(colorStop.clr)), colorStop.clr, Arrays.toString(colorStop.clrXYZ)));
+			sb.append(String.format("    " + "%-10s%-18s%-12s%-20s\n", colorStop.percent,
+					Functions.formatArray(Functions.decomposeclrRGBDouble(colorStop.clr), 0, 2), colorStop.clr,
+					Functions.formatArray(colorStop.getColor(colourSpace), 2, 3)));
 		}
 		return sb.toString();
 	}

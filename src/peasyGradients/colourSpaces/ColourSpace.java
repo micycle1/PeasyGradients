@@ -1,42 +1,31 @@
 package peasyGradients.colourSpaces;
 
 /**
- * Defines how gradient should interpolate between colors (by performing
- * interpolation on different color spaces).
- * 
- * https://www.easyrgb.com/en/math.php TODO
- * https://github.com/tompazourek/Colourful
+ * Colourspaces should implement this class.
  * 
  * @author micycle1
  *
  */
-public enum ColourSpace {
+public interface ColourSpace {
 
-	RGB(), XYZ, XYZ_FAST, LAB, FAST_LAB, DIN99, VERY_FAST_LAB, ITP, ITP_FAST, HUNTER_LAB, HUNTER_LAB_FAST, LUV, FAST_LUV, JAB, JAB_FAST, RYB,
-	HSB_SHORT, HSB_LONG, TEMP;
+	public double[] toRGB(double[] colour); // convert from colour space to RGB
 
-	public static final int size = values().length;
+	public double[] fromRGB(double[] RGB); // convert from RGB to colour space
 	
-	private final static ColourSpace[] vals = values();
-	
-//	private colorspaceclass class;
-	
-//	ColourSpace(Class<?> clazz) {
-//		// TODO Auto-generated constructor stub
-	// RGB(RGB.class),
-	// this.class = clazz
-//	return clazz
-//	}
-
-	public static ColourSpace get(int index) {
-		return vals[index];
-	}
-
-	public ColourSpace next() {
-		return vals[(ordinal() + 1) % vals.length];
-	}
-
-	public ColourSpace prev() {
-		return vals[Math.floorMod((ordinal() - 1), vals.length)];
+	/**
+	 * Default linear interpolation method. Most classes use this; a few (like HSB)
+	 * may need to override.
+	 * 
+	 * @param a
+	 * @param b
+	 * @param step
+	 * @param out
+	 * @return
+	 */
+	public default double[] interpolateLinear(double[] a, double[] b, float step, double[] out) {
+		out[0] = a[0] + step * (b[0] - a[0]);
+		out[1] = a[1] + step * (b[1] - a[1]);
+		out[2] = a[2] + step * (b[2] - a[2]);
+		return out;
 	}
 }

@@ -10,7 +10,7 @@ import net.jafama.FastMath;
  * @author micycle1
  *
  */
-public final class ITP {
+public final class ITP implements ColourSpace {
 
 	private static final double m1 = 2610d / 16384;
 	private static final double m2 = 2523d / 4096 * 128;
@@ -32,13 +32,16 @@ public final class ITP {
 			LUT[i] = EOTF((1d / LUT_SIZE) * i);
 		}
 	}
+	
+	public ITP() {
+	}
 
 	/**
 	 * 
 	 * @param rgb [R,G,B] 0...1
 	 * @return [I,T,P]
 	 */
-	public static double[] rgb2itp(double[] rgb) {
+	public double[] fromRGB(double[] rgb) {
 		double L = 1688 * rgb[0] + 2146 * rgb[1] + 262 * rgb[2];
 		double M = 683 * rgb[0] + 2951 * rgb[1] + 462 * rgb[2];
 		double S = 99 * rgb[0] + 309 * rgb[1] + 3688 * rgb[2];
@@ -64,7 +67,7 @@ public final class ITP {
 		return new double[] { I, P, T };
 	}
 
-	public static double[] itp2rgb(double[] itp) {
+	public double[] toRGB(double[] itp) {
 		double I = itp[0] + 0.00860904 * itp[1] + 0.11102963 * itp[2];
 		double T = itp[0] + -0.00860904 * itp[1] + -0.11102963 * itp[2];
 		double P = itp[0] + 0.56003134 * itp[1] + -0.32062717 * itp[2];

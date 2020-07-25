@@ -10,22 +10,25 @@ import peasyGradients.utilities.Functions;
  * @author micycle1
  *
  */
-public final class RYB {
+public final class RYB implements ColourSpace {
+	
+	public RYB() {
+	}
 
 	/**
 	 * 
 	 * @param RGBA vals 0...1
 	 * @return
 	 */
-	public static float[] rgb2ryb(float[] RGBA) {
-		float R = RGBA[0];
-		float G = RGBA[1];
-		float B = RGBA[2];
+	public double[] fromRGB(double[] RGB) {
+		double R = RGB[0];
+		double G = RGB[1];
+		double B = RGB[2];
 
-		float r, y, b;
+		double r, y, b;
 
 		// subtract whiteness
-		final float w = Functions.min(R, G, B); // calc white component
+		final double w = Functions.min(R, G, B); // calc white component
 		R -= w;
 		G -= w;
 		B -= w;
@@ -35,31 +38,31 @@ public final class RYB {
 		b = (B + G - (R > G ? G : R)) / 2;
 
 		// normalise
-		float n = Functions.max(r, y, b) / Functions.max(R, G, B);
-		if (!Float.isNaN(n)) {
+		double n = Functions.max(r, y, b) / Functions.max(R, G, B);
+		if (!Double.isNaN(n)) {
 			r /= n;
 			y /= n;
 			b /= n;
 		}
 
 		// add blackness
-		final float black = Functions.min(1 - RGBA[0], 1 - RGBA[1], 1 - RGBA[2]);
+		final double black = Functions.min(1 - RGB[0], 1 - RGB[1], 1 - RGB[2]);
 		r += black;
 		y += black;
 		b += black;
 
-		return new float[] { r, y, b, RGBA[3] };
+		return new double[] { r, y, b};
 	}
 
-	public static float[] ryb2rgb(float[] ryba) {
-		float r = ryba[0];
-		float y = ryba[1];
-		float b = ryba[2];
+	public double[] toRGB(double[] ryb) {
+		double r = ryb[0];
+		double y = ryb[1];
+		double b = ryb[2];
 
-		float R, G, B;
+		double R, G, B;
 
 		// subtract whiteness
-		final float black = Functions.min(r, y, b); // calc white component
+		final double black = Functions.min(r, y, b); // calc white component
 		r -= black;
 		y -= black;
 		b -= black;
@@ -69,20 +72,20 @@ public final class RYB {
 		B = 2 * (b - (y > b ? b : y));
 
 		// normalise
-		float n = Functions.max(R, G, B) / Functions.max(r, y, b);
-		if (!Float.isNaN(n)) {
+		double n = Functions.max(R, G, B) / Functions.max(r, y, b);
+		if (!Double.isNaN(n)) {
 			R /= n;
 			G /= n;
 			B /= n;
 		}
 
 		// add blackness
-		final float w = Functions.min(1 - ryba[0], 1 - ryba[1], 1 - ryba[2]);
+		final double w = Functions.min(1 - ryb[0], 1 - ryb[1], 1 - ryb[2]);
 		R += w;
 		G += w;
 		B += w;
 
-		return new float[] { R, G, B, ryba[3] };
+		return new double[] { R, G, B};
 	}
 
 }

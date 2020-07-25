@@ -1,7 +1,8 @@
 package peasyGradients.gradient;
 
-import peasyGradients.colourSpaces.HSB;
+import peasyGradients.colourSpaces.ColourSpaces;
 import peasyGradients.utilities.Functions;
+
 import processing.core.PApplet;
 
 /**
@@ -65,23 +66,28 @@ public final class Palette {
 	public static int[] randomColors(int nColours) {
 		return generic(nColours, GRC);
 	}
-	
+
 	/**
-	 * Generate a colour palette of n random colours. Colours are generated completely randomly.
+	 * Generate a colour palette of n random colours. Colours are generated
+	 * completely randomly.
+	 * 
 	 * @param nColours
 	 * @return
-	 * @see #randomColors(int) generates colours with similar saturation and brightness
+	 * @see #randomColors(int) generates colours with similar saturation and
+	 *      brightness
 	 */
 	public static int[] randomRandomColors(int nColours) {
 		int[] out = new int[nColours];
 		for (int i = 0; i < nColours; i++) {
-			out[i] = -Functions.randomInt(0, 2<<24);
+			out[i] = -Functions.randomInt(0, 2 << 24);
 		}
 		return out;
 	}
 
 	/**
-	 * Generate an n-colour palette by cycling hue and varying saturation and brightness a little.
+	 * Generate an n-colour palette by cycling hue and varying saturation and
+	 * brightness a little.
+	 * 
 	 * @param colours
 	 * @param increment
 	 * @return array of colours, represented by ARGB integers
@@ -93,9 +99,10 @@ public final class Palette {
 		float b = Functions.random(bMin, 1);
 
 		for (int i = 0; i < colours; i++) {
-			out[i] = Functions
-					.composeclr(HSB.hsbToRgb(h, PApplet.constrain(s + Functions.random(-sVarMax, sVarMax), sMin, 1),
-							PApplet.constrain(b + Functions.random(-bVarMax, bVarMax), bMin, 1), 1));
+
+			double[] HSB = new double[] { h, PApplet.constrain(s + Functions.random(-sVarMax, sVarMax), sMin, 1),
+					PApplet.constrain(b + Functions.random(-bVarMax, bVarMax), bMin, 1) };
+			out[i] = Functions.composeclr(ColourSpaces.HSB.getColourSpace().toRGB(HSB));
 			h += increment;
 			h %= 1;
 		}

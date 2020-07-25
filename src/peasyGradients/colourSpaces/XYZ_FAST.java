@@ -6,6 +6,7 @@ package peasyGradients.colourSpaces;
  * XYZ_FAST values are not divided by certain constants.
  * 
  * @author micycle1
+ * @deprecated
  *
  */
 public final class XYZ_FAST {
