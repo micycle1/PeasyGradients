@@ -7,7 +7,6 @@ import processing.core.PImage;
 import processing.core.PShape;
 import processing.core.PVector;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.concurrent.Callable;
 
@@ -19,8 +18,8 @@ import peasyGradients.utilities.Functions;
  * horizontal) and more powerful constructors for more __ gradients
  * (centre-offset, angled, n-color gradient with color stops)
  * 
- * TODO memoisation TODO pshape masks TODO set color interpolation method shape,
- * TODO interpolation mode in this class! gradient
+ * TODO pshape masks TODO set color interpolation method shape, TODO
+ * interpolation mode in this class! gradient
  * Shape.applycolorgradient(gradient).applyopacitygradient(shape.applyopacity))
  * 
  * TODO dithering/banding/rgb depth TODO parallelStream for
@@ -55,7 +54,7 @@ public final class PeasyGradients {
 	private PShape shapeMask;
 	int colorMode = PConstants.RGB;
 	private PGraphics gradientPG;
-	int[] pixels;
+
 	HashMap<Float, Integer> cache = new HashMap<>();
 	int[] pixelCache;
 	int cacheSize;
@@ -63,8 +62,9 @@ public final class PeasyGradients {
 	int cacheSizeConic;
 
 	private boolean renderInternal = true; // render internal pgraphics, or parent papplet?
-	private int pAppletRenderHeight, pAppletRenderWidth;
-	private int pAppletRenderOffsetX, pAppletRenderOffsetY;
+	private int renderHeight, renderWidth;
+	private int renderOffsetX, renderOffsetY;
+	private float scaleY, scaleX;
 
 	private PGraphics emptyPGraphics;
 
@@ -82,31 +82,11 @@ public final class PeasyGradients {
 
 	}
 
-	public void setCanvas(int width, int height) {
-		if (!(width >= 0 && height >= 0)) {
-			System.err.println("Dimensions must each be greater than 0.");
-			return;
-		}
-		pixels = new int[width * height];
-		gradientPG = p.createGraphics(width, height);
-		gradientPG.beginDraw();
-		gradientPG.loadPixels();
-		gradientPG.endDraw();
-//		cacheSize = (int) (Math.max(gradientPG.width, gradientPG.height) * 1.4143); // minimum required for linear gradient
-		cacheSize = 2 * (gradientPG.width + gradientPG.height); // minimum required for perfectly smooth conic gradient
-		pixelCache = new int[cacheSize + 1];
-		renderInternal = true;
-	}
-
 	/**
 	 * @see #renderIntoPApplet(int, int, int, int)
 	 */
 	public void renderIntoPApplet() {
-		pAppletRenderWidth = p.width;
-		pAppletRenderHeight = p.height;
-		pAppletRenderOffsetX = 0;
-		pAppletRenderOffsetY = 0;
-		setRenderTarget(p.getGraphics());
+		renderIntoPApplet(0, 0, p.width, p.height);
 	}
 
 	/**
@@ -118,30 +98,40 @@ public final class PeasyGradients {
 	 * @see #renderIntoPApplet()
 	 */
 	public void renderIntoPApplet(int x, int y, int width, int height) {
-		if (x < 0 || y < 0 || width > p.width || height > p.height) {
+		if (x < 0 || y < 0 || (width + x) > p.width || (y + height) > p.height) {
 			System.err.println("Invalid parameters.");
 			return;
 		}
-		
-		pAppletRenderWidth = width;
-		pAppletRenderHeight = height;
-		pAppletRenderOffsetX = x;
-		pAppletRenderOffsetY = y;
-		setRenderTarget(p.getGraphics());
+
+		renderWidth = width;
+		renderHeight = height;
+		renderOffsetX = x;
+		renderOffsetY = y;
+		setRenderTarget(p.getGraphics(), x, y, width, height);
 	}
 
 	public void setRenderTarget(PGraphics g) {
+		setRenderTarget(g, 0, 0, g.width, g.height);
+	}
+
+	private void setRenderTarget(PGraphics g, int offSetX, int offSetY, int width, int height) {
+
+		final int actualWidth = width - offSetX;
+		final int actualHeight = height - offSetY;
+		
+		scaleX = g.width / (float) width; // used for correct rendering increment
+		scaleY = g.height / (float) height; // used for correct rendering increment
+
 		g.loadPixels(); // only needs to be called once
+
 		renderInternal = false; // don't render to internal PG, let user control PG
 		gradientPG = g;
-		
-		cacheSize = (int) Math.ceil(Math.max(gradientPG.width, gradientPG.height) * 1.4143);
+
+		cacheSize = (int) Math.ceil(Math.max(actualWidth, actualHeight) * 1.4143);
 		pixelCache = new int[cacheSize + 1];
-		
-		cacheSizeConic = (int) (2 * Math.ceil(Math.max(gradientPG.width, gradientPG.height)));
+
+		cacheSizeConic = (int) (2 * Math.ceil(Math.max(actualWidth, actualHeight)));
 		pixelCacheConic = new int[cacheSizeConic + 1];
-		
-//		pixels = new int[g.width * g.height];
 	}
 
 	/**
@@ -163,26 +153,34 @@ public final class PeasyGradients {
 	}
 
 	/**
-	 * Restrict the gradient to use at most n colours (posterisation).
+	 * Restricts any all rendered to use at most n colours (posterisation).
 	 * 
-	 * @param n
-	 * @see #resetPosterise()
+	 * @param n max number of colours
+	 * @see #clearPosterise()
 	 */
 	public void posterise(int n) {
-		cacheSize = n; // minimum required for perfectly smooth conic gradient
-		pixelCache = new int[n + 1];
+		if (n != cacheSize) {
+			cacheSize = n; // minimum required for perfectly smooth conic gradient
+			pixelCache = new int[n + 1];
+			pixelCacheConic = new int[n + 1];
+		}
 	}
 
 	/**
 	 * Clears any user-defined colour posterisation.
+	 * 
 	 * @see #posterise(int)
 	 */
-	public void resetPosterise() {
-		cacheSize = 2 * (gradientPG.width + gradientPG.height); // minimum required for perfectly smooth conic gradient
-		pixelCache = new int[cacheSize + 1];
+	public void clearPosterise() {
+		setRenderTarget(gradientPG, renderOffsetX, renderOffsetY, renderWidth, renderHeight);
 	}
-	
 
+	/**
+	 * 
+	 * @param gradient 1D Gradient to use as the basis for the linear gradient
+	 * @param angle    radians. East is 0, moves clockwise
+	 * @return
+	 */
 	public PImage linearGradient(Gradient gradient, float angle) {
 
 		PVector centerPoint = new PVector(gradientPG.width / 2, gradientPG.height / 2);
@@ -195,6 +193,13 @@ public final class PeasyGradients {
 		}
 	}
 
+	/**
+	 * 
+	 * @param gradient
+	 * @param centerPoint
+	 * @param angle       in radians
+	 * @return
+	 */
 	public PImage linearGradient(Gradient gradient, PVector centerPoint, float angle) {
 
 		// get edge-line intersection points
@@ -210,7 +215,7 @@ public final class PeasyGradients {
 	 * 
 	 * @param gradient    colour source
 	 * @param centerPoint gradient midpoint
-	 * @param angle       radians
+	 * @param angle       in radians
 	 * @param length      coefficient to lerp from centrepoint to edges (that
 	 *                    intersect with angle). default = 1: (first and last
 	 *                    colours will be exactly on edge); <1: colours will be
@@ -257,18 +262,14 @@ public final class PeasyGradients {
 	 * @return
 	 */
 	public PImage linearGradient(Gradient gradient, PVector centerPoint, PVector controlPoint1, PVector controlPoint2) {
-//		if (!PGPrimed) {
-//			System.err.println("First use setCanvas() to create a plane to render into");
-//			return null;
-//		}
 
 		gradient.prime(); // prime curr color stop
 
 		/**
 		 * Pre-compute vals for linearprojection
 		 */
-		final float odX = controlPoint2.x - controlPoint1.x; // Rise and run of line.
-		final float odY = controlPoint2.y - controlPoint1.y; // Rise and run of line.
+		float odX = controlPoint2.x - controlPoint1.x; // Rise and run of line.
+		float odY = controlPoint2.y - controlPoint1.y; // Rise and run of line.
 		final float odSqInverse = 1 / (odX * odX + odY * odY); // Distance-squared of line.
 		float opXod = -controlPoint1.x * odX + -controlPoint1.y * odY;
 
@@ -279,33 +280,20 @@ public final class PeasyGradients {
 			pixelCache[i] = gradient.evalRGB(i / (float) pixelCache.length);
 		}
 
-		if (renderInternal) {
-			/**
-			 * Usually, we'd call Functions.linearProject() to calculate step, but the
-			 * function is inlined here to optimise speed.
-			 */
-			for (int i = 0, y = 0, x; y < gradientPG.height; ++y) { // loop for quality = 0 (every pixel)
-				opXod += odY;
-				xOff = 0;
-				for (x = 0; x < gradientPG.width; ++x, ++i) {
-					step = (opXod + xOff) * odSqInverse; // get position of point on 1D gradient and normalise
-					step = (step < 0) ? 0 : (step > 1 ? 1 : step); // clamp
-					int stepInt = (int) (step * cacheSize);
-					gradientPG.pixels[i] = pixelCache[stepInt];
-					xOff += odX;
-				}
-			}
-		} else {
-			for (int i = 0, y = pAppletRenderOffsetY, x; y < pAppletRenderHeight; ++y) { // loop for quality = 0 (every pixel)
-				opXod += odY;
-				xOff = 0;
-				for (x = pAppletRenderOffsetX; x < pAppletRenderWidth; ++x, ++i) {
-					step = (opXod + xOff) * odSqInverse; // get position of point on 1D gradient and normalise
-					step = (step < 0) ? 0 : (step > 1 ? 1 : step); // clamp
-					int stepInt = (int) (step * cacheSize);
-					gradientPG.pixels[i] = pixelCache[stepInt];
-					xOff += odX;
-				}
+
+		/**
+		 * Usually, we'd call Functions.linearProject() to calculate step, but the
+		 * function is inlined here to optimise speed.
+		 */
+		for (int y = 0, x; y < renderHeight; ++y) { // loop for quality = 0 (every pixel)
+			opXod += odY * scaleY;
+			xOff = 0;
+			for (x = 0; x < renderWidth; ++x) {
+				step = (opXod + xOff) * odSqInverse; // get position of point on 1D gradient and normalise
+				step = (step < 0) ? 0 : (step > 1 ? 1 : step); // clamp
+				int stepInt = (int) (step * cacheSize);
+				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCache[stepInt];
+				xOff += odX * scaleX;
 			}
 		}
 
@@ -319,7 +307,7 @@ public final class PeasyGradients {
 			gradientPG.ellipse(controlPoint2.x, controlPoint2.y, 50, 50);
 			gradientPG.ellipse(centerPoint.x, centerPoint.y, 10, 10);
 		}
-		
+
 		if (renderInternal) {
 			gradientPG.endDraw();
 			return gradientPG;
@@ -340,22 +328,26 @@ public final class PeasyGradients {
 	 */
 	public PImage radialGradient(Gradient gradient, PVector midPoint, float zoom) {
 
-		float hypotSq = (gradientPG.width * gradientPG.width) + (gradientPG.height * gradientPG.height);
+//		float hypotSq = (gradientPG.width * gradientPG.width) + (gradientPG.height * gradientPG.height);
+		float hypotSq = (renderWidth * renderWidth) + (renderHeight * renderHeight);
 		float rise, run, distSq, dist;
 		zoom = 1 / zoom;
+		
+		float renderMidpointX = (midPoint.x / gradientPG.width) * renderWidth;
+		float renderMidpointY = (midPoint.y / gradientPG.height) * renderHeight;
 
 		gradient.prime();
-		
+
 		for (int i = 0; i < pixelCache.length; i++) { // calc LUT
 			pixelCache[i] = gradient.evalRGB(i / (float) pixelCache.length);
 		}
 
-		for (int i = 0, y = 0, x; y < gradientPG.height; ++y) {
-			rise = midPoint.y - y;
+		for (int y = 0, x; y < renderHeight; ++y) {
+			rise = renderMidpointY - y;
 			rise *= rise;
 
-			for (x = 0; x < gradientPG.width; ++x, ++i) {
-				run = midPoint.x - x;
+			for (x = 0; x < renderWidth; ++x) {
+				run = renderMidpointX - x;
 				run *= run;
 
 				distSq = run + rise;
@@ -365,13 +357,14 @@ public final class PeasyGradients {
 				}
 
 				int stepInt = (int) (dist * cacheSize);
+
+				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCache[stepInt];
 				
-				gradientPG.pixels[i] = pixelCache[stepInt];
 			}
 		}
-		
+
 		gradientPG.updatePixels();
-		
+
 		if (renderInternal) {
 			gradientPG.endDraw();
 			return gradientPG.get();
@@ -394,31 +387,37 @@ public final class PeasyGradients {
 	 * 
 	 * <p>
 	 * This method creates a hard stop where the last and first colors bump right up
-	 * to one another.
+	 * to one another. See
+	 * {@link #conicGradientSmooth(Gradient, PVector, float, float)
+	 * conicGradientSmooth()} to smoothly transition between the first and last
+	 * colours.
 	 * 
 	 * @param gradient
 	 * @param midPoint
-	 * @param angle
-	 * @param zoom
+	 * @param angle    in radians, where east is 0 and moves clockwise
+	 * @param zoom default=1
 	 * @return
 	 * @see #conicGradientSmooth(Gradient, PVector, float, float)
 	 */
-	public PImage conicGradient(Gradient gradient, PVector midPoint, float angle, float zoom) {
+	public PImage conicGradient(Gradient gradient, PVector midPoint, float angle) {
 
 		gradient.prime();
-		
+
 		for (int i = 0; i < pixelCacheConic.length; i++) { // calc LUT
 			pixelCacheConic[i] = gradient.evalRGB(i / (float) pixelCacheConic.length);
 		}
 
 		float rise, run;
 		double t = 0;
+		
+		float renderMidpointX = (midPoint.x / gradientPG.width) * renderWidth;
+		float renderMidpointY = (midPoint.y / gradientPG.height) * renderHeight;
 
-		for (int i = 0, y = 0, x; y < gradientPG.height; ++y) {
-			rise = midPoint.y - y;
-			run = midPoint.x;
-			for (x = 0; x < gradientPG.width; ++x, ++i) {
-				run = midPoint.x - x;
+		for (int y = 0, x; y < renderHeight; ++y) {
+			rise = renderMidpointY - y;
+			run = renderMidpointX;
+			for (x = 0; x < renderWidth; ++x) {
+				run = renderMidpointX - x;
 
 				t = Functions.fastAtan2(rise, run) + angle;
 
@@ -427,8 +426,9 @@ public final class PeasyGradients {
 
 				// Divide by TWO_PI to get value in range 0...1
 				t *= INV_TWO_PI;
-				int stepInt = (int) (t * pixelCacheConic.length);
-				gradientPG.pixels[i] = pixelCacheConic[stepInt];
+				int stepInt = (int) (t * cacheSizeConic);
+				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCacheConic[stepInt];
+//				gradientPG.pixels[i] = pixelCacheConic[stepInt];
 			}
 		}
 
@@ -458,13 +458,13 @@ public final class PeasyGradients {
 	 * @return
 	 * @see #conicGradient(Gradient, PVector, float, float)
 	 */
-	public PImage conicGradientSmooth(Gradient gradient, PVector midPoint, float angle, float zoom) {
+	public PImage conicGradientSmooth(Gradient gradient, PVector midPoint, float angle) {
 		gradient.push(gradient.colourAt(0)); // add copy of first colour to end
-		PImage out = conicGradient(gradient, midPoint, angle, zoom);
+		PImage out = conicGradient(gradient, midPoint, angle);
 		gradient.removeLast(); // remove colour copy
 		return out;
 	}
-	
+
 	public void quadGradient() {
 		// TODO multiple linear gradient passes, then lerp?
 	}
