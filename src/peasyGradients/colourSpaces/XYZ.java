@@ -6,8 +6,9 @@ import peasyGradients.utilities.FastPow;
 import peasyGradients.utilities.Functions;
 
 /**
- * aka CIE 1931, Java implementation of https://www.easyrgb.com/en/math.php
- * method
+ * CIE XYZ (aka CIE 1931) (aka tristimulus values) is a device-invariant representation of color.
+ * It serves as a standard reference against which many other color spaces are
+ * defined.
  *
  * @author micycle1
  *

@@ -10,6 +10,7 @@ import peasyGradients.utilities.FastPow;
  * https://github.com/quag/JzAzBz/blob/master/glsl/jchz.glsl
  * http://im.snibgo.com/jzazbz.htm
  * 
+ * <p>
  * JAB (JzAzBz) is a a colour space designed for perceptul uniformity in high
  * dynamic range (HDR) and wide colour gamut (WCG) applications. Conceptually it
  * is similar to CIE L*a*b*, but has claimed improvements:

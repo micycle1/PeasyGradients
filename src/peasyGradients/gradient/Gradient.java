@@ -37,7 +37,7 @@ public final class Gradient {
 
 	double[] colorOut; // TODO color (in Gradient's current colourspace)
 
-	public ColourSpace colourSpace = ColourSpace.XYZ_FAST; // TODO public for testing
+	public ColourSpace colourSpace = ColourSpace.XYZ; // TODO public for testing
 
 	/**
 	 * 
@@ -92,7 +92,7 @@ public final class Gradient {
 	}
 	
 	public void setOffset(float offset) {
-		offset = offset;
+		this.offset = offset;
 	}
 
 	public void mutateColour(float amt) {
@@ -100,16 +100,11 @@ public final class Gradient {
 	}
 
 	/**
-	 * Prime for animation
+	 * Prime the gradient for animation (pushes the a copy of the first colour of
+	 * the gradient to the end and scales the rest).
 	 */
 	public void primeAnimation() {
-		float offset = colorStops.get(1).percent; // get where first colour stop ends
-		offset /= 2;
-
-		for (int i = 1; i < colorStops.size(); i++) { // shift all stops down
-			colorStops.get(i).percent -= offset;
-		}
-		add(1, colourAt(0));
+		push(colourAt(0));
 	}
 
 	/**
@@ -244,7 +239,7 @@ public final class Gradient {
 		switch (colourSpace) {
 			case HSB_SHORT :
 				HSB.interpolateShort(currStop.clrHSB, prevStop.clrHSB, smoothStep, rsltclrF);
-				return Functions.composeclr(HSB.hsbToRgb(rsltclrF));
+				return Functions.composeclr(HSB.hsbToRgb(rsltclrF)); // TODO return with interpolated alpha (add alpha to RGB 24 bit)
 			case HSB_LONG :
 				HSB.interpolateLong(currStop.clrHSB, prevStop.clrHSB, smoothStep, rsltclrF);
 				return Functions.composeclr(HSB.hsbToRgb(rsltclrF));
@@ -260,6 +255,9 @@ public final class Gradient {
 			case VERY_FAST_LAB :
 				interpolateLinear(currStop.clrLAB, prevStop.clrLAB, smoothStep, rsltclrD);
 				return Functions.composeclr(CIE_LAB.lab2rgbVeryQuick(rsltclrD));
+			case DIN99:
+				interpolateLinear(currStop.clrDIN99, prevStop.clrDIN99, smoothStep, rsltclrD);
+				return Functions.composeclr(DIN99.din2rgb(rsltclrD));
 			case HUNTER_LAB :
 				interpolateLinear(currStop.clrHLAB, prevStop.clrHLAB, smoothStep, rsltclrD);
 				return Functions.composeclr(HUNTER_LAB.hlab2rgb(rsltclrD));

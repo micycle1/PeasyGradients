@@ -33,6 +33,7 @@ public final class ColorStop implements Comparable<ColorStop> {
 	double[] clrXYZ_FAST;
 	double[] clrJAB;
 	double[] clrITP;
+	double[] clrDIN99;
 
 	/**
 	 * 
@@ -62,11 +63,16 @@ public final class ColorStop implements Comparable<ColorStop> {
 		clrRYB = RYB.rgb2ryb(Functions.decomposeclrRGBA(clr));
 		clrJAB = JAB.rgb2jab(clrRGBDouble);
 		clrITP = ITP.rgb2itp(clrRGBDouble);
+		clrDIN99 = DIN99.rgb2din(clrRGBDouble);
+		
+//		for (int i = 0; i < ColourSpace.size; i++) {
+//			col
+//		}
+		
 	}
 
 	/**
-	 * Mandated by the interface Comparable<ColorStop>. Permits color stops to be
-	 * sorted by Collections.sort via pairwise comparison.
+	 * Permits color stops to be sorted by Collections.sort via pairwise comparison on the percent of each stop.
 	 */
 	public int compareTo(ColorStop cs) {
 		return percent > cs.percent ? 1 : percent < cs.percent ? -1 : 0;

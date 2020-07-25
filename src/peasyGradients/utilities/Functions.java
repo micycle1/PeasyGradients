@@ -288,6 +288,11 @@ public final class Functions {
 		return out;
 	}
 
+	/**
+	 * Unpack a 32-Bit ARGB int, normalising to 0..1
+	 * @param clr
+	 * @return  sRGB representing the argb color
+	 */
 	public static float[] decomposeclrRGBA(int clr) {
 		float[] out = new float[4];
 		out[3] = (clr >> 24 & 0xff) * INV_255;
@@ -355,6 +360,18 @@ public final class Functions {
 		return random.nextFloat();
 	}
 	
+	/**
+	 * Returns a pseudorandom, uniformly distributed int value between min
+	 * (inclusive) and max (inclusive),
+	 * 
+	 * @param min
+	 * @param max
+	 * @return
+	 */
+	public static int randomInt(int min, int max) {
+		return random.nextInt(max + 1 - min) + min; // + 1 for inclusive
+	}
+
 	/**
 	 * Very fast and fairly accurate (for its speed).
 	 * @param f1 base

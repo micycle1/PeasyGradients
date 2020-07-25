@@ -65,6 +65,20 @@ public final class Palette {
 	public static int[] randomColors(int nColours) {
 		return generic(nColours, GRC);
 	}
+	
+	/**
+	 * Generate a colour palette of n random colours. Colours are generated completely randomly.
+	 * @param nColours
+	 * @return
+	 * @see #randomColors(int) generates colours with similar saturation and brightness
+	 */
+	public static int[] randomRandomColors(int nColours) {
+		int[] out = new int[nColours];
+		for (int i = 0; i < nColours; i++) {
+			out[i] = -Functions.randomInt(0, 2<<24);
+		}
+		return out;
+	}
 
 	/**
 	 * Generate an n-colour palette by cycling hue and varying saturation and brightness a little.
