@@ -485,7 +485,7 @@ public final class PeasyGradients {
 			final double yTranslate = (y - midPoint.y);
 			for (x = 0; x < renderWidth; ++x) {
 
-				newXpos = (x - midPoint.x) * cos - yTranslate * sin + midPoint.x; // rotate y about midpoint
+				newXpos = (x - midPoint.x) * cos - yTranslate * sin + midPoint.x; // rotate x about midpoint
 				newYpos = yTranslate * cos + (x - midPoint.x) * sin + midPoint.y; // rotate y about midpoint
 
 				dist = Math.max(Math.abs(newYpos - midPoint.y), Math.abs(newXpos - midPoint.x)) / denominator; // max
@@ -531,7 +531,7 @@ public final class PeasyGradients {
 			final double yTranslate = (y - midPoint.y);
 			for (x = 0; x < renderWidth; ++x) {
 
-				newXpos = (x - midPoint.x) * cos - yTranslate * sin + midPoint.x; // rotate y about midpoint
+				newXpos = (x - midPoint.x) * cos - yTranslate * sin + midPoint.x; // rotate x about midpoint
 				newYpos = yTranslate * cos + (x - midPoint.x) * sin + midPoint.y; // rotate y about midpoint
 
 				dist = Math.min(Math.abs(newYpos - midPoint.y), Math.abs(newXpos - midPoint.x)) / denominator; // min
@@ -561,47 +561,59 @@ public final class PeasyGradients {
 	}
 
 	public void multiGradient() {
-
 		// TODO two/n pass
 	}
 
 	/**
-	 * Petal gradient
+	 * Hourglass gradient
 	 * 
 	 * @param gradient
 	 * @param midPoint
 	 * @param angle
-	 * @param zoom
-	 * @param petals nearest multiple of 2 (floor)
+	 * @param zoom default = 1
 	 * @return
 	 */
-	public PImage petalGradient(Gradient gradient, PVector midPoint, float angle, float zoom, int petals) {
+	public PImage hourglassGradient(Gradient gradient, PVector midPoint, float angle, float zoom) {
 
 		gradient.prime();
-		petals /= 2;
 		
-		double denominator = (Math.max(renderHeight, renderWidth) / 2) * zoom;
+		double denominator = 1 / ((Math.max(renderHeight, renderWidth) / 2) * zoom);
 
 		for (int i = 0; i < pixelCacheConic.length; i++) { // calc LUT
 			pixelCacheConic[i] = gradient.evalRGB(i / (float) pixelCacheConic.length);
 		}
+		
+		final float sin = (float) FastMath.sin(PApplet.TWO_PI - angle);
+		final float cos = (float) FastMath.cos(angle);
+		
+		float newXpos;
+		float newYpos;
 
-		double yDist;
-		double xDist;
+		float yDist;
+		float xDist;
+		
 		for (int y = 0, x; y < renderHeight; ++y) {
 			yDist = (midPoint.y - y) * (midPoint.y - y);
+			final float yTranslate = (y - midPoint.y);
+			
 			for (x = 0; x < renderWidth; ++x) {
 				xDist = (midPoint.x - x) * (midPoint.x - x);
-
-				// TODO calc based on prev value
-				float pointAngle = Functions.angleBetween(midPoint, x, y) - angle + THREE_QRTR_PI;
-				pointAngle*=petals;
 				
-				final double absdist = Math.sqrt(yDist + xDist); // euclidean distance between midpoint and (x,y)
-
-				double dist = Math
-						.abs(absdist / (FastMath.cosQuick(pointAngle) + FastMath.sinQuick(pointAngle)) / denominator);
-
+				newXpos = (x - midPoint.x) * cos - yTranslate * sin + midPoint.x; // rotate x about midpoint
+				newYpos = yTranslate * cos + (x - midPoint.x) * sin + midPoint.y; // rotate y about midpoint
+				
+				/**
+				 * In the 2 lines below, we are effectively calculating dist = eDist/(cos(angle) +
+				 * sin(angle)), where eDist is euclidean distance between (x,y) & midpoint, and
+				 * angle is the (atan2) angle between (x,y) & midpoint. These trig functions and
+				 * multiple sqrts have been cancelled out to derive the faster equivalent
+				 * equations below.
+				 */
+				
+				float z = (midPoint.y - newYpos) / (midPoint.x - newXpos); // atan2(y,x) === atan(y/x), so calc y/x here
+				
+				double dist = Math.sqrt((yDist + xDist) * (z * z + 1)) * denominator; // sqrt(z * z + 1) === cos(atan(x)) 
+				
 				if (dist > 1) {
 					dist = 1;
 				}

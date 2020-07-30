@@ -163,16 +163,16 @@ public final class Functions {
 	}
 
 	/**
-	 * Project a given pixel coordinate (x, y) onto the imaginary spine of the
-	 * gradient (linear gradients only).
+	 * Project a given 2D pixel coordinate (x, y) onto a position (0...1) of the
+	 * imaginary 1D spine of the gradient (linear gradients only).
 	 * 
-	 * @param originX
-	 * @param originY
-	 * @param destX
-	 * @param destY
-	 * @param pointX
-	 * @param pointY
-	 * @return percent that the point occurs on in a gradient [0...1]
+	 * @param originX x coord of gradient spline origin
+	 * @param originY y coord of gradient spline origin
+	 * @param destX x coord of gradient spline destination
+	 * @param destY y coord of gradient spline destination
+	 * @param pointX x coord of point to project onto spline
+	 * @param pointY y coord of point to project onto spline 
+	 * @return position (0...1) that the point occurs on in a gradient [0...1]
 	 */
 	public static float linearProject(float originX, float originY, float destX, float destY, int pointX, int pointY) {
 		// Rise and run of line.
@@ -208,7 +208,7 @@ public final class Functions {
 	}
 
 	/**
-	 * Compose an sRGBA int from float[] 0...1
+	 * Compose a 32 bit sARGB int from float[] 0...1
 	 * 
 	 * @param in
 	 * @return
@@ -235,13 +235,23 @@ public final class Functions {
 	}
 
 	/**
-	 * sRGB (0...1) in
+	 * sRGB (0...1) in. Assumes full alpha.
 	 * 
 	 * @param in
 	 * @return
 	 */
 	public static int composeclr(double[] in) {
 		return fullAlpha | (int) (in[0] * 255 + 0.5) << 16 | (int) (in[1] * 255 + 0.5) << 8 | (int) (in[2] * 255 + 0.5);
+	}
+	
+	/**
+	 * 
+	 * @param in double[3] each is 0...1
+	 * @param alpha 0...255
+	 * @return
+	 */
+	public static int composeclr(double[] in, int alpha) {
+		return alpha << 24 | (int) (in[0] * 255 + 0.5) << 16 | (int) (in[1] * 255 + 0.5) << 8 | (int) (in[2] * 255 + 0.5);
 	}
 
 	public static int[] composeclrTo255(double[] in) {
@@ -288,6 +298,15 @@ public final class Functions {
 		out[0] = (clr >> 16 & 0xff);
 		out[1] = (clr >> 8 & 0xff);
 		out[2] = (clr & 0xff);
+		return out;
+	}
+	
+	public static double[] decomposeclrRGBDouble(int clr, int alpha) {
+		double[] out = new double[4];
+		out[0] = (clr >> 16 & 0xff);
+		out[1] = (clr >> 8 & 0xff);
+		out[2] = (clr & 0xff);
+		out[3] = alpha;
 		return out;
 	}
 
@@ -394,12 +413,12 @@ public final class Functions {
 	}
 
 	/**
-	 * Returns of string representation of the input array, array values are
+	 * Returns of string representation of the input array; array values are
 	 * formatted to n decimal places, and padded with zeros (optional).
 	 * 
 	 * @param array
-	 * @param decimalPlaces
-	 * @param padding default 3 when decimal places = 0
+	 * @param decimalPlaces number of decimal places to retain
+	 * @param padding default is 3 when decimal places = 0
 	 * @return
 	 */
 	public static String formatArray(double[] array, int decimalPlaces, int padding) {
@@ -448,7 +467,7 @@ public final class Functions {
 
 		return rv;
 	}
-
+	
 	/**
 	 * pow approximation with exponentiation by squaring. Very fast, but with
 	 * appreciable inaccuracy. https://pastebin.com/ZW95gEyr
@@ -475,6 +494,24 @@ public final class Functions {
 		final long tmp = Double.doubleToLongBits(a);
 		final long tmp2 = (long) (b_faction * (tmp - 4606921280493453312L)) + 4606921280493453312L;
 		return r * Double.longBitsToDouble(tmp2);
+	}
+	
+	/**
+	 * rel. error of 0.000892
+	 */
+	public static float fastInvSqrt(float x) {
+	    final float xhalf = 0.5f * x;
+	    int i = Float.floatToIntBits(x);
+	    i = 0x5F376908 - (i >> 1);
+	    x = Float.intBitsToFloat(i);
+	    return x *= (1.5008909f - xhalf * x * x);
+	}
+	
+	/**
+	 * rel. error of 0.035
+	 */
+	public static float veryFastInvSqrt(float x) {
+	    return  Float.intBitsToFloat(0x5F37624F - (Float.floatToIntBits(x) >> 1));
 	}
 
 	/**
@@ -544,7 +581,7 @@ public final class Functions {
 	}
 
 	/**
-	 * Finds the two points of intersection between a rectange and a line, which
+	 * Finds the two points of intersection between a rectangle and a line, which
 	 * given by a point inside the rectangle and an angle.
 	 * <p>
 	 * A Java/Processing implementation of
