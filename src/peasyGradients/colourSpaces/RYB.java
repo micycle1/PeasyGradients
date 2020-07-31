@@ -10,9 +10,9 @@ import peasyGradients.utilities.Functions;
  * @author micycle1
  *
  */
-public final class RYB implements ColourSpace {
+final class RYB implements ColourSpace {
 	
-	public RYB() {
+	RYB() {
 	}
 
 	/**

@@ -13,6 +13,8 @@ import peasyGradients.gradient.Gradient;
 import peasyGradients.utilities.Functions;
 
 /**
+ * Turns 1D gradient into 2D image.
+ * 
  * Offers both quick constructors for more simple gradients (such as 2 color
  * horizontal) and more powerful constructors for more __ gradients
  * (centre-offset, angled, n-color gradient with color stops)
@@ -159,7 +161,8 @@ public final class PeasyGradients {
 	 */
 	public void posterise(int n) {
 		if (n != cacheSize) {
-			cacheSize = n; // minimum required for perfectly smooth conic gradient
+			cacheSize = n;
+			cacheSizeConic = n;
 			pixelCache = new int[n + 1];
 			pixelCacheConic = new int[n + 1];
 		}
@@ -416,7 +419,7 @@ public final class PeasyGradients {
 			run = renderMidpointX;
 			for (x = 0; x < renderWidth; ++x) {
 
-				t = Functions.fastAtan2(rise, run) + angle;
+				t = Functions.fastAtan2(rise, run) + PConstants.PI - angle;
 
 				// Ensure a positive value if angle is negative.
 				t = Functions.floorMod(t, PConstants.TWO_PI);
@@ -468,8 +471,8 @@ public final class PeasyGradients {
 
 		gradient.prime();
 
-		for (int i = 0; i < pixelCacheConic.length; i++) { // calc LUT
-			pixelCacheConic[i] = gradient.evalRGB(i / (float) pixelCacheConic.length);
+		for (int i = 0; i < pixelCache.length; i++) { // calc LUT
+			pixelCache[i] = gradient.evalRGB(i / (float) pixelCache.length);
 		}
 
 		final double denominator = (Math.max(renderHeight, renderWidth) / 2) * zoom; // calc here, not in loop
@@ -496,7 +499,7 @@ public final class PeasyGradients {
 
 				final int stepInt = (int) (dist * cacheSize);
 
-				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCacheConic[stepInt];
+				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCache[stepInt];
 			}
 		}
 
@@ -577,7 +580,7 @@ public final class PeasyGradients {
 
 		gradient.prime();
 		
-		double denominator = 1 / ((Math.max(renderHeight, renderWidth) / 2) * zoom);
+		double denominator = 1 / ((Math.max(renderHeight, renderWidth)) * zoom);
 
 		for (int i = 0; i < pixelCacheConic.length; i++) { // calc LUT
 			pixelCacheConic[i] = gradient.evalRGB(i / (float) pixelCacheConic.length);

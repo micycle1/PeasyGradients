@@ -25,7 +25,7 @@ import peasyGradients.utilities.FastPow;
  * @author micycle1
  *
  */
-public final class JAB implements ColourSpace {
+final class JAB implements ColourSpace {
 
 	private static final double b = 1.15;
 	private static final double g = 0.66;
@@ -39,7 +39,7 @@ public final class JAB implements ColourSpace {
 	private static final double d = -0.56;
 	private static final double d0 = 1.6295499532821567 * Math.pow(10, -11);
 	
-	public JAB() {
+	JAB() {
 	}
 
 	public double[] fromRGB(double[] rgb) {

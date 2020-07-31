@@ -6,9 +6,9 @@ package peasyGradients.colourSpaces;
  * @author micycle1
  *
  */
-public final class RGB implements ColourSpace {
+final class RGB implements ColourSpace {
 	
-	public RGB() {
+	RGB() {
 	}
 	
 	/**

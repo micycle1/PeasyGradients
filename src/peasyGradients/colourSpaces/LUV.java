@@ -6,7 +6,7 @@ package peasyGradients.colourSpaces;
  * @author micycle1
  *
  */
-public final class LUV implements ColourSpace {
+final class LUV implements ColourSpace {
 
 	private static final double refU = 0.19783000664283;
 	private static final double refV = 0.46831999493879;
@@ -15,7 +15,7 @@ public final class LUV implements ColourSpace {
 	private static final double kappa = 903.2962962;
 	private static final double epsilon = 0.0088564516;
 	
-	public LUV() {
+	LUV() {
 	}
 
 	/**

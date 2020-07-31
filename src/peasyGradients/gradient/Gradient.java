@@ -1,9 +1,11 @@
 package peasyGradients.gradient;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import net.jafama.FastMath;
 import peasyGradients.colourSpaces.*;
+import peasyGradients.utilities.FastPow;
 import peasyGradients.utilities.Functions;
+import peasyGradients.utilities.Interpolation;
 
 /**
  * A gradient comprises of {@link #colorStops}, which each specify a colour and
@@ -17,6 +19,8 @@ import peasyGradients.utilities.Functions;
  * Use a {@link #peasyGradients.PeasyGradients} instance to render Gradients.
  * 
  * @author micycle1
+ * 
+ * TODO export as JSON
  *
  */
 public final class Gradient {
@@ -35,12 +39,14 @@ public final class Gradient {
 
 	public ColourSpaces colourSpace = ColourSpaces.XYZ; // TODO public for testing
 	ColourSpace colourSpaceInstance = colourSpace.getColourSpace(); // call toRGB on this instance
-
+	public Interpolation interpolationMode = Interpolation.SMOOTH_STEP;
+	
 	/**
 	 * 
 	 */
 	public Gradient() {
-		this(0xff000000, 0xffffffff); // default: black-->white
+//		this(0xff000000, 0xffffffff); // default: black-->white
+		this(Palette.complementary());
 	}
 
 	// Creates equidistant color stops.
@@ -77,7 +83,8 @@ public final class Gradient {
 	 * @param col       ARGB colour integer representation
 	 */
 	public void setColorStopCol(int stopIndex, int col) {
-		if (stopIndex < colorStops.size()) {
+		if (stopIndex > -1 && stopIndex < colorStops.size()) {
+			System.out.println("set colo");
 			colorStops.get(stopIndex).setColor(col);
 		}
 	}
@@ -86,17 +93,23 @@ public final class Gradient {
 	 * Increases the gradient offset (for animation) by the amount given.
 	 * 
 	 * @param amt 0...1 smaller is less change
+	 * @see #setOffset(float)
 	 */
 	public void animate(float amt) {
 		offset += amt;
 	}
 
+	/**
+	 * 
+	 * @param offset
+	 * @see #animate(float)
+	 */
 	public void setOffset(float offset) {
 		this.offset = offset;
 	}
 
 	public void mutateColour(float amt) {
-
+		// TODO mutate all colour stops
 	}
 
 	/**
@@ -124,7 +137,7 @@ public final class Gradient {
 
 	/**
 	 * Remove last colour stop from the gradient and scale the rest to fill
-	 * gradient.
+	 * the gradient.
 	 * 
 	 * @see #push(int)
 	 */
@@ -176,6 +189,7 @@ public final class Gradient {
 		lastCurrStopIndex = 0;
 		currStop = colorStops.get(lastCurrStopIndex);
 		prevStop = colorStops.get(0);
+		colorStops.forEach(c-> c.setColourSpace(colourSpace));
 	}
 
 	/**
@@ -197,62 +211,69 @@ public final class Gradient {
 		}
 
 		/**
-		 * First calculate whether the current step has gone beyond the existing
-		 * colourstop boundary (either above or below). If the first colour stop is at a
-		 * position > 0 or last colour stop at a position < 1, then when step >
-		 * currStop.percent or step < currStop.percent is true, we don't want to
-		 * inc/decrement currStop.
+		 * Calculate whether the current step has gone beyond the existing colourstop
+		 * boundary (either above or below). If the first colour stop is at a position >
+		 * 0 or last colour stop at a position < 1, then when step > currStop.percent or
+		 * step < currStop.percent is true, we don't want to inc/decrement currStop.
+		 * Deprecated now, since we pre-compute results into a LUT, so this function is
+		 * now called with monotonically increasing step.
 		 */
-		if (step > currStop.percent) { // if at end, stay, otherwise next
-			if (lastCurrStopIndex == (colorStops.size() - 1)) {
-				prevStop = colorStops.get(lastCurrStopIndex);
-				denom = 1;
-			} else {
-				do {
-					lastCurrStopIndex++; // increment
-					currStop = colorStops.get(lastCurrStopIndex);
-				} while (step > currStop.percent && lastCurrStopIndex < (colorStops.size() - 1)); // sometimes step might jump more than 1
-																									// colour
-				prevStop = colorStops.get(lastCurrStopIndex - 1);
-
-				denom = 1 / (prevStop.percent - currStop.percent); // compute denominator inverse
-			}
-
-		} else if (step < prevStop.percent) {
-			if (lastCurrStopIndex == 0) { // if at zero stay, otherwise prev
-				denom = 1;
-				currStop = colorStops.get(0);
-			} else {
-				do {
-					lastCurrStopIndex--; // decrement
-					prevStop = colorStops.get(Math.max(lastCurrStopIndex - 1, 0));
-				} while (step < prevStop.percent); // sometimes step might jump back more than 1 colour
-
-				currStop = colorStops.get(lastCurrStopIndex);
-
-				denom = 1 / (prevStop.percent - currStop.percent); // compute denominator inverse
-			}
+//		if (step > currStop.percent) { // if at end, stay, otherwise next
+//			if (lastCurrStopIndex == (colorStops.size() - 1)) {
+//				prevStop = colorStops.get(lastCurrStopIndex);
+//				denom = 1;
+//			} else {
+//				do {
+//					lastCurrStopIndex++; // increment
+//					currStop = colorStops.get(lastCurrStopIndex);
+//				} while (step > currStop.percent && lastCurrStopIndex < (colorStops.size() - 1)); // sometimes step might jump more than 1
+//																									// colour
+//				prevStop = colorStops.get(lastCurrStopIndex - 1);
+//
+//				denom = 1 / (prevStop.percent - currStop.percent); // compute denominator inverse
+//			}
+//
+//		}
+//		else if (step <= prevStop.percent) {
+//		if (lastCurrStopIndex == 0) { // if at zero stay, otherwise prev
+//			denom = 1;
+//			currStop = colorStops.get(0);
+//		} else {
+//			do {
+//				lastCurrStopIndex--; // decrement
+//				prevStop = colorStops.get(Math.max(lastCurrStopIndex - 1, 0));
+//			} while (step < prevStop.percent); // sometimes step might jump back more than 1 colour
+//
+//			currStop = colorStops.get(lastCurrStopIndex);
+//
+//			denom = 1 / (prevStop.percent - currStop.percent); // compute denominator inverse
+//		}
+//	}
+		if (step > currStop.percent && lastCurrStopIndex != (colorStops.size() - 1) ) {
+			prevStop = colorStops.get(lastCurrStopIndex);
+			lastCurrStopIndex++; // increment
+			currStop = colorStops.get(lastCurrStopIndex);
+			denom = 1 / (prevStop.percent - currStop.percent); // compute denominator inverse
 		}
 
-		float smoothStep = Functions.functStep((step - currStop.percent) * denom); // apply interpolation function
+		double smoothStep = functStep((step - currStop.percent) * denom); // apply interpolation function
 
-		// interpolate in given colourspace
+		// interpolate within given colourspace
 		colourSpaceInstance.interpolateLinear(currStop.colorOut, prevStop.colorOut, smoothStep, interpolatedColourOUT);
+		int alpha = (int) Math.floor( (currStop.alpha + (step * (prevStop.alpha - currStop.alpha))) + 0.5d);
 
-		// convert current colourspace value to ARGB int
-		return Functions.composeclr(colourSpaceInstance.toRGB(interpolatedColourOUT));
-		// TODO return with interpolated alpha (add alpha to RGB 24 bit)
-
+		// convert current colourspace value to ARGB int and return
+		return Functions.composeclr(colourSpaceInstance.toRGB(interpolatedColourOUT), alpha);
 	}
-
+	
 	/**
-	 * TODO Return raw colour value (don't convert to rgb). Used for quad gradients
-	 * / second pass
-	 * 
-	 * @return
+	 * Colour space is defined for user at peasyGradients level, not gradient (1D)
+	 * @param colourSpace
 	 */
-	int evalRaw() {
-		return 0;
+	public void setColSpace(ColourSpaces colourSpace) {
+		this.colourSpace = colourSpace;
+		colourSpaceInstance = colourSpace.getColourSpace();
+		colorStops.forEach(c -> c.setColourSpace(colourSpace));
 	}
 
 	public void nextColSpace() {
@@ -265,6 +286,14 @@ public final class Gradient {
 		colourSpace = colourSpace.prev();
 		colourSpaceInstance = colourSpace.getColourSpace();
 		colorStops.forEach(c -> c.setColourSpace(colourSpace));
+	}
+	
+	public void nextInterpolationMode() {
+		interpolationMode = interpolationMode.next();
+	}
+
+	public void prevInterpolationMode() {
+		interpolationMode = interpolationMode.prev();
 	}
 
 	boolean remove(ColorStop colorStop) {
@@ -334,13 +363,74 @@ public final class Gradient {
 		sb.append("Gradient\n");
 		sb.append("Offset: " + offset + "\n");
 		sb.append("Colour Stops (" + colorStops.size() + "):\n");
-		sb.append(String.format("    " + "%-10s%-18s%-12s%-20s\n", "Percent", "RGB", "clrInteger", "clrCurrentColSpace"));
+		sb.append(String.format("    " + "%-10s%-25s%-12s%-20s\n", "Percent", "RGBA", "clrInteger", "clrCurrentColSpace"));
 		for (ColorStop colorStop : colorStops) {
-			sb.append(String.format("    " + "%-10s%-18s%-12s%-20s\n", colorStop.percent,
-					Functions.formatArray(Functions.decomposeclrRGBDouble(colorStop.clr), 0, 2), colorStop.clr,
+			sb.append(String.format("    " + "%-10s%-25s%-12s%-20s\n", colorStop.percent,
+					Functions.formatArray(Functions.decomposeclrRGBDouble(colorStop.clr, colorStop.alpha), 0, 2), colorStop.clr,
 					Functions.formatArray(colorStop.getColor(colourSpace), 2, 3)));
 		}
 		return sb.toString();
+	}
+	
+	/**
+	 * Calculate the step by passing it to the selected smoothing function. Allows
+	 * gradient renderer to easily change how the gradient is smoothed.
+	 * 
+	 * @param step 0...1
+	 * @return the new step
+	 */
+	private double functStep(float step) {
+		switch (interpolationMode) {
+			case LINEAR :
+				return step;
+			case IDENTITY :
+				return step * step * (2.0f - step);
+			case SMOOTH_STEP :
+				return 3 * step * step - 2 * step * step * step; // polynomial approximation of (0.5-FastMath.cos(PI*step)/2)
+			case SMOOTHER_STEP :
+				return step * step * step * (step * (step * 6 - 15) + 10);
+			case EXPONENTIAL :
+				return step == 1.0f ? step : 1.0f - FastPow.fastPow(2, -10 * step);
+			case CUBIC :
+				return step * step * step;
+			case BOUNCE :
+				float sPrime = step;
+
+				if (sPrime < 0.36364) { // 1/2.75
+					return 7.5625f * sPrime * sPrime;
+				}
+				if (sPrime < 0.72727) // 2/2.75
+				{
+					return 7.5625f * (sPrime -= 0.545454f) * sPrime + 0.75f;
+				}
+				if (sPrime < 0.90909) // 2.5/2.75
+				{
+					return 7.5625f * (sPrime -= 0.81818f) * sPrime + 0.9375f;
+				}
+				return 7.5625f * (sPrime -= 0.95455f) * sPrime + 0.984375f;
+			case CIRCULAR :
+				return Math.sqrt((2.0 - step) * step);
+			case SINE :
+				return FastMath.sinQuick(step);
+			case PARABOLA :
+				return Math.sqrt(4.0 * step * (1.0 - step));
+			case GAIN1 :
+				if (step < 0.5f) {
+					return 0.5f * FastPow.fastPow(2.0f * step, 0.3f);
+				} else {
+					return 1 - 0.5f * FastPow.fastPow(2.0f * (1 - step), 0.3f);
+				}
+			case GAIN2 :
+				if (step < 0.5f) {
+					return 0.5f * FastPow.fastPow(2.0f * step, 3.3333f);
+				} else {
+					return 1 - 0.5f * FastPow.fastPow(2.0f * (1 - step), 3.3333f);
+				}
+			case EXPIMPULSE :
+				return (2 * step * FastMath.expQuick(1.0 - (2 * step)));
+			default :
+				return step;
+		}
 	}
 
 }

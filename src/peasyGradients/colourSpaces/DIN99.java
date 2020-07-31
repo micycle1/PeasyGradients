@@ -8,7 +8,7 @@ package peasyGradients.colourSpaces;
  * @author micycle1
  *
  */
-public final class DIN99 implements ColourSpace {
+final class DIN99 implements ColourSpace {
 
 	private static final double SIN_16DEG = Math.sin(Math.toRadians(16.));
 	private static final double COS_16DEG = Math.cos(Math.toRadians(16.));
@@ -16,7 +16,7 @@ public final class DIN99 implements ColourSpace {
 	private static final double kCH = 1.;
 	private static final double kE = 1.;
 	
-	public DIN99() {
+	DIN99() {
 	}
 
 	/**

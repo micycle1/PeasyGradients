@@ -30,77 +30,6 @@ public final class Functions {
 
 	private static final Random random = new Random();
 
-	public static void nextInterpolationMode() {
-		interpolationMode = interpolationMode.next();
-	}
-
-	public static void prevInterpolationMode() {
-		interpolationMode = interpolationMode.prev();
-	}
-
-	public static Interpolation interpolationMode = Interpolation.SMOOTH_STEP;
-
-	/**
-	 * Calculate the step by passing it to the selected smoothing function. Allows
-	 * gradient renderer to easily change how the gradient is smoothed.
-	 * 
-	 * @param step 0...1
-	 * @return the new step
-	 */
-	public static float functStep(float step) {
-		switch (interpolationMode) {
-			case LINEAR :
-				return step;
-			case IDENTITY :
-				return step * step * (2.0f - step);
-			case SMOOTH_STEP :
-				return 3 * step * step - 2 * step * step * step; // polynomial approximation of (0.5-FastMath.cos(PI*step)/2)
-			case SMOOTHER_STEP :
-				return step * step * step * (step * (step * 6 - 15) + 10);
-			case EXPONENTIAL :
-				return step == 1.0f ? step : 1.0f - FastPow.fastPow(2, -10 * step);
-			case CUBIC :
-				return step * step * step;
-			case BOUNCE :
-				float sPrime = step;
-
-				if (sPrime < 0.36364) { // 1/2.75
-					return 7.5625f * sPrime * sPrime;
-				}
-				if (sPrime < 0.72727) // 2/2.75
-				{
-					return 7.5625f * (sPrime -= 0.545454f) * sPrime + 0.75f;
-				}
-				if (sPrime < 0.90909) // 2.5/2.75
-				{
-					return 7.5625f * (sPrime -= 0.81818f) * sPrime + 0.9375f;
-				}
-				return 7.5625f * (sPrime -= 0.95455f) * sPrime + 0.984375f;
-			case CIRCULAR :
-				return (float) FastMath.sqrt((2.0 - step) * step);
-			case SINE :
-				return (float) FastMath.sinQuick(step);
-			case PARABOLA :
-				return (float) FastMath.sqrt(4.0 * step * (1.0 - step));
-			case GAIN1 :
-				if (step < 0.5f) {
-					return 0.5f * FastPow.fastPow(2.0f * step, 0.3f);
-				} else {
-					return 1 - 0.5f * FastPow.fastPow(2.0f * (1 - step), 0.3f);
-				}
-			case GAIN2 :
-				if (step < 0.5f) {
-					return 0.5f * FastPow.fastPow(2.0f * step, 3.3333f);
-				} else {
-					return 1 - 0.5f * FastPow.fastPow(2.0f * (1 - step), 3.3333f);
-				}
-			case EXPIMPULSE :
-				return (float) (2 * step * FastMath.expQuick(1.0 - (2 * step)));
-			default :
-				return step;
-		}
-	}
-
 	/**
 	 * Linearly interpolate between 2 colours (color-space independent) using the
 	 * given step.
@@ -163,15 +92,15 @@ public final class Functions {
 	}
 
 	/**
-	 * Project a given 2D pixel coordinate (x, y) onto a position (0...1) of the
-	 * imaginary 1D spine of the gradient (linear gradients only).
+	 * Project a given 2D pixel coordinate (x, y) onto a position (0...1) of a
+	 * imaginary 1D spine of a linear gradient given by its start and end points.
 	 * 
 	 * @param originX x coord of gradient spline origin
 	 * @param originY y coord of gradient spline origin
-	 * @param destX x coord of gradient spline destination
-	 * @param destY y coord of gradient spline destination
-	 * @param pointX x coord of point to project onto spline
-	 * @param pointY y coord of point to project onto spline 
+	 * @param destX   x coord of gradient spline destination
+	 * @param destY   y coord of gradient spline destination
+	 * @param pointX  x coord of point to project onto spline
+	 * @param pointY  y coord of point to project onto spline
 	 * @return position (0...1) that the point occurs on in a gradient [0...1]
 	 */
 	public static float linearProject(float originX, float originY, float destX, float destY, int pointX, int pointY) {

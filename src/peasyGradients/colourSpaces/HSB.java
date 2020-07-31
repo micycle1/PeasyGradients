@@ -7,7 +7,10 @@ import peasyGradients.utilities.Functions;
  * @author micycle1
  *
  */
-public final class HSB implements ColourSpace {
+final class HSB implements ColourSpace {
+	
+	HSB() {
+	}
 
 	/**
 	 * 

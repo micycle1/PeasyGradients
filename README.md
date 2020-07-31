@@ -1,12 +1,43 @@
 \~work in progress\~
 
-# PeasyGradients0
+# PeasyGradients
 
 PeasyGradients for Processing
 A library make drawing gradients in Processing easy-peasy.
 
 ## Overview
 Linear, conic, radial, quad gradients in ~10 colour spaces.
+
+## Gradients
+
+### Linear
+<details><summary>More...</summary>
+  * `linearGradient(Gradient gradient, float angle)`
+</details>
+
+### Radial
+### Conic
+### Conic Smooth
+### Diamond
+### Diamond Inverse
+### Hourglass
+
+## Colour Spaces
+
+PeasyGradients supports many colour spaces. Different colour spaces can have a noticable effect on how a gradient transitions between colours so experimentation is encouraged. A rule of thumb: avoid the `RGB`, `RYB` and `HSB` colour spaces.
+
+ `myGradient.setColSpace(ColourSpaces.RGB);`
+
+* `RGB`
+* `RYB`
+* `HSB`
+* `XYZ` (CIE 1931) [**gradient default**]
+* `LAB` (CIE L\*a\*b*)
+* `DIN99`
+* `ITP` (ICtCp)
+* `HLAB` (Hunter LAB)
+* `LUV` (CIE 1976 L*, u*, v*)
+* `JAB` (JzAzBz)
 
 ## Interpolation: Colour Spaces
 By their very nature, gradients must interpolate between colours. With PeasyGradients you can... In RGB, calculate a new colour by interpolating between each of the red, green and blue components of the gradient colours. Colours can be represented in different colour spaces (so colours comprise of different components) -- when we interpolate 
@@ -18,4 +49,4 @@ Easing explained: Gradient with 2 colours and we want to find colour in the midd
 Filling a PShape with a gradient
 
 ## Optimisation
-PeasyGradients has been written to target the CPU (as opposed to the GPU, using OPENGL/shaders) as to not be dependent on OPENGL libraries. To this end, there have been many internal optimisations to make the library suitable for dynamic animation and interaction, rather than just static rendering (>30fps at reasonable resolutions).
+PeasyGradients has been written to target the CPU (as opposed to the GPU) as to not be dependent on OPENGL libraries. To this end, there have been many internal optimisations to make the library suitable for dynamic animation and interaction, rather than just static rendering; gradients at 60fps at 1080p are achievable on modern processors.

@@ -13,7 +13,7 @@ package peasyGradients.colourSpaces;
  * @author micycle1
  *
  */
-public final class LAB implements ColourSpace {
+final class LAB implements ColourSpace {
 
 	/**
 	 * D65/2° Illuminants: Daylight, sRGB, Adobe-RGB
@@ -24,7 +24,7 @@ public final class LAB implements ColourSpace {
 
 	private static final double third = 1 / 3d;
 	
-	public LAB() {
+	LAB() {
 	}
 	
 	public double[] fromRGB(double[] rgb) {

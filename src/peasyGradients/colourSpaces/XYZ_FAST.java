@@ -9,7 +9,7 @@ package peasyGradients.colourSpaces;
  * @deprecated
  *
  */
-public final class XYZ_FAST {
+final class XYZ_FAST {
 
 	/**
 	 * 
@@ -17,7 +17,7 @@ public final class XYZ_FAST {
 	 * @return XYZ representation (where values have same relative difference as
 	 *         real XYZ values)
 	 */
-	public static double[] rgb2xyz(double[] rgb) {
+	static double[] rgb2xyz(double[] rgb) {
 
 		double x = rgb[0];
 		double y = rgb[1];
@@ -41,7 +41,7 @@ public final class XYZ_FAST {
 	 * @param XYZ representation [X,Y,Z]
 	 * @return [R,G,B] where values are 0...1.0
 	 */
-	public static double[] xyz2rgbVeryQuick(final double[] xyz) {
+	static double[] xyz2rgbVeryQuick(final double[] xyz) {
 
 		double r, g, b;
 

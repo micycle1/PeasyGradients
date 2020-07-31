@@ -10,7 +10,7 @@ import net.jafama.FastMath;
  * @author micycle1
  *
  */
-public final class ITP implements ColourSpace {
+final class ITP implements ColourSpace {
 
 	private static final double m1 = 2610d / 16384;
 	private static final double m2 = 2523d / 4096 * 128;
@@ -33,7 +33,7 @@ public final class ITP implements ColourSpace {
 		}
 	}
 	
-	public ITP() {
+	ITP() {
 	}
 
 	/**

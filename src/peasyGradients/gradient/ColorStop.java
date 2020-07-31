@@ -21,6 +21,7 @@ public final class ColorStop implements Comparable<ColorStop> {
 	float percent; // percent, taking into account animation offset, etc.
 
 	int clr; // 32bit ARGB colour int
+	int alpha; // 0-255 alpha
 
 	private HashMap<ColourSpaces, double[]> coloursMap;
 	double[] colorOut; // TODO current color space's raw colour to save hashmap lookup each time.
@@ -43,20 +44,22 @@ public final class ColorStop implements Comparable<ColorStop> {
 	 * @param color 32bit ARGB
 	 */
 	void setColor(int color) {
+		coloursMap.clear();
 		this.clr = color;
+		this.alpha = (color >> 24) & 0xff;
 
-		final double[] clrRGBDouble = Functions.decomposeclrDouble(clr);
-
+		final double[] clrRGBDouble = Functions.decomposeclrDouble(color);
+		
 		for (int i = 0; i < ColourSpaces.size; i++) {
 			coloursMap.put(ColourSpaces.get(i), ColourSpaces.get(i).getColourSpace().fromRGB(clrRGBDouble));
 		}
 	}
 
 	/**
-	 * Return the value of a colour (double[a, b, c]) in a given colourspace
+	 * Return the value of the colourstop in a given colourspace
 	 * 
 	 * @param colourSpace
-	 * @return
+	 * @return double[a, b, c] representing colour in given colourspace
 	 */
 	double[] getColor(ColourSpaces colourSpace) {
 		return coloursMap.get(colourSpace);

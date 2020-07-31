@@ -22,7 +22,7 @@ public interface ColourSpace {
 	 * @param out
 	 * @return
 	 */
-	public default double[] interpolateLinear(double[] a, double[] b, float step, double[] out) {
+	public default double[] interpolateLinear(double[] a, double[] b, double step, double[] out) {
 		out[0] = a[0] + step * (b[0] - a[0]);
 		out[1] = a[1] + step * (b[1] - a[1]);
 		out[2] = a[2] + step * (b[2] - a[2]);
