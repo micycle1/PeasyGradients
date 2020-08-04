@@ -7,6 +7,8 @@ import processing.core.PImage;
 import processing.core.PShape;
 import processing.core.PVector;
 
+import java.util.HashMap;
+
 import net.jafama.FastMath;
 
 import peasyGradients.gradient.Gradient;
@@ -45,8 +47,14 @@ import peasyGradients.utilities.Functions;
  */
 public final class PeasyGradients {
 
+	private static final float TWO_PI = (float) (2 * Math.PI);
+	private static final float HALF_PI = (float) (0.5f * Math.PI);
+	private static final float QRTR_PI = (float) (0.25f * Math.PI);
+
 	private static final float INV_TWO_PI = 1f / PConstants.TWO_PI;
 	private static final float THREE_QRTR_PI = (float) (Math.PI * 3 / 4);
+	private static final double SQRT3 = Math.tan(HALF_PI - (Math.PI / 6)); // used for hexagon gradient (== tan(60)) tan(SIDES)
+	private static final double THIRDPI = 2 * Math.PI / 6; // (1 sixth of circle), used for hexagon gradient
 
 	private boolean debug;
 	private final PApplet p;
@@ -466,7 +474,7 @@ public final class PeasyGradients {
 		gradient.removeLast(); // remove colour copy
 		return out;
 	}
-	
+
 	public PImage diamondGradient(Gradient gradient, PVector midPoint, float angle, float zoom) {
 
 		gradient.prime();
@@ -476,6 +484,7 @@ public final class PeasyGradients {
 		}
 
 		final double denominator = (Math.max(renderHeight, renderWidth) / 2) * zoom; // calc here, not in loop
+		angle += PConstants.QUARTER_PI; // angled at 0
 		final double sin = FastMath.sin(angle);
 		final double cos = FastMath.cos(angle);
 
@@ -513,7 +522,7 @@ public final class PeasyGradients {
 		}
 	}
 
-	public PImage diamondGradientInverse(Gradient gradient, PVector midPoint, float angle, float zoom) {
+	public PImage crossGradient(Gradient gradient, PVector midPoint, float angle, float zoom) {
 
 		gradient.prime();
 
@@ -522,6 +531,7 @@ public final class PeasyGradients {
 		}
 
 		final double denominator = (Math.max(renderHeight, renderWidth) / 2) * zoom; // calc here, not in loop
+		angle += PConstants.QUARTER_PI; // angled at 0
 		final double sin = FastMath.sin(angle);
 		final double cos = FastMath.cos(angle);
 
@@ -559,6 +569,89 @@ public final class PeasyGradients {
 		}
 	}
 
+	/**
+	 * 
+	 * @param gradient
+	 * @param midPoint
+	 * @param angle
+	 * @param zoom
+	 * @param sides    at least 3
+	 * @return
+	 */
+	public PImage polygonGradient(Gradient gradient, PVector midPoint, float angle, float zoom, int sides) {
+
+		gradient.prime();
+
+		for (int i = 0; i < pixelCacheConic.length; i++) { // calc LUT
+			pixelCacheConic[i] = gradient.evalRGB(i / (float) pixelCacheConic.length);
+		}
+
+		final float sin = (float) FastMath.sin(PApplet.TWO_PI - angle);
+		final float cos = (float) FastMath.cos(angle);
+
+		/**
+		 * Calculate minlength/maxlength of distances between edges of unit-length
+		 * polygon and its midpoint (generally around 0.85). Or, distance of the centre
+		 * of the polygon to the midpoint of each side (which are closer than vertices)
+		 */
+		final double MIN_LENGTH_RATIO = FastMath.tan(HALF_PI - (Math.PI / sides)); // used for hexagon gradient (== tan(60)) tan(SIDES)
+		final double SEGMENT_ANGLE = (2 * Math.PI) / sides; // max angle of polygon segment
+
+		double dist = 0;
+
+		// (SQRT3 / 3) to scale width of hexagon to match width of renderwidth
+		final double denominator = MIN_LENGTH_RATIO / ((Math.max(renderHeight, renderWidth)) * zoom); // calc here, not in loop
+
+		float yDist;
+		float xDist;
+
+		for (int y = 0, x; y < renderHeight; ++y) {
+			final float yTranslate = (y - midPoint.y);
+			yDist = (midPoint.y - y) * (midPoint.y - y);
+			for (x = 0; x < renderWidth; ++x) {
+				xDist = (midPoint.x - x) * (midPoint.x - x);
+
+				float newXpos = (x - midPoint.x) * cos - yTranslate * sin + midPoint.x; // rotate x about midpoint
+				float newYpos = yTranslate * cos + (x - midPoint.x) * sin + midPoint.y; // rotate y about midpoint
+
+				double theta = Math.abs(Functions.fastAtan2((midPoint.y - newYpos), (midPoint.x - newXpos)));
+
+				// polgyon is split into N segments; repeat angle within this range
+				while (theta > SEGMENT_ANGLE) { // effectively modulo (faster than using % operator)
+					theta -= SEGMENT_ANGLE;
+				}
+
+				double pointDistance = Math.sqrt(yDist + xDist); // dist between (x,y) and midpoint
+
+				// calc the dist multiplier according to unit-length hexagon segment
+				// theta is positive and between 0...PI/3
+				// Dervied from here, but generalises to all polygons
+				// https://math.stackexchange.com/questions/1210572/find-the-distance-to-th-edge-of-a-hexagon
+				double polygonRatio = (MIN_LENGTH_RATIO * FastMath.cosQuick(theta) + FastMath.sinQuick(theta));
+				polygonRatio *= denominator;
+
+				dist = polygonRatio * pointDistance;
+
+				if (dist > 1) { // clamp gradient
+					dist = 1;
+				}
+
+				final int stepInt = (int) (dist * cacheSizeConic);
+
+				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCacheConic[stepInt];
+			}
+		}
+
+		gradientPG.updatePixels();
+
+		if (renderInternal) {
+			gradientPG.endDraw();
+			return gradientPG;
+		} else {
+			return emptyPGraphics;
+		}
+	}
+
 	public void quadGradient() {
 		// TODO multiple linear gradient passes, then lerp?
 	}
@@ -573,50 +666,50 @@ public final class PeasyGradients {
 	 * @param gradient
 	 * @param midPoint
 	 * @param angle
-	 * @param zoom default = 1
+	 * @param zoom     default = 1
 	 * @return
 	 */
 	public PImage hourglassGradient(Gradient gradient, PVector midPoint, float angle, float zoom) {
 
 		gradient.prime();
-		
+
 		double denominator = 1 / ((Math.max(renderHeight, renderWidth)) * zoom);
 
 		for (int i = 0; i < pixelCacheConic.length; i++) { // calc LUT
 			pixelCacheConic[i] = gradient.evalRGB(i / (float) pixelCacheConic.length);
 		}
-		
+
 		final float sin = (float) FastMath.sin(PApplet.TWO_PI - angle);
 		final float cos = (float) FastMath.cos(angle);
-		
+
 		float newXpos;
 		float newYpos;
 
 		float yDist;
 		float xDist;
-		
+
 		for (int y = 0, x; y < renderHeight; ++y) {
 			yDist = (midPoint.y - y) * (midPoint.y - y);
 			final float yTranslate = (y - midPoint.y);
-			
+
 			for (x = 0; x < renderWidth; ++x) {
 				xDist = (midPoint.x - x) * (midPoint.x - x);
-				
+
 				newXpos = (x - midPoint.x) * cos - yTranslate * sin + midPoint.x; // rotate x about midpoint
 				newYpos = yTranslate * cos + (x - midPoint.x) * sin + midPoint.y; // rotate y about midpoint
-				
+
 				/**
-				 * In the 2 lines below, we are effectively calculating dist = eDist/(cos(angle) +
-				 * sin(angle)), where eDist is euclidean distance between (x,y) & midpoint, and
-				 * angle is the (atan2) angle between (x,y) & midpoint. These trig functions and
-				 * multiple sqrts have been cancelled out to derive the faster equivalent
+				 * In the 2 lines below, we are effectively calculating dist = eDist/(cos(angle)
+				 * + sin(angle)), where eDist is euclidean distance between (x,y) & midpoint,
+				 * and angle is the (atan2) angle between (x,y) & midpoint. These trig functions
+				 * and multiple sqrts have been cancelled out to derive the faster equivalent
 				 * equations below.
 				 */
-				
+
 				float z = (midPoint.y - newYpos) / (midPoint.x - newXpos); // atan2(y,x) === atan(y/x), so calc y/x here
-				
-				double dist = Math.sqrt((yDist + xDist) * (z * z + 1)) * denominator; // sqrt(z * z + 1) === cos(atan(x)) 
-				
+
+				double dist = Math.sqrt((yDist + xDist) * (z * z + 1)) * denominator; // sqrt(z * z + 1) === cos(atan(x))
+
 				if (dist > 1) {
 					dist = 1;
 				}
