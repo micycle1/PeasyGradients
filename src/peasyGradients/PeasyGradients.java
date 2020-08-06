@@ -586,48 +586,38 @@ public final class PeasyGradients {
 			pixelCacheConic[i] = gradient.evalRGB(i / (float) pixelCacheConic.length);
 		}
 
-		final float sin = (float) FastMath.sin(PApplet.TWO_PI - angle);
-		final float cos = (float) FastMath.cos(angle);
-
 		/**
 		 * Calculate minlength/maxlength of distances between edges of unit-length
 		 * polygon and its midpoint (generally around 0.85). Or, distance of the centre
 		 * of the polygon to the midpoint of each side (which are closer than vertices)
 		 */
 		final double MIN_LENGTH_RATIO = FastMath.tan(HALF_PI - (Math.PI / sides)); // used for hexagon gradient (== tan(60)) tan(SIDES)
-		final double SEGMENT_ANGLE = (2 * Math.PI) / sides; // max angle of polygon segment
+		final double SEGMENT_ANGLE = (2 * Math.PI) / sides; // max angle of polygon segment in radians
 
 		double dist = 0;
 
-		// (SQRT3 / 3) to scale width of hexagon to match width of renderwidth
-		final double denominator = MIN_LENGTH_RATIO / ((Math.max(renderHeight, renderWidth)) * zoom); // calc here, not in loop
+		final double denominator = 1 / ((Math.max(renderHeight, renderWidth)) * zoom); // calc here, not in loop
 
-		float yDist;
-		float xDist;
+		double yDist; // y distance between midpoint and a given pixel
+		double xDist; // x distance between midpoint and a given pixel
 
 		for (int y = 0, x; y < renderHeight; ++y) {
-			final float yTranslate = (y - midPoint.y);
 			yDist = (midPoint.y - y) * (midPoint.y - y);
 			for (x = 0; x < renderWidth; ++x) {
 				xDist = (midPoint.x - x) * (midPoint.x - x);
 
-				float newXpos = (x - midPoint.x) * cos - yTranslate * sin + midPoint.x; // rotate x about midpoint
-				float newYpos = yTranslate * cos + (x - midPoint.x) * sin + midPoint.y; // rotate y about midpoint
+				double theta = Functions.fastAtan2((midPoint.y - y), (midPoint.x - x));
+				theta += (TWO_PI - angle); // TWO_PI - angle, so we rotate clockwise
+				theta = Math.abs(theta);
 
-				double theta = Math.abs(Functions.fastAtan2((midPoint.y - newYpos), (midPoint.x - newXpos)));
-
-				// polgyon is split into N segments; repeat angle within this range
+				// polygon is split into N segments; restrict theta to angle of one segment
 				while (theta > SEGMENT_ANGLE) { // effectively modulo (faster than using % operator)
 					theta -= SEGMENT_ANGLE;
 				}
 
-				double pointDistance = Math.sqrt(yDist + xDist); // dist between (x,y) and midpoint
+				double pointDistance = Math.sqrt(yDist + xDist); // euclidean dist between (x,y) and midpoint
 
-				// calc the dist multiplier according to unit-length hexagon segment
-				// theta is positive and between 0...PI/3
-				// Dervied from here, but generalises to all polygons
-				// https://math.stackexchange.com/questions/1210572/find-the-distance-to-th-edge-of-a-hexagon
-				double polygonRatio = (MIN_LENGTH_RATIO * FastMath.cosQuick(theta) + FastMath.sinQuick(theta));
+				double polygonRatio = MIN_LENGTH_RATIO * (MIN_LENGTH_RATIO * FastMath.cosQuick(theta) + FastMath.sinQuick(theta));
 				polygonRatio *= denominator;
 
 				dist = polygonRatio * pointDistance;
@@ -643,6 +633,108 @@ public final class PeasyGradients {
 		}
 
 		gradientPG.updatePixels();
+
+		if (renderInternal) {
+			gradientPG.endDraw();
+			return gradientPG;
+		} else {
+			return emptyPGraphics;
+		}
+	}
+
+	// https://www.filterforge.com/filters/6027-v3.html
+//	public PImage spiralGradient(Gradient gradient, PVector midPoint, float angle, float zoom) {
+//		gradient.prime();
+//
+//		for (int i = 0; i < pixelCacheConic.length; i++) { // calc LUT
+//			pixelCacheConic[i] = gradient.evalRGB(i / (float) pixelCacheConic.length);
+//		}
+//		gradientPG.updatePixels();
+//		
+//		for (int y = 0, x; y < renderHeight; ++y) {
+//			double yDist = (midPoint.y - y) * (midPoint.y - y);
+//			
+//			for (x = 0; x < renderWidth; ++x) {
+//				
+//				// map x,y to an angle
+//
+//				double xDist = (midPoint.x - x) * (midPoint.x - x);
+//				double theta = Functions.angleBetween(midPoint, x, y);
+//
+////				System.out.println(theta);
+//				double distance = Math.sqrt(yDist + xDist); // euclidean dist between (x,y) and midpoint
+////				distance = Math.round(distance / 50) * 50; // bands 50 width across
+//				double step = Math.abs(TWO_PI/theta) * distance;
+//				step/=400*TWO_PI/10; // between 0...1
+////				step = Math.round(step/0.1)*0.1;
+//				step%=1;
+//				
+//
+//				final int stepInt = (int) (step * cacheSizeConic);
+//
+//				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCacheConic[stepInt];
+//			}
+//		}
+//
+//		if (renderInternal) {
+//			gradientPG.endDraw();
+//			return gradientPG;
+//		} else {
+//			return emptyPGraphics;
+//		}
+//	}
+
+	public PImage spiralGradient(Gradient gradient, PVector midPoint, float angle, float zoom) {
+		gradient.prime();
+
+		for (int i = 0; i < pixelCache.length; i++) { // calc LUT
+			pixelCache[i] = gradient.evalRGB(i / (float) pixelCache.length);
+		}
+
+		gradientPG.updatePixels();
+		final float spiralDist = 10;
+		for (int y = 0, x; y < renderHeight; ++y) {
+//			double yDist = (midPoint.y - y) * (midPoint.y - y);
+
+			for (x = 0; x < renderWidth; ++x) {
+				PVector pixel = new PVector(x, y);
+				// map x,y to an angle
+
+//				double xDist = (midPoint.x - x) * (midPoint.x - x);
+				double theta = Functions.angleBetween(midPoint, x, y);
+//				double theta = 0;
+
+//				final double cos = 0;
+//				final double sin = 0;
+
+				final double cos = FastMath.cos(theta);
+				final double sin = FastMath.sin(theta);
+
+				int newI = (int) Math.round(((((midPoint.x - x) / cos) / spiralDist) - theta) / TWO_PI);
+				newI--;
+				double r = (newI * TWO_PI + theta) * spiralDist;
+
+				PVector p1 = new PVector((float) (midPoint.x - r * cos - (spiralDist * Math.PI) * cos),
+						(float) (midPoint.y - r * sin - (spiralDist / 2 * TWO_PI) * sin));
+				newI++;
+				r = (newI * TWO_PI + theta) * spiralDist;
+
+				PVector p2 = new PVector((float) (midPoint.x - r * cos - (spiralDist * Math.PI) * cos),
+						(float) (midPoint.y - r * sin - (spiralDist * Math.PI) * sin));
+
+				double step = PVector.dist(p1, pixel) / PVector.dist(p1, p2); // dist p1 p2 = cos (theta) * dist?
+//				double step = 0.5;
+				if (step < 0.1) {
+					step = 0;
+				}
+				if (step > 1) { // clamp gradient
+					step = 1;
+				}
+				final int stepInt = (int) (step * cacheSize);
+
+				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCache[stepInt];
+			}
+		}
 
 		if (renderInternal) {
 			gradientPG.endDraw();
