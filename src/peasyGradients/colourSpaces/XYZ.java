@@ -140,7 +140,7 @@ final class XYZ implements ColourSpace {
 
 	/**
 	 * Static for use by other classes
-	 * @param xyz
+	 * @param rgb [R,G,B] where values are 0...1.0
 	 * @return
 	 */
 	static double[] rgb2xyz(double[] rgb) {

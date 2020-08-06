@@ -4,11 +4,12 @@ import peasyGradients.utilities.Functions;
 
 /**
  * Same as HSV
+ * 
  * @author micycle1
  *
  */
 final class HSB implements ColourSpace {
-	
+
 	HSB() {
 	}
 
@@ -22,7 +23,7 @@ final class HSB implements ColourSpace {
 	 */
 	public double[] toRGB(double[] HSB) {
 		double[] RGB = new double[3];
-		
+
 		if (HSB[1] == 0.0) {
 			// 0.0 saturation is grayscale, so all values are equal.
 			RGB[0] = RGB[1] = RGB[2] = HSB[2];
@@ -73,11 +74,11 @@ final class HSB implements ColourSpace {
 		}
 		return RGB;
 	}
-	
+
 	@Override
 	public double[] fromRGB(double[] RGB) {
 		double[] HSB = new double[3];
-		
+
 		// Find highest and lowest values.
 		double max = Functions.max(RGB[0], RGB[1], RGB[2]);
 		double min = Functions.min(RGB[0], RGB[1], RGB[2]);
@@ -113,12 +114,12 @@ final class HSB implements ColourSpace {
 	 * Processing's native lerpColor() method (which is linear). The shortest path
 	 * between hues is used.
 	 * 
-	 * @param col1 First color, represented as [H,S,B,A] array; each value between
+	 * @param col1 First color, represented as [H,S,B] array; each value between
 	 *             0...1.
-	 * @param col2 Second color, represented as [H,S,B,A] array; each value between
+	 * @param col2 Second color, represented as [H,S,B] array; each value between
 	 *             0...1.
 	 * @param st   step: percentage between the two colors.
-	 * @param out  The new interpolated color, represented by a [H,S,B,A] array.
+	 * @param out  The new interpolated color, represented by a [H,S,B] array.
 	 * @return
 	 */
 	public double[] interpolateLinear(double[] a, double[] b, double st, double[] out) {
@@ -140,7 +141,6 @@ final class HSB implements ColourSpace {
 		out[0] = (huea + st * (hueb - huea)) % 1;
 		out[1] = a[1] + st * (b[1] - a[1]);
 		out[2] = a[2] + st * (b[2] - a[2]);
-		out[3] = a[3] + st * (b[3] - a[3]);
 		return out;
 	}
 }

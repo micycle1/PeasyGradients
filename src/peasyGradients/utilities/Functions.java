@@ -135,6 +135,14 @@ public final class Functions {
 		}
 		return a;
 	}
+	
+	public static double angleBetween(PVector tail, float headX, float headY) {
+		double a = fastAtan2(tail.y - headY, tail.x - headX);
+		if (a < 0) {
+			a += TWO_PI;
+		}
+		return a;
+	}
 
 	/**
 	 * Compose a 32 bit sARGB int from float[] 0...1
@@ -449,7 +457,7 @@ public final class Functions {
 	 * @param z
 	 * @return
 	 */
-	public static float fastSin(float z) {
+	public static double fastSin(double z) {
 		return z - 0.166666667f * z + 0.008833333333f * (z * z * z * z * z);
 	}
 
