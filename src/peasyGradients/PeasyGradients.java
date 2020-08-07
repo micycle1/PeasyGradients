@@ -7,11 +7,10 @@ import processing.core.PImage;
 import processing.core.PShape;
 import processing.core.PVector;
 
-import java.util.HashMap;
-
 import net.jafama.FastMath;
 
 import peasyGradients.gradient.Gradient;
+import peasyGradients.utilities.FastNoise;
 import peasyGradients.utilities.Functions;
 
 /**
@@ -36,6 +35,8 @@ import peasyGradients.utilities.Functions;
  * rectPane.applyLinearGradient(gradient).setOpacity().applyCircularGradient(gradient1).setColorspace(HSV).get().getRaw().applyRadialGradientMask().get()
  * 
  * gradient.mask(shape).mask(opacity) lineargradient() mask get()
+ * 
+ * https://www.filterforge.com/wiki/index.php/Index_of_Gradient_Types
  * 
  * <p>
  * Algorithms for linear/radial/conic gradient calculation are based on <a href=
@@ -340,7 +341,8 @@ public final class PeasyGradients {
 
 		float hypotSq = (renderWidth * renderWidth) + (renderHeight * renderHeight);
 		float rise, run, distSq, dist;
-		zoom = 1 / zoom;
+		zoom = 4 / zoom; // calc here, not in loop
+		zoom /= hypotSq; // calc here, not in loop
 
 		float renderMidpointX = (midPoint.x / gradientPG.width) * renderWidth;
 		float renderMidpointY = (midPoint.y / gradientPG.height) * renderHeight;
@@ -360,13 +362,12 @@ public final class PeasyGradients {
 				run *= run;
 
 				distSq = run + rise;
-				dist = zoom * 4.0f * distSq / hypotSq;
+				dist = zoom * distSq;
 				if (dist > 1) {
 					dist = 1; // constrain
 				}
 
 				int stepInt = (int) (dist * cacheSize);
-
 				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCache[stepInt];
 
 			}
@@ -596,7 +597,7 @@ public final class PeasyGradients {
 
 		double dist = 0;
 
-		final double denominator = 1 / ((Math.max(renderHeight, renderWidth)) * zoom); // calc here, not in loop
+		final double denominator = MIN_LENGTH_RATIO / ((Math.max(renderHeight, renderWidth)) * zoom); // calc here, not in loop
 
 		double yDist; // y distance between midpoint and a given pixel
 		double xDist; // x distance between midpoint and a given pixel
@@ -617,7 +618,7 @@ public final class PeasyGradients {
 
 				double pointDistance = Math.sqrt(yDist + xDist); // euclidean dist between (x,y) and midpoint
 
-				double polygonRatio = MIN_LENGTH_RATIO * (MIN_LENGTH_RATIO * FastMath.cosQuick(theta) + FastMath.sinQuick(theta));
+				double polygonRatio = (MIN_LENGTH_RATIO * FastMath.cosQuick(theta) + FastMath.sinQuick(theta));
 				polygonRatio *= denominator;
 
 				dist = polygonRatio * pointDistance;
@@ -692,44 +693,97 @@ public final class PeasyGradients {
 		}
 
 		gradientPG.updatePixels();
-		final float spiralDist = 10;
+
+		final float spiralDist = 30;
+		final double denom = 1 / (spiralDist * TWO_PI);
+
+		final double offset = spiralDist * Math.PI;
+
 		for (int y = 0, x; y < renderHeight; ++y) {
-//			double yDist = (midPoint.y - y) * (midPoint.y - y);
+			final double yDist = (midPoint.y - y);
 
 			for (x = 0; x < renderWidth; ++x) {
-				PVector pixel = new PVector(x, y);
-				// map x,y to an angle
 
-//				double xDist = (midPoint.x - x) * (midPoint.x - x);
-				double theta = Functions.angleBetween(midPoint, x, y);
-//				double theta = 0;
+				double cos;
+				double sin;
 
-//				final double cos = 0;
-//				final double sin = 0;
+				final double z = yDist / (midPoint.x - x);
+				final double theta = Functions.fastAtan2(yDist, midPoint.x - x);
+				cos = 1 / Math.sqrt(z * z + 1);
+				sin = z * cos;
 
-				final double cos = FastMath.cos(theta);
-				final double sin = FastMath.sin(theta);
+				long newI = Math.round(((((midPoint.x - x) / cos) / spiralDist) - theta) / TWO_PI) - 1;
 
-				int newI = (int) Math.round(((((midPoint.x - x) / cos) / spiralDist) - theta) / TWO_PI);
-				newI--;
+//				System.out.println(newI);
 				double r = (newI * TWO_PI + theta) * spiralDist;
 
-				PVector p1 = new PVector((float) (midPoint.x - r * cos - (spiralDist * Math.PI) * cos),
-						(float) (midPoint.y - r * sin - (spiralDist / 2 * TWO_PI) * sin));
-				newI++;
-				r = (newI * TWO_PI + theta) * spiralDist;
+				double innerSpiralX = midPoint.x - r * cos - (offset * cos); // x coord of nearest spiral line
+				double innerSpiralY = midPoint.y - r * sin - (offset * sin);
 
-				PVector p2 = new PVector((float) (midPoint.x - r * cos - (spiralDist * Math.PI) * cos),
-						(float) (midPoint.y - r * sin - (spiralDist * Math.PI) * sin));
+				double step = Math.sqrt((innerSpiralY - y) * (innerSpiralY - y) + (innerSpiralX - x) * (innerSpiralX - x)); // dist
+				step *= denom;
 
-				double step = PVector.dist(p1, pixel) / PVector.dist(p1, p2); // dist p1 p2 = cos (theta) * dist?
-//				double step = 0.5;
-				if (step < 0.1) {
-					step = 0;
-				}
-				if (step > 1) { // clamp gradient
-					step = 1;
-				}
+//				if (step > 1) { // clamp gradient
+//					System.out.println(step);
+//					step = 1;
+//				}
+				final int stepInt = (int) (step * cacheSize);
+
+				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCache[stepInt];
+			}
+		}
+
+		if (renderInternal) {
+			gradientPG.endDraw();
+			return gradientPG;
+		} else {
+			return emptyPGraphics;
+		}
+	}
+
+	FastNoise noise2 = new FastNoise();
+
+	public PImage noiseGradient(Gradient gradient, PVector midPoint, float angle, float zoom) {
+		gradient.prime();
+
+		for (int i = 0; i < pixelCache.length; i++) { // calc LUT
+			pixelCache[i] = gradient.evalRGB(i / (float) pixelCache.length);
+		}
+
+		gradientPG.updatePixels();
+
+		noise2.SetFrequency(zoom * 0.015f);
+//		noise2.SetInterp(FastNoise.Interp.Quintic);
+//		noise2.SetFractalOctaves(5);
+		noise2.SetCellularDistanceFunction(FastNoise.CellularDistanceFunction.Euclidean);
+		noise2.SetFractalLacunarity(2);
+		noise2.SetFractalGain(0.5f);
+//		noise2.SetGradientPerturbAmp(1);
+		noise2.SetCellularReturnType(FastNoise.CellularReturnType.CellValue);
+		noise2.SetNoiseType(FastNoise.NoiseType.SimplexFractal);
+//		noise2.SetInterp(FastNoise.Interp.Linear);
+
+		final float sin = (float) FastMath.sin(-angle);
+		final float cos = (float) FastMath.cos(-angle);
+
+		double min = 0, max = 0;
+		for (int y = 0, x; y < renderHeight; ++y) {
+			final float yTranslate = (y - midPoint.y);
+			
+			for (x = 0; x < renderWidth; ++x) {
+
+				float newXpos = (x - midPoint.x) * cos - yTranslate * sin + midPoint.x; // rotate x about midpoint
+				float newYpos = yTranslate * cos + (x - midPoint.x) * sin + midPoint.y; // rotate y about midpoint
+
+//				double step = noise.eval(x * inc, y * inc); // -0.8313049677675405...0.8074247384505447
+				double step = noise2.GetValue(newXpos, newYpos);
+//				step = Math.abs(step);
+
+				min = Math.min(min, step);
+				max = Math.max(max, step);
+				double maxMinDenom = 1/(max-min);
+				step = ((step - min) * (maxMinDenom)); // map to 0...1
+
 				final int stepInt = (int) (step * cacheSize);
 
 				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCache[stepInt];

@@ -469,7 +469,7 @@ public final class Functions {
 	 * @param z
 	 * @return
 	 */
-	public static float fastAtan(float z) {
+	public static double fastAtan(double z) {
 		return z * (QRTR_PI + 0.273f * (1 - Math.abs(z)));
 	}
 
@@ -482,10 +482,10 @@ public final class Functions {
 	 * @return
 	 * @see #fastAtan(float)
 	 */
-	public static float fastAtan2(float y, float x) {
+	public static double fastAtan2(double y, double x) {
 		if (x != 0.0f) {
 			if (Math.abs(x) > Math.abs(y)) {
-				float z = y / x;
+				double z = y / x;
 				if (x > 0.0) {
 					// atan2(y,x) = atan(y/x) if x > 0
 					return fastAtan(z);
@@ -498,7 +498,7 @@ public final class Functions {
 				}
 			} else // Use property atan(y/x) = PI/2 - atan(x/y) if |y/x| > 1.
 			{
-				final float z = x / y;
+				final double z = x / y;
 				if (y > 0.0) {
 					// atan2(y,x) = PI/2 - atan(x/y) if |y/x| > 1, y > 0
 					return -fastAtan(z) + HALF_PI;

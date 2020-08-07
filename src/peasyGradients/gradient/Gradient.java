@@ -215,46 +215,48 @@ public final class Gradient {
 		 * boundary (either above or below). If the first colour stop is at a position >
 		 * 0 or last colour stop at a position < 1, then when step > currStop.percent or
 		 * step < currStop.percent is true, we don't want to inc/decrement currStop.
-		 * Deprecated now, since we pre-compute results into a LUT, so this function is
-		 * now called with monotonically increasing step.
 		 */
-//		if (step > currStop.percent) { // if at end, stay, otherwise next
-//			if (lastCurrStopIndex == (colorStops.size() - 1)) {
-//				prevStop = colorStops.get(lastCurrStopIndex);
-//				denom = 1;
-//			} else {
-//				do {
-//					lastCurrStopIndex++; // increment
-//					currStop = colorStops.get(lastCurrStopIndex);
-//				} while (step > currStop.percent && lastCurrStopIndex < (colorStops.size() - 1)); // sometimes step might jump more than 1
-//																									// colour
-//				prevStop = colorStops.get(lastCurrStopIndex - 1);
-//
-//				denom = 1 / (prevStop.percent - currStop.percent); // compute denominator inverse
-//			}
-//
-//		}
-//		else if (step <= prevStop.percent) {
-//		if (lastCurrStopIndex == 0) { // if at zero stay, otherwise prev
-//			denom = 1;
-//			currStop = colorStops.get(0);
-//		} else {
-//			do {
-//				lastCurrStopIndex--; // decrement
-//				prevStop = colorStops.get(Math.max(lastCurrStopIndex - 1, 0));
-//			} while (step < prevStop.percent); // sometimes step might jump back more than 1 colour
-//
-//			currStop = colorStops.get(lastCurrStopIndex);
-//
-//			denom = 1 / (prevStop.percent - currStop.percent); // compute denominator inverse
-//		}
-//	}
-		if (step > currStop.percent && lastCurrStopIndex != (colorStops.size() - 1) ) {
-			prevStop = colorStops.get(lastCurrStopIndex);
-			lastCurrStopIndex++; // increment
+		if (step > currStop.percent) { // if at end, stay, otherwise next
+			if (lastCurrStopIndex == (colorStops.size() - 1)) {
+				prevStop = colorStops.get(lastCurrStopIndex);
+				denom = 1;
+			} else {
+				do {
+					lastCurrStopIndex++; // increment
+					currStop = colorStops.get(lastCurrStopIndex);
+				} while (step > currStop.percent && lastCurrStopIndex < (colorStops.size() - 1)); // sometimes step might jump more than 1
+																									// colour
+				prevStop = colorStops.get(lastCurrStopIndex - 1);
+
+				denom = 1 / (prevStop.percent - currStop.percent); // compute denominator inverse
+			}
+
+		}
+		else if (step <= prevStop.percent) {
+		if (lastCurrStopIndex == 0) { // if at zero stay, otherwise prev
+			denom = 1;
+			currStop = colorStops.get(0);
+		} else {
+			do {
+				lastCurrStopIndex--; // decrement
+				prevStop = colorStops.get(Math.max(lastCurrStopIndex - 1, 0));
+			} while (step < prevStop.percent); // sometimes step might jump back more than 1 colour
+
 			currStop = colorStops.get(lastCurrStopIndex);
+
 			denom = 1 / (prevStop.percent - currStop.percent); // compute denominator inverse
 		}
+	}
+		/**
+		 * Since we pre-compute results into a LUT, this function works with
+		 * monotonically increasing step. HOWEVER, doesn't work if animating.
+		 */
+//		if (step > currStop.percent && lastCurrStopIndex != (colorStops.size() - 1) ) {
+//			prevStop = colorStops.get(lastCurrStopIndex);
+//			lastCurrStopIndex++; // increment
+//			currStop = colorStops.get(lastCurrStopIndex);
+//			denom = 1 / (prevStop.percent - currStop.percent); // compute denominator inverse
+//		}
 
 		double smoothStep = functStep((step - currStop.percent) * denom); // apply interpolation function
 
