@@ -12,7 +12,7 @@ package peasyGradients.colourSpaces;
 final class XYZ_FAST {
 
 	/**
-	 * 
+	 * Not fast, since only called once during colorstop instantiation.
 	 * @param sRGB [R,G,B] where values are 0...1.0
 	 * @return XYZ representation (where values have same relative difference as
 	 *         real XYZ values)

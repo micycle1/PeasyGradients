@@ -21,8 +21,6 @@ final class LAB implements ColourSpace {
 	protected static final double illuminantX = 95.047;
 	protected static final double illuminantY = 100.000;
 	protected static final double illuminantZ = 108.883;
-
-	private static final double third = 1 / 3d;
 	
 	LAB() {
 	}
@@ -51,15 +49,15 @@ final class LAB implements ColourSpace {
 		double Z = xyz[2] / illuminantZ;
 
 		if (X > 0.008856)
-			X = Math.pow(X, third);
+			X = StrictMath.cbrt(X);
 		else
 			X = (7.787 * X) + (16 / 116);
 		if (Y > 0.008856)
-			Y = Math.pow(Y, third);
+			Y = StrictMath.cbrt(Y);
 		else
 			Y = (7.787 * Y) + (16 / 116);
 		if (Z > 0.008856)
-			Z = Math.pow(Z, third);
+			Z = StrictMath.cbrt(Z);
 		else
 			Z = (7.787 * Z) + (16 / 116);
 
@@ -86,10 +84,10 @@ final class LAB implements ColourSpace {
 	private static double[] lab2xyz(double[] lab) {
 		double cache = lab[1];
 
-		lab[0] = cache * 0.002 + (lab[1] = (lab[0] + 16) * 0.0086207);
+		lab[0] = cache * 0.002 + (lab[1] = (lab[0] + 16) * 0.00862068965);
 		lab[2] = lab[1] - lab[2] * 0.005;
 
-		if (lab[1] > 0.2069) { // 6/29
+		if (lab[1] > 0.206897) { // 6/29
 			lab[1] = lab[1] * lab[1] * lab[1];
 		} else {
 			lab[1] = (lab[1] - 16) * 14.8966;

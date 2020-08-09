@@ -11,6 +11,7 @@ import net.jafama.FastMath;
 
 import peasyGradients.gradient.Gradient;
 import peasyGradients.utilities.FastNoise;
+import peasyGradients.utilities.FastPow;
 import peasyGradients.utilities.Functions;
 
 /**
@@ -48,14 +49,11 @@ import peasyGradients.utilities.Functions;
  */
 public final class PeasyGradients {
 
-	private static final float TWO_PI = (float) (2 * Math.PI);
-	private static final float HALF_PI = (float) (0.5f * Math.PI);
+	private static final double TWO_PI = (2 * Math.PI);
+	private static final double HALF_PI = (0.5f * Math.PI);
 	private static final float QRTR_PI = (float) (0.25f * Math.PI);
 
 	private static final float INV_TWO_PI = 1f / PConstants.TWO_PI;
-	private static final float THREE_QRTR_PI = (float) (Math.PI * 3 / 4);
-	private static final double SQRT3 = Math.tan(HALF_PI - (Math.PI / 6)); // used for hexagon gradient (== tan(60)) tan(SIDES)
-	private static final double THIRDPI = 2 * Math.PI / 6; // (1 sixth of circle), used for hexagon gradient
 
 	private boolean debug;
 	private final PApplet p;
@@ -63,6 +61,8 @@ public final class PeasyGradients {
 	private PShape shapeMask;
 	int colorMode = PConstants.RGB;
 	private PGraphics gradientPG;
+	
+	private FastNoise fastNoise = new FastNoise();
 
 	private int[] pixelCache;
 	private int cacheSize;
@@ -420,15 +420,15 @@ public final class PeasyGradients {
 		float rise, run;
 		double t = 0;
 
-		float renderMidpointX = (midPoint.x / gradientPG.width) * renderWidth;
-		float renderMidpointY = (midPoint.y / gradientPG.height) * renderHeight;
+		final float renderMidpointX = (midPoint.x / gradientPG.width) * renderWidth;
+		final float renderMidpointY = (midPoint.y / gradientPG.height) * renderHeight;
 
 		for (int y = 0, x; y < renderHeight; ++y) {
 			rise = renderMidpointY - y;
 			run = renderMidpointX;
 			for (x = 0; x < renderWidth; ++x) {
 
-				t = Functions.fastAtan2(rise, run) + PConstants.PI - angle;
+				t = Functions.fastAtan2(rise, run) + Math.PI - angle;
 
 				// Ensure a positive value if angle is negative.
 				t = Functions.floorMod(t, PConstants.TWO_PI);
@@ -595,31 +595,52 @@ public final class PeasyGradients {
 		final double MIN_LENGTH_RATIO = FastMath.tan(HALF_PI - (Math.PI / sides)); // used for hexagon gradient (== tan(60)) tan(SIDES)
 		final double SEGMENT_ANGLE = (2 * Math.PI) / sides; // max angle of polygon segment in radians
 
+		angle %= SEGMENT_ANGLE; // mod angle to minimise difference between theta and SEGMENT_ANGLE in loop
+
 		double dist = 0;
 
-		final double denominator = MIN_LENGTH_RATIO / ((Math.max(renderHeight, renderWidth)) * zoom); // calc here, not in loop
+		final double denominator = MIN_LENGTH_RATIO / ((Math.max(renderHeight, renderWidth)) * (0.01 * zoom * FastPow.fastPow(sides, 2.4)));
 
 		double yDist; // y distance between midpoint and a given pixel
 		double xDist; // x distance between midpoint and a given pixel
 
+		final double midpointXSquared = midPoint.x * midPoint.x;
+		final double twoMidpointX = 2 * midPoint.x;
+
+		final double LUT_MAX_VALUE = SEGMENT_ANGLE; // domain bound of LUT (0...max)
+		final int LUT_SIZE = 1000;
+		final double[] ratioLookup = new double[(int) (LUT_MAX_VALUE * LUT_SIZE) + 1]; // LUT
+
+		for (int i = 0; i < ratioLookup.length; i++) {
+			double theta = ((float) i / ((int) (LUT_MAX_VALUE * LUT_SIZE)) * LUT_MAX_VALUE);
+			ratioLookup[i] = (MIN_LENGTH_RATIO * FastMath.cosQuick(theta) + FastMath.sinQuick(theta)) * denominator;
+		}
+
 		for (int y = 0, x; y < renderHeight; ++y) {
+
 			yDist = (midPoint.y - y) * (midPoint.y - y);
+			xDist = midpointXSquared + 1;
+			int inc = 1; // (N+x*i)^2, difference between successive ones.
 			for (x = 0; x < renderWidth; ++x) {
-				xDist = (midPoint.x - x) * (midPoint.x - x);
+
+				xDist -= twoMidpointX;
+				xDist += inc;
+				double pointDistance = Math.sqrt(yDist + xDist); // euclidean dist between (x,y) and midpoint
+				inc += 2;
 
 				double theta = Functions.fastAtan2((midPoint.y - y), (midPoint.x - x));
-				theta += (TWO_PI - angle); // TWO_PI - angle, so we rotate clockwise
-				theta = Math.abs(theta);
+
+				theta -= angle; // - angle, to rotate clockwise
+				theta = Math.abs(theta); // theta
 
 				// polygon is split into N segments; restrict theta to angle of one segment
 				while (theta > SEGMENT_ANGLE) { // effectively modulo (faster than using % operator)
 					theta -= SEGMENT_ANGLE;
 				}
 
-				double pointDistance = Math.sqrt(yDist + xDist); // euclidean dist between (x,y) and midpoint
-
-				double polygonRatio = (MIN_LENGTH_RATIO * FastMath.cosQuick(theta) + FastMath.sinQuick(theta));
-				polygonRatio *= denominator;
+//				double polygonRatio = (MIN_LENGTH_RATIO * FastMath.cosQuick(theta) + FastMath.sinQuick(theta));
+//				polygonRatio *= denominator;
+				double polygonRatio = ratioLookup[(int) (theta * LUT_SIZE)]; // use LUT
 
 				dist = polygonRatio * pointDistance;
 
@@ -630,6 +651,7 @@ public final class PeasyGradients {
 				final int stepInt = (int) (dist * cacheSizeConic);
 
 				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCacheConic[stepInt];
+
 			}
 		}
 
@@ -643,95 +665,49 @@ public final class PeasyGradients {
 		}
 	}
 
-	// https://www.filterforge.com/filters/6027-v3.html
-//	public PImage spiralGradient(Gradient gradient, PVector midPoint, float angle, float zoom) {
-//		gradient.prime();
-//
-//		for (int i = 0; i < pixelCacheConic.length; i++) { // calc LUT
-//			pixelCacheConic[i] = gradient.evalRGB(i / (float) pixelCacheConic.length);
-//		}
-//		gradientPG.updatePixels();
-//		
-//		for (int y = 0, x; y < renderHeight; ++y) {
-//			double yDist = (midPoint.y - y) * (midPoint.y - y);
-//			
-//			for (x = 0; x < renderWidth; ++x) {
-//				
-//				// map x,y to an angle
-//
-//				double xDist = (midPoint.x - x) * (midPoint.x - x);
-//				double theta = Functions.angleBetween(midPoint, x, y);
-//
-////				System.out.println(theta);
-//				double distance = Math.sqrt(yDist + xDist); // euclidean dist between (x,y) and midpoint
-////				distance = Math.round(distance / 50) * 50; // bands 50 width across
-//				double step = Math.abs(TWO_PI/theta) * distance;
-//				step/=400*TWO_PI/10; // between 0...1
-////				step = Math.round(step/0.1)*0.1;
-//				step%=1;
-//				
-//
-//				final int stepInt = (int) (step * cacheSizeConic);
-//
-//				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCacheConic[stepInt];
-//			}
-//		}
-//
-//		if (renderInternal) {
-//			gradientPG.endDraw();
-//			return gradientPG;
-//		} else {
-//			return emptyPGraphics;
-//		}
-//	}
+	public PImage spiralGradient(Gradient gradient, PVector midPoint, final float angle, final float curve) {
 
-	public PImage spiralGradient(Gradient gradient, PVector midPoint, float angle, float zoom) {
 		gradient.prime();
 
-		for (int i = 0; i < pixelCache.length; i++) { // calc LUT
-			pixelCache[i] = gradient.evalRGB(i / (float) pixelCache.length);
+		for (int i = 0; i < pixelCacheConic.length; i++) { // calc LUT
+			pixelCacheConic[i] = gradient.evalRGB(i / (float) pixelCacheConic.length);
+		}
+
+		float rise, run;
+		double t = 0;
+
+		final double curveDenominator = 1d / (renderWidth * renderWidth + renderHeight * renderHeight);
+		final double curviness = TWO_PI*curve;
+
+		final float renderMidpointX = (midPoint.x / gradientPG.width) * renderWidth;
+		final float renderMidpointY = (midPoint.y / gradientPG.height) * renderHeight;
+
+		for (int y = 0, x; y < renderHeight; ++y) {
+			
+			rise = renderMidpointY - y;
+			final double riseSquared = rise*rise;
+			run = renderMidpointX;
+			
+			for (x = 0; x < renderWidth; ++x) {
+
+				t = Functions.fastAtan2(rise, run) + Math.PI - angle;
+
+				t += (curviness * Math.sqrt((riseSquared + run * run) * curveDenominator));
+
+				// Ensure a positive value if angle is negative.
+				t = Functions.floorMod(t, TWO_PI);
+
+				// Divide by TWO_PI to get value in range 0...1
+				t *= INV_TWO_PI;
+
+				int stepInt = (int) (t * cacheSizeConic);
+				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCacheConic[stepInt];
+
+				run--;
+			}
 		}
 
 		gradientPG.updatePixels();
-
-		final float spiralDist = 30;
-		final double denom = 1 / (spiralDist * TWO_PI);
-
-		final double offset = spiralDist * Math.PI;
-
-		for (int y = 0, x; y < renderHeight; ++y) {
-			final double yDist = (midPoint.y - y);
-
-			for (x = 0; x < renderWidth; ++x) {
-
-				double cos;
-				double sin;
-
-				final double z = yDist / (midPoint.x - x);
-				final double theta = Functions.fastAtan2(yDist, midPoint.x - x);
-				cos = 1 / Math.sqrt(z * z + 1);
-				sin = z * cos;
-
-				long newI = Math.round(((((midPoint.x - x) / cos) / spiralDist) - theta) / TWO_PI) - 1;
-
-//				System.out.println(newI);
-				double r = (newI * TWO_PI + theta) * spiralDist;
-
-				double innerSpiralX = midPoint.x - r * cos - (offset * cos); // x coord of nearest spiral line
-				double innerSpiralY = midPoint.y - r * sin - (offset * sin);
-
-				double step = Math.sqrt((innerSpiralY - y) * (innerSpiralY - y) + (innerSpiralX - x) * (innerSpiralX - x)); // dist
-				step *= denom;
-
-//				if (step > 1) { // clamp gradient
-//					System.out.println(step);
-//					step = 1;
-//				}
-				final int stepInt = (int) (step * cacheSize);
-
-				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCache[stepInt];
-			}
-		}
 
 		if (renderInternal) {
 			gradientPG.endDraw();
@@ -740,8 +716,6 @@ public final class PeasyGradients {
 			return emptyPGraphics;
 		}
 	}
-
-	FastNoise noise2 = new FastNoise();
 
 	public PImage noiseGradient(Gradient gradient, PVector midPoint, float angle, float zoom) {
 		gradient.prime();
@@ -752,16 +726,17 @@ public final class PeasyGradients {
 
 		gradientPG.updatePixels();
 
-		noise2.SetFrequency(zoom * 0.015f);
+		fastNoise.SetFrequency(0.02f);
 //		noise2.SetInterp(FastNoise.Interp.Quintic);
 //		noise2.SetFractalOctaves(5);
-		noise2.SetCellularDistanceFunction(FastNoise.CellularDistanceFunction.Euclidean);
-		noise2.SetFractalLacunarity(2);
-		noise2.SetFractalGain(0.5f);
+		fastNoise.SetCellularDistanceFunction(FastNoise.CellularDistanceFunction.Euclidean);
+		fastNoise.SetFractalLacunarity(2);
+		fastNoise.SetFractalGain(0.5f);
 //		noise2.SetGradientPerturbAmp(1);
-		noise2.SetCellularReturnType(FastNoise.CellularReturnType.CellValue);
-		noise2.SetNoiseType(FastNoise.NoiseType.SimplexFractal);
-//		noise2.SetInterp(FastNoise.Interp.Linear);
+		fastNoise.SetCellularReturnType(FastNoise.CellularReturnType.Distance2Div);
+		fastNoise.SetNoiseType(FastNoise.NoiseType.Cellular);
+		
+		fastNoise.SetInterp(FastNoise.Interp.Linear);
 
 		final float sin = (float) FastMath.sin(-angle);
 		final float cos = (float) FastMath.cos(-angle);
@@ -769,19 +744,19 @@ public final class PeasyGradients {
 		double min = 0, max = 0;
 		for (int y = 0, x; y < renderHeight; ++y) {
 			final float yTranslate = (y - midPoint.y);
-			
+
 			for (x = 0; x < renderWidth; ++x) {
 
 				float newXpos = (x - midPoint.x) * cos - yTranslate * sin + midPoint.x; // rotate x about midpoint
 				float newYpos = yTranslate * cos + (x - midPoint.x) * sin + midPoint.y; // rotate y about midpoint
 
 //				double step = noise.eval(x * inc, y * inc); // -0.8313049677675405...0.8074247384505447
-				double step = noise2.GetValue(newXpos, newYpos);
+				double step = fastNoise.GetCellular(newXpos, newYpos);
 //				step = Math.abs(step);
 
 				min = Math.min(min, step);
 				max = Math.max(max, step);
-				double maxMinDenom = 1/(max-min);
+				double maxMinDenom = 1 / (max - min);
 				step = ((step - min) * (maxMinDenom)); // map to 0...1
 
 				final int stepInt = (int) (step * cacheSize);

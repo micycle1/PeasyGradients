@@ -135,9 +135,9 @@ public final class Functions {
 		}
 		return a;
 	}
-	
-	public static double angleBetween(PVector tail, float headX, float headY) {
-		double a = fastAtan2(tail.y - headY, tail.x - headX);
+
+	public static double angleBetween(PVector head, float tailX, float tailY) {
+		double a = fastAtan2(tailY - head.y, tailX - head.x);
 		if (a < 0) {
 			a += TWO_PI;
 		}
@@ -180,10 +180,10 @@ public final class Functions {
 	public static int composeclr(double[] in) {
 		return fullAlpha | (int) (in[0] * 255 + 0.5) << 16 | (int) (in[1] * 255 + 0.5) << 8 | (int) (in[2] * 255 + 0.5);
 	}
-	
+
 	/**
 	 * 
-	 * @param in double[3] each is 0...1
+	 * @param in    double[3] each is 0...1
 	 * @param alpha 0...255
 	 * @return
 	 */
@@ -237,7 +237,7 @@ public final class Functions {
 		out[2] = (clr & 0xff);
 		return out;
 	}
-	
+
 	public static double[] decomposeclrRGBDouble(int clr, int alpha) {
 		double[] out = new double[4];
 		out[0] = (clr >> 16 & 0xff);
@@ -355,7 +355,7 @@ public final class Functions {
 	 * 
 	 * @param array
 	 * @param decimalPlaces number of decimal places to retain
-	 * @param padding default is 3 when decimal places = 0
+	 * @param padding       default is 3 when decimal places = 0
 	 * @return
 	 */
 	public static String formatArray(double[] array, int decimalPlaces, int padding) {
@@ -363,12 +363,12 @@ public final class Functions {
 
 		int i = 0;
 		if (decimalPlaces == 0) { // assuming array values > 1
-			String outString = "[" + String.format("%03d",Math.round(out[0])) + ", ";
+			String outString = "[" + String.format("%03d", Math.round(out[0])) + ", ";
 
 			for (int j = 1; j < out.length - 1; j++) {
 				outString += String.format("%03d", Math.round(out[j])) + ", ";
 			}
-			outString += String.format("%03d",Math.round(out[out.length - 1])) + "]";
+			outString += String.format("%03d", Math.round(out[out.length - 1])) + "]";
 			return outString;
 		} else {
 			DecimalFormat df = new DecimalFormat(
@@ -404,7 +404,7 @@ public final class Functions {
 
 		return rv;
 	}
-	
+
 	/**
 	 * pow approximation with exponentiation by squaring. Very fast, but with
 	 * appreciable inaccuracy. https://pastebin.com/ZW95gEyr
@@ -432,23 +432,23 @@ public final class Functions {
 		final long tmp2 = (long) (b_faction * (tmp - 4606921280493453312L)) + 4606921280493453312L;
 		return r * Double.longBitsToDouble(tmp2);
 	}
-	
+
 	/**
 	 * rel. error of 0.000892
 	 */
 	public static float fastInvSqrt(float x) {
-	    final float xhalf = 0.5f * x;
-	    int i = Float.floatToIntBits(x);
-	    i = 0x5F376908 - (i >> 1);
-	    x = Float.intBitsToFloat(i);
-	    return x *= (1.5008909f - xhalf * x * x);
+		final float xhalf = 0.5f * x;
+		int i = Float.floatToIntBits(x);
+		i = 0x5F376908 - (i >> 1);
+		x = Float.intBitsToFloat(i);
+		return x *= (1.5008909f - xhalf * x * x);
 	}
-	
+
 	/**
 	 * rel. error of 0.035
 	 */
 	public static float veryFastInvSqrt(float x) {
-	    return  Float.intBitsToFloat(0x5F37624F - (Float.floatToIntBits(x) >> 1));
+		return Float.intBitsToFloat(0x5F37624F - (Float.floatToIntBits(x) >> 1));
 	}
 
 	/**
