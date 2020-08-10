@@ -4,9 +4,9 @@ import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.Random;
 
-import net.jafama.FastMath;
 import peasyGradients.utilities.fastLog.DFastLog;
 import peasyGradients.utilities.fastLog.FastLog;
+
 import processing.core.PVector;
 
 /**
@@ -24,6 +24,7 @@ public final class Functions {
 	private static final float TWO_PI = (float) (2 * Math.PI);
 	private static final float HALF_PI = (float) (0.5f * Math.PI);
 	private static final float QRTR_PI = (float) (0.25f * Math.PI);
+	private static final float THREE_QRTR_PI = (float) (0.75f * Math.PI);
 
 	private static final int fullAlpha = 255 << 24; // fully opaque
 	private static final float INV_255 = 1f / 255f; // used to normalise RGB values
@@ -136,8 +137,11 @@ public final class Functions {
 		return a;
 	}
 
+	/*
+	 * Calls fastAtan2
+	 */
 	public static double angleBetween(PVector head, float tailX, float tailY) {
-		double a = fastAtan2(tailY - head.y, tailX - head.x);
+		double a = fastAtan2b(tailY - head.y, tailX - head.x);
 		if (a < 0) {
 			a += TWO_PI;
 		}
@@ -432,6 +436,10 @@ public final class Functions {
 		final long tmp2 = (long) (b_faction * (tmp - 4606921280493453312L)) + 4606921280493453312L;
 		return r * Double.longBitsToDouble(tmp2);
 	}
+	
+	public static double fastSqrt(double d) {
+		return Double.longBitsToDouble(((Double.doubleToLongBits(d) - (1l << 52)) >> 1) + (1l << 61));
+	}
 
 	/**
 	 * rel. error of 0.000892
@@ -482,7 +490,7 @@ public final class Functions {
 	 * @return
 	 * @see #fastAtan(float)
 	 */
-	public static double fastAtan2(double y, double x) {
+	public static double fastAtan2a(double y, double x) {
 		if (x != 0.0f) {
 			if (Math.abs(x) > Math.abs(y)) {
 				double z = y / x;
@@ -515,6 +523,72 @@ public final class Functions {
 			}
 		}
 		return 0.0f; // x,y = 0. Could return NaN instead.
+	}
+	
+	/**
+	 * Faster, seemingly accurate too.
+	 * @param y
+	 * @param x
+	 * @return
+	 */
+	public static float fastAtan2b(float y, float x) {
+
+		float r, angle;
+		final float abs_y = Math.abs(y) + 1e-10f; // kludge to prevent 0/0 condition
+		
+		if (x < 0.0f) {
+			r = (x + abs_y) / (abs_y - x);
+			angle = THREE_QRTR_PI;
+		} else {
+			r = (x - abs_y) / (x + abs_y);
+			angle = QRTR_PI;
+		}
+		angle += (0.1963f * r * r - 0.9817f) * r;
+		if (y < 0.0f)
+			return (-angle); // negate if in quad III or IV
+		else
+			return (angle);
+
+	}
+	
+	/**
+	 * Very accurate
+	 * @param y
+	 * @param x
+	 * @return
+	 */
+	public static float fastAtan2c(float y, float x) {
+		if (x == 0f) {
+			if (y > 0f)
+				return PI / 2;
+			if (y == 0f)
+				return 0f;
+			return -PI / 2;
+		}
+		final float atan, z = y / x;
+		if (Math.abs(z) < 1f) {
+			atan = z / (1f + 0.28f * z * z);
+			if (x < 0f)
+				return atan + (y < 0f ? -PI : PI);
+			return atan;
+		}
+		atan = PI / 2 - z / (z * z + 0.28f);
+		return y < 0f ? atan - PI : atan;
+	}
+	
+	/**
+	 * Linearly interpolates between two angles in radians. Takes into account that
+	 * angles wrap at two pi and always takes the direction with the smallest delta
+	 * angle.
+	 * 
+	 * @param fromRadians start angle in radians
+	 * @param toRadians   target angle in radians
+	 * @param progress    interpolation value in the range [0, 1]
+	 * @return the interpolated angle in the range [0, PI2]
+	 */
+	public static float lerpAngle(float fromRadians, float toRadians, float progress) {
+		float delta = ((toRadians - fromRadians + TWO_PI + PI) % TWO_PI) - PI;
+		return (fromRadians + delta * progress + TWO_PI) % TWO_PI;
 	}
 
 	/**

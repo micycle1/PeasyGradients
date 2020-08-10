@@ -65,7 +65,7 @@ final class XYZ_FAST {
 	/**
 	 * The following polynomial approximations have been generated with sollya, and
 	 * have a worst case relative error of 0.0144%.
-	 * https://stackoverflow.com/questions/6475373/optimizations-for-pow-with-const-non-integer-exponent
+	 * Source: https://stackoverflow.com/a/39652091/9808792
 	 * 
 	 * @param x
 	 * @return
