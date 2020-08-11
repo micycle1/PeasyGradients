@@ -335,7 +335,7 @@ public final class PeasyGradients {
 	 */
 	public PImage radialGradient(Gradient gradient, PVector midPoint, float zoom) {
 
-		float hypotSq = (renderWidth * renderWidth) + (renderHeight * renderHeight);
+		final float hypotSq = (renderWidth * renderWidth) + (renderHeight * renderHeight);
 		float rise, run, distSq, dist;
 		zoom = 4 / zoom; // calc here, not in loop
 		zoom /= hypotSq; // calc here, not in loop
@@ -591,6 +591,7 @@ public final class PeasyGradients {
 		final double MIN_LENGTH_RATIO = FastMath.tan(HALF_PI - (Math.PI / sides)); // used for hexagon gradient (== tan(60)) tan(SIDES)
 		final double SEGMENT_ANGLE = (2 * Math.PI) / sides; // max angle of polygon segment in radians
 
+//		angle = (float) (TWO_PI - angle);
 		angle %= SEGMENT_ANGLE; // mod angle to minimise difference between theta and SEGMENT_ANGLE in loop
 
 		double dist = 0;
@@ -603,12 +604,15 @@ public final class PeasyGradients {
 		final double midpointXSquared = midPoint.x * midPoint.x;
 		final double twoMidpointX = 2 * midPoint.x;
 
-		final double LUT_MAX_VALUE = SEGMENT_ANGLE; // domain bound of LUT (0...max)
 		final int LUT_SIZE = 1000;
-		final double[] ratioLookup = new double[(int) (LUT_MAX_VALUE * LUT_SIZE) + 1]; // LUT
+		final int HALF_LUT_SIZE = (int) (LUT_SIZE/TWO_PI);
+		final double[] ratioLookup = new double[(int) (LUT_SIZE) + 1]; // LUT
 
 		for (int i = 0; i < ratioLookup.length; i++) {
-			double theta = ((float) i / ((int) (LUT_MAX_VALUE * LUT_SIZE)) * LUT_MAX_VALUE);
+			double theta = (float) (i * 2) / (LUT_SIZE) ; // *2 for
+			theta*=Math.PI;
+			theta -= angle;
+			theta = Math.abs(theta) % SEGMENT_ANGLE;
 			ratioLookup[i] = (MIN_LENGTH_RATIO * FastMath.cosQuick(theta) + FastMath.sinQuick(theta)) * denominator;
 		}
 
@@ -624,19 +628,10 @@ public final class PeasyGradients {
 				double pointDistance = Math.sqrt(yDist + xDist); // euclidean dist between (x,y) and midpoint
 				inc += 2;
 
-				double theta = Functions.fastAtan2b((midPoint.y - y), (midPoint.x - x));
+				double theta = Functions.fastAtan2b((midPoint.y - y), (midPoint.x - x)); // -PI...PI
 
-				theta -= angle; // - angle, to rotate clockwise
-				theta = Math.abs(theta); // theta
-
-				// polygon is split into N segments; restrict theta to angle of one segment
-				while (theta > SEGMENT_ANGLE) { // effectively modulo (faster than using % operator)
-					theta -= SEGMENT_ANGLE;
-				}
-
-//				double polygonRatio = (MIN_LENGTH_RATIO * FastMath.cosQuick(theta) + FastMath.sinQuick(theta));
-//				polygonRatio *= denominator;
-				double polygonRatio = ratioLookup[(int) (theta * LUT_SIZE)]; // use LUT
+				// Use LUT: +PI to makes array index positive 0...2PI
+				double polygonRatio = ratioLookup[(int) ((theta + Math.PI) * HALF_LUT_SIZE)]; // use LUT
 
 				dist = polygonRatio * pointDistance;
 
@@ -691,7 +686,7 @@ public final class PeasyGradients {
 				spiralOffset = curviness * Math.sqrt((riseSquared + run * run) * curveDenominator);
 				t += spiralOffset;
 
-				// if+whiles are faster than Functions.floorMod()
+				// if & whiles are slightly faster than Functions.floorMod()
 				if (t < 0) {
 					while (t < 0) {
 						t += TWO_PI;
@@ -800,7 +795,7 @@ public final class PeasyGradients {
 //				step = Math.abs(x-midPoint.x) < y? 1: 0;
 //				step*=(y/(float)renderHeight);
 
-				step = Math.abs(x - midPoint.x) > ((y-midPoint.y) / 2) ? 0 : 1 - Math.abs(x - midPoint.x) / ((y-midPoint.y) / 2);
+				step = Math.abs(x - midPoint.x) > ((y - midPoint.y) / 2) ? 0 : 1 - Math.abs(x - midPoint.x) / ((y - midPoint.y) / 2);
 				step *= (y / (float) renderHeight);
 
 //				float newXpos = (x - midPoint.x) * cos - yTranslate * sin + midPoint.x; // rotate x about midpoint

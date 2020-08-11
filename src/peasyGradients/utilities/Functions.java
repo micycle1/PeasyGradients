@@ -436,7 +436,7 @@ public final class Functions {
 		final long tmp2 = (long) (b_faction * (tmp - 4606921280493453312L)) + 4606921280493453312L;
 		return r * Double.longBitsToDouble(tmp2);
 	}
-	
+
 	public static double fastSqrt(double d) {
 		return Double.longBitsToDouble(((Double.doubleToLongBits(d) - (1l << 52)) >> 1) + (1l << 61));
 	}
@@ -524,35 +524,38 @@ public final class Functions {
 		}
 		return 0.0f; // x,y = 0. Could return NaN instead.
 	}
-	
+
 	/**
-	 * Faster, seemingly accurate too.
+	 * Max error of .01 rads
+	 * http://dspguru.com/dsp/tricks/fixed-point-atan2-with-self-normalization/
+	 * 
 	 * @param y
 	 * @param x
 	 * @return
 	 */
-	public static float fastAtan2b(float y, float x) {
+	public static float fastAtan2b(final float y, final float x) {
 
 		float r, angle;
 		final float abs_y = Math.abs(y) + 1e-10f; // kludge to prevent 0/0 condition
-		
+
 		if (x < 0.0f) {
-			r = (x + abs_y) / (abs_y - x);
-			angle = THREE_QRTR_PI;
+			r = (x + abs_y) / (abs_y - x); // (3)
+			angle = THREE_QRTR_PI; // (4)
 		} else {
-			r = (x - abs_y) / (x + abs_y);
-			angle = QRTR_PI;
+			r = (x - abs_y) / (x + abs_y); // (1)
+			angle = QRTR_PI; // (2)
 		}
-		angle += (0.1963f * r * r - 0.9817f) * r;
+		angle += (0.1963f * r * r - 0.9817f) * r; // (2 | 4)
 		if (y < 0.0f)
 			return (-angle); // negate if in quad III or IV
 		else
 			return (angle);
 
 	}
-	
+
 	/**
 	 * Very accurate
+	 * 
 	 * @param y
 	 * @param x
 	 * @return

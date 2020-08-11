@@ -28,6 +28,9 @@ public final class FastPow {
 	private static final float _2p23 = 8388608.0f;
 	private static final float _2p23b = (127.0f * _2p23);
 	private static final float ln2_INV = (float) (1 / Math.log(2));
+	private static final float floatBaseE = getBaseRepresentation(Math.E);
+	private static final float doubleBaseE = getBaseRepresentation(Math.E);
+	
 	private static FastLog fastLog;
 
 	private static int[] table;
@@ -35,6 +38,8 @@ public final class FastPow {
 
 	/**
 	 * Initialize powFast lookup table. Must be called once before use.
+	 * 
+	 * fastLog speed factor drops off after 14 bits.
 	 * 
 	 * @param precision number of mantissa bits used, >= 0 and <= 18
 	 */
@@ -59,12 +64,24 @@ public final class FastPow {
 	/**
 	 * Use {@link #getBaseRepresentation(float)}
 	 * 
-	 * @param baseRepresentation one over log, to required radix, of two
+	 * @param baseRepresentation one over log, to required radix, of two. Use
+	 *                           {@link #getBaseRepresentation(float)} to derive
+	 *                           value.
 	 * @param exponent           power to raise radix to
 	 * @return
 	 * @see #fastPow(double, double)
 	 */
 	public static float fastPowConstantBase(final float baseRepresentation, final float exponent) {
+		final int i = (int) ((exponent * (_2p23 * baseRepresentation)) + (127.0f * _2p23));
+
+		/* replace mantissa with lookup */
+		final int it = (i & 0xFF800000) | table[(i & 0x7FFFFF) >> (23 - precision)];
+
+		/* convert bits to float */
+		return Float.intBitsToFloat(it); // Calls a JNI binding
+	}
+	
+	public static float fastPowConstantBase(final double baseRepresentation, final double exponent) {
 		final int i = (int) ((exponent * (_2p23 * baseRepresentation)) + (127.0f * _2p23));
 
 		/* replace mantissa with lookup */
@@ -104,6 +121,22 @@ public final class FastPow {
 	}
 
 	/**
+	 * @param exponent the exponent to raise e to
+	 * @return the value e^a, where e is the base of the natural logarithms.
+	 */
+	public static float exp(final float exponent) {
+		return fastPowConstantBase(floatBaseE, exponent);
+	}
+	
+	/**
+	 * @param exponent the exponent to raise e to
+	 * @return the value e^a, where e is the base of the natural logarithms.
+	 */
+	public static float exp(final double exponent) {
+		return fastPowConstantBase(doubleBaseE, exponent);
+	}
+
+	/**
 	 * Calcuate representation of the given radix for use in
 	 * {@link #fastPow(float, float)}.
 	 * 
@@ -112,6 +145,10 @@ public final class FastPow {
 	 * @see #fastPow(float, float)
 	 */
 	public static float getBaseRepresentation(float radix) {
+		return (float) FastMath.log(radix) * ln2_INV;
+	}
+	
+	public static float getBaseRepresentation(double radix) {
 		return (float) FastMath.log(radix) * ln2_INV;
 	}
 
