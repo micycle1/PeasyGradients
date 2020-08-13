@@ -20,7 +20,7 @@ import peasyGradients.utilities.Interpolation;
  * 
  * @author micycle1
  * 
- * TODO export as JSON
+ *         TODO export as JSON
  *
  */
 public final class Gradient {
@@ -40,13 +40,12 @@ public final class Gradient {
 	public ColourSpaces colourSpace = ColourSpaces.XYZ; // TODO public for testing
 	ColourSpace colourSpaceInstance = colourSpace.getColourSpace(); // call toRGB on this instance
 	public Interpolation interpolationMode = Interpolation.SMOOTH_STEP;
-	
+
 	/**
-	 * 
+	 * Constructs a new gradient of complementary colours.
 	 */
 	public Gradient() {
-//		this(0xff000000, 0xffffffff); // default: black-->white
-		this(Palette.complementary());
+		this(Palette.complementary()); // random 2 colours
 	}
 
 	// Creates equidistant color stops.
@@ -65,14 +64,12 @@ public final class Gradient {
 			this.colorStops.add(colorStops[i]);
 		}
 		java.util.Collections.sort(this.colorStops);
-		remove();
 		this.colorStops.forEach(c -> c.setColourSpace(colourSpace));
 	}
 
 	public Gradient(ArrayList<ColorStop> colorStops) {
 		this.colorStops = colorStops;
 		java.util.Collections.sort(this.colorStops);
-		remove();
 		this.colorStops.forEach(c -> c.setColourSpace(colourSpace));
 	}
 
@@ -136,8 +133,8 @@ public final class Gradient {
 	}
 
 	/**
-	 * Remove last colour stop from the gradient and scale the rest to fill
-	 * the gradient.
+	 * Remove last colour stop from the gradient and scale the rest to fill the
+	 * gradient.
 	 * 
 	 * @see #push(int)
 	 */
@@ -150,15 +147,19 @@ public final class Gradient {
 	}
 
 	/**
-	 * Returns colour of the colourstop at a given index.
+	 * Returns the ARGB colour of the colorstop at a given index.
 	 * 
 	 * @param colorStopIndex
-	 * @return
+	 * @return 32bit ARGB colour int
 	 */
 	public int colourAt(int colorStopIndex) {
 		return colorStops.get(colorStopIndex).clr;
 	}
 
+	/**
+	 * Returns this gradient's last colour.
+	 * @return 32bit ARGB colour int
+	 */
 	public int lastColor() {
 		return colorStops.get(colorStops.size() - 1).clr;
 	}
@@ -174,13 +175,6 @@ public final class Gradient {
 	}
 
 	void add(final ColorStop colorStop) {
-//		for (int sz = colorStops.size(), i = sz - 1; i > 0; --i) {
-//			ColorStop current = colorStops.get(i);
-//			if (ColorStop.approxPercent(colorStop, ColorStop.TOLERANCE)) {
-//				System.out.println(current.toString() + " will be replaced by " + colorStop.toString()); // TODO
-//				colorStops.remove(current);
-//			}
-//		}
 		colorStops.add(colorStop);
 		java.util.Collections.sort(colorStops); // sort colorstops by value
 	}
@@ -189,13 +183,13 @@ public final class Gradient {
 		lastCurrStopIndex = 0;
 		currStop = colorStops.get(lastCurrStopIndex);
 		prevStop = colorStops.get(0);
-		colorStops.forEach(c-> c.setColourSpace(colourSpace));
+		colorStops.forEach(c -> c.setColourSpace(colourSpace));
 	}
 
 	/**
 	 * Main method of gradient class. Computes the RGB value at a given percentage
 	 * of the gradient. Internally, the step input undergoes a function set by the
-	 * user. www.andrewnoske.com/wiki/Code_-_heatmaps_and_color_gradients
+	 * user.
 	 * 
 	 * @param step a linear step (percentage) through the gradient 0...1
 	 * @return ARGB integer for Processing pixel array.
@@ -224,29 +218,28 @@ public final class Gradient {
 				do {
 					lastCurrStopIndex++; // increment
 					currStop = colorStops.get(lastCurrStopIndex);
-				} while (step > currStop.percent && lastCurrStopIndex < (colorStops.size() - 1)); // sometimes step might jump more than 1
-																									// colour
+					// sometimes step might jump more than 1 colour, hence while()
+				} while (step > currStop.percent && lastCurrStopIndex < (colorStops.size() - 1));
 				prevStop = colorStops.get(lastCurrStopIndex - 1);
 
 				denom = 1 / (prevStop.percent - currStop.percent); // compute denominator inverse
 			}
 
-		}
-		else if (step <= prevStop.percent) {
-		if (lastCurrStopIndex == 0) { // if at zero stay, otherwise prev
-			denom = 1;
-			currStop = colorStops.get(0);
-		} else {
-			do {
-				lastCurrStopIndex--; // decrement
-				prevStop = colorStops.get(Math.max(lastCurrStopIndex - 1, 0));
-			} while (step < prevStop.percent); // sometimes step might jump back more than 1 colour
+		} else if (step <= prevStop.percent) {
+			if (lastCurrStopIndex == 0) { // if at zero stay, otherwise prev
+				denom = 1;
+				currStop = colorStops.get(0);
+			} else {
+				do {
+					lastCurrStopIndex--; // decrement
+					prevStop = colorStops.get(Math.max(lastCurrStopIndex - 1, 0));
+				} while (step < prevStop.percent); // sometimes step might jump back more than 1 colour
 
-			currStop = colorStops.get(lastCurrStopIndex);
+				currStop = colorStops.get(lastCurrStopIndex);
 
-			denom = 1 / (prevStop.percent - currStop.percent); // compute denominator inverse
+				denom = 1 / (prevStop.percent - currStop.percent); // compute denominator inverse
+			}
 		}
-	}
 		/**
 		 * Since we pre-compute results into a LUT, this function works with
 		 * monotonically increasing step. HOWEVER, doesn't work if animating.
@@ -262,14 +255,15 @@ public final class Gradient {
 
 		// interpolate within given colourspace
 		colourSpaceInstance.interpolateLinear(currStop.colorOut, prevStop.colorOut, smoothStep, interpolatedColourOUT);
-		int alpha = (int) Math.floor( (currStop.alpha + (step * (prevStop.alpha - currStop.alpha))) + 0.5d);
+		int alpha = (int) Math.floor((currStop.alpha + (step * (prevStop.alpha - currStop.alpha))) + 0.5d);
 
 		// convert current colourspace value to ARGB int and return
 		return Functions.composeclr(colourSpaceInstance.toRGB(interpolatedColourOUT), alpha);
 	}
-	
+
 	/**
 	 * Colour space is defined for user at peasyGradients level, not gradient (1D)
+	 * 
 	 * @param colourSpace
 	 */
 	public void setColSpace(ColourSpaces colourSpace) {
@@ -289,7 +283,7 @@ public final class Gradient {
 		colourSpaceInstance = colourSpace.getColourSpace();
 		colorStops.forEach(c -> c.setColourSpace(colourSpace));
 	}
-	
+
 	public void nextInterpolationMode() {
 		interpolationMode = interpolationMode.next();
 	}
@@ -304,25 +298,6 @@ public final class Gradient {
 
 	ColorStop remove(int i) {
 		return colorStops.remove(i);
-	}
-
-	/**
-	 * Remove points if they are within a certain tolerance of each other.
-	 * 
-	 * @return number of removed points
-	 */
-	int remove() {
-		int removed = 0;
-		for (int sz = colorStops.size(), i = sz - 1; i > 0; --i) {
-			ColorStop current = colorStops.get(i);
-			ColorStop prev = colorStops.get(i - 1);
-			if (ColorStop.approxPercent(prev, ColorStop.TOLERANCE)) {
-				System.out.println(current + " removed, as it was too close to " + prev);
-				colorStops.remove(current);
-				removed++;
-			}
-		}
-		return removed;
 	}
 
 	/**
@@ -373,7 +348,7 @@ public final class Gradient {
 		}
 		return sb.toString();
 	}
-	
+
 	/**
 	 * Calculate the step by passing it to the selected smoothing function. Allows
 	 * gradient renderer to easily change how the gradient is smoothed.

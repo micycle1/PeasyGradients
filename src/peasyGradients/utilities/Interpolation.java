@@ -1,13 +1,13 @@
 package peasyGradients.utilities;
 
 /**
- * Defines interpolation functions, which change the rate at which colour
- * changes throughout a gradient. Does not affect how two colours are
- * interpolated. Changes how the colour between two control points is lerped to
- * as a function of the the position between them. For example, in linear mode,
- * a point mid-way between two control points will use 50% of the left and 50%
- * of the right; in exponential interpolation, the same point be an average of
- * x% of left colour and y% of right colour.
+ * Interpolation functions affect the interpolation factor between any 2 colour
+ * stops and therefore the appearance (ramp) of a gradient.
+ * 
+ * <P>
+ * For example, in linear mode, a point mid-way between two control points will
+ * use 50% of the left and 50% of the right; in exponential interpolation, the
+ * same point be an average of x% of left colour and y% of right colour.
  * 
  * @author micycle1
  *
@@ -86,8 +86,8 @@ public enum Interpolation {
 	 * 
 	 * Great for triggering behaviours or making envelopes for music or animation,
 	 * and for anything that grows fast and then slowly decays. Use k to control the
-	 * stretching of the function. Its maximum, which is 1, happens at exactly
-	 * x = 1/k.
+	 * stretching of the function. Its maximum, which is 1, happens at exactly x =
+	 * 1/k.
 	 */
 	EXPIMPULSE;
 
@@ -95,6 +95,7 @@ public enum Interpolation {
 
 	/**
 	 * Switches to the next interpolation mode.
+	 * 
 	 * @return
 	 */
 	public Interpolation next() {
@@ -103,6 +104,7 @@ public enum Interpolation {
 
 	/**
 	 * Switches to the previous interpolation mode.
+	 * 
 	 * @return
 	 */
 	public Interpolation prev() {

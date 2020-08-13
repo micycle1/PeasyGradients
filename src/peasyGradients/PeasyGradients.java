@@ -3,8 +3,6 @@ package peasyGradients;
 import processing.core.PApplet;
 import processing.core.PConstants;
 import processing.core.PGraphics;
-import processing.core.PImage;
-import processing.core.PShape;
 import processing.core.PVector;
 
 import net.jafama.FastMath;
@@ -25,13 +23,6 @@ import peasyGradients.utilities.Functions;
  * interpolation mode in this class! gradient
  * Shape.applycolorgradient(gradient).applyopacitygradient(shape.applyopacity))
  * 
- * TODO dithering/banding/rgb depth TODO parallelStream for
- * iteration/calculation?
- * 
- * TODO text masking
- * 
- * TODO JBLAS for multiplication
- * 
  * API:
  * rectPane.applyLinearGradient(gradient).setOpacity().applyCircularGradient(gradient1).setColorspace(HSV).get().getRaw().applyRadialGradientMask().get()
  * 
@@ -42,7 +33,7 @@ import peasyGradients.utilities.Functions;
  * <p>
  * Algorithms for linear/radial/conic gradient calculation are based on <a href=
  * "https://medium.com/@behreajj/color-gradients-in-processing-v-2-0-e5c0b87cdfd2">this</a>
- * work by Jeremy Behreandt
+ * work by Jeremy Behreandt; all others are mostly my own derivation.
  * 
  * @author micycle1
  *
@@ -53,10 +44,9 @@ public final class PeasyGradients {
 	private static final double HALF_PI = (0.5f * Math.PI);
 	private static final float INV_TWO_PI = 1f / PConstants.TWO_PI;
 
-	private boolean debug;
 	private final PApplet p;
-	int colorMode = PConstants.RGB;
-	private PGraphics gradientPG;
+//	int colorMode = PConstants.RGB;
+	private PGraphics gradientPG; // reference to object to render into
 
 	private FastNoise fastNoise = new FastNoise();
 
@@ -65,25 +55,12 @@ public final class PeasyGradients {
 	private int[] pixelCacheConic;
 	private int cacheSizeConic;
 
-	private boolean renderInternal = true; // render to internal pgraphics, or parent papplet?
 	private int renderHeight, renderWidth;
 	private int renderOffsetX, renderOffsetY;
 	private float scaleY, scaleX;
 
-	private PGraphics emptyPGraphics;
-
 	public PeasyGradients(PApplet p) {
 		this.p = p;
-		emptyPGraphics = p.createGraphics(0, 0);
-	}
-
-	/**
-	 * Mask will apply to the next gradient only.
-	 * 
-	 * @param mask
-	 */
-	public void setMask(PImage mask) {
-
 	}
 
 	/**
@@ -101,17 +78,12 @@ public final class PeasyGradients {
 	 * @param height
 	 * @see #renderIntoPApplet()
 	 */
-	public void renderIntoPApplet(int x, int y, int width, int height) {
-		if (x < 0 || y < 0 || (width + x) > p.width || (y + height) > p.height) {
+	public void renderIntoPApplet(int offSetX, int offSetY, int width, int height) {
+		if (offSetY < 0 || offSetY < 0 || (width + offSetX) > p.width || (offSetY + height) > p.height) {
 			System.err.println("Invalid parameters.");
 			return;
 		}
-
-		renderWidth = width;
-		renderHeight = height;
-		renderOffsetX = x;
-		renderOffsetY = y;
-		setRenderTarget(p.getGraphics(), x, y, width, height);
+		setRenderTarget(p.getGraphics(), offSetX, offSetY, width, height);
 	}
 
 	public void setRenderTarget(PGraphics g) {
@@ -119,6 +91,7 @@ public final class PeasyGradients {
 	}
 
 	private void setRenderTarget(PGraphics g, int offSetX, int offSetY, int width, int height) {
+		System.out.println(width);
 
 		final int actualWidth = width - offSetX;
 		final int actualHeight = height - offSetY;
@@ -126,11 +99,15 @@ public final class PeasyGradients {
 		scaleX = g.width / (float) width; // used for correct rendering increment
 		scaleY = g.height / (float) height; // used for correct rendering increment
 
+		renderWidth = width;
+		renderHeight = height;
+		renderOffsetX = offSetX;
+		renderOffsetY = offSetY;
+
 		g.beginDraw();
 		g.loadPixels(); // only needs to be called once
 		g.endDraw();
 
-		renderInternal = false; // don't render to internal PG, let user control PG
 		gradientPG = g;
 
 		cacheSize = (int) Math.ceil(Math.max(actualWidth, actualHeight) * 1.4143);
@@ -146,16 +123,7 @@ public final class PeasyGradients {
 	 * colors) looks.
 	 */
 	public void setColorSpace() {
-
-	}
-
-	/**
-	 * Return RGB (OR LAB?) int grid (not PImage)
-	 * 
-	 * @return
-	 */
-	public int[] getRaw() {
-		return null; // TODO
+		// TODO ?
 	}
 
 	/**
@@ -183,21 +151,23 @@ public final class PeasyGradients {
 	}
 
 	/**
+	 * Renders into the parent sketch unless otherwise
+	 * {@link #setRenderTarget(PGraphics) specified}.
 	 * 
 	 * @param gradient 1D Gradient to use as the basis for the linear gradient
 	 * @param angle    radians. East is 0, moves clockwise
 	 * @return
 	 */
-	public PImage linearGradient(Gradient gradient, float angle) {
+	public void linearGradient(Gradient gradient, float angle) {
 
 		PVector centerPoint = new PVector(gradientPG.width / 2, gradientPG.height / 2);
 		// get edge-line intersection points
 		PVector[] o = Functions.lineRectIntersection(gradientPG.width, gradientPG.height, centerPoint, angle);
-//		PVector[] o = new PVector[] {new PVector(10, 10), new PVector(20,20)};
+
 		if (angle > PConstants.HALF_PI && angle <= PConstants.HALF_PI * 3) {
-			return linearGradient(gradient, centerPoint, o[1], o[0]);
+			linearGradient(gradient, o[1], o[0]);
 		} else {
-			return linearGradient(gradient, centerPoint, o[0], o[1]);
+			linearGradient(gradient, o[0], o[1]);
 		}
 	}
 
@@ -208,14 +178,15 @@ public final class PeasyGradients {
 	 * @param angle       in radians
 	 * @return
 	 */
-	public PImage linearGradient(Gradient gradient, PVector centerPoint, float angle) {
+	public void linearGradient(Gradient gradient, PVector centerPoint, float angle) {
 
 		// get edge-line intersection points
 		PVector[] o = Functions.lineRectIntersection(gradientPG.width, gradientPG.height, centerPoint, angle);
+
 		if (angle > PConstants.HALF_PI && angle <= PConstants.HALF_PI * 3) {
-			return linearGradient(gradient, centerPoint, o[1], o[0]);
+			linearGradient(gradient, o[1], o[0]);
 		} else {
-			return linearGradient(gradient, centerPoint, o[0], o[1]);
+			linearGradient(gradient, o[0], o[1]);
 		}
 	}
 
@@ -230,19 +201,18 @@ public final class PeasyGradients {
 	 *                    sqashed; >1 colours spread out (outermost colours will
 	 *                    leave the view).
 	 */
-	public PImage linearGradient(Gradient gradient, PVector centerPoint, float angle, float length) {
+	public void linearGradient(Gradient gradient, PVector centerPoint, float angle, float length) {
 		// get edge-line intersection points
 		PVector[] o = Functions.lineRectIntersection(gradientPG.width, gradientPG.height, centerPoint, angle);
 		o[0].lerp(centerPoint, 1 - length); // mutate length
 		o[1].lerp(centerPoint, 1 - length); // mutate length
+
 		if (angle > PConstants.HALF_PI && angle <= PConstants.HALF_PI * 3) {
-			return linearGradient(gradient, centerPoint, o[1], o[0]);
+			linearGradient(gradient, o[1], o[0]);
 		} else {
-			return linearGradient(gradient, centerPoint, o[0], o[1]);
+			linearGradient(gradient, o[0], o[1]);
 		}
 	}
-
-//	void linearGradiet(BlendMode b)
 
 	/**
 	 * User defined control points. try to make on a line.
@@ -269,7 +239,7 @@ public final class PeasyGradients {
 	 * @param angle
 	 * @return
 	 */
-	public PImage linearGradient(Gradient gradient, PVector centerPoint, PVector controlPoint1, PVector controlPoint2) {
+	public void linearGradient(Gradient gradient, PVector controlPoint1, PVector controlPoint2) {
 
 		gradient.prime(); // prime curr color stop
 
@@ -306,22 +276,6 @@ public final class PeasyGradients {
 
 		gradientPG.updatePixels();
 
-		if (debug) {
-			gradientPG.ellipseMode(PConstants.CENTER);
-			gradientPG.fill(250);
-			gradientPG.ellipse(controlPoint1.x, controlPoint1.y, 25, 25);
-			gradientPG.fill(0);
-			gradientPG.ellipse(controlPoint2.x, controlPoint2.y, 25, 25);
-			gradientPG.ellipse(centerPoint.x, centerPoint.y, 10, 10);
-		}
-
-		if (renderInternal) {
-			gradientPG.endDraw();
-			return gradientPG;
-		} else {
-			return emptyPGraphics; // avoid caller null pointer
-		}
-
 	}
 
 	/**
@@ -333,15 +287,15 @@ public final class PeasyGradients {
 	 * @param zoom
 	 * @return
 	 */
-	public PImage radialGradient(Gradient gradient, PVector midPoint, float zoom) {
+	public void radialGradient(Gradient gradient, PVector midPoint, float zoom) {
 
 		final float hypotSq = (renderWidth * renderWidth) + (renderHeight * renderHeight);
 		float rise, run, distSq, dist;
 		zoom = 4 / zoom; // calc here, not in loop
 		zoom /= hypotSq; // calc here, not in loop
 
-		float renderMidpointX = (midPoint.x / gradientPG.width) * renderWidth;
-		float renderMidpointY = (midPoint.y / gradientPG.height) * renderHeight;
+		final float renderMidpointX = (midPoint.x / gradientPG.width) * renderWidth;
+		final float renderMidpointY = (midPoint.y / gradientPG.height) * renderHeight;
 
 		gradient.prime();
 
@@ -371,12 +325,6 @@ public final class PeasyGradients {
 
 		gradientPG.updatePixels();
 
-		if (renderInternal) {
-			gradientPG.endDraw();
-			return gradientPG.get();
-		} else {
-			return emptyPGraphics;
-		}
 	}
 
 	/**
@@ -402,10 +350,9 @@ public final class PeasyGradients {
 	 * @param midPoint
 	 * @param angle    in radians, where east is 0 and moves clockwise
 	 * @param zoom     default=1
-	 * @return
 	 * @see #conicGradientSmooth(Gradient, PVector, float, float)
 	 */
-	public PImage conicGradient(Gradient gradient, PVector midPoint, float angle) {
+	public void conicGradient(Gradient gradient, PVector midPoint, float angle) {
 
 		gradient.prime();
 
@@ -441,21 +388,13 @@ public final class PeasyGradients {
 
 		gradientPG.updatePixels();
 
-		if (renderInternal) {
-			gradientPG.endDraw();
-			return gradientPG;
-		} else {
-			return emptyPGraphics;
-		}
 	}
 
 	/**
 	 * Renders a conic gradient with a smooth transition between the first and last
 	 * colours (unlike {@link #conicGradient(Gradient, PVector, float, float) this}
-	 * where there is a hard transition). For this reason, this method generally
-	 * gives nice looking (more gradient-like) results.
-	 * 
-	 * TODO offset angle: https://css-tricks.com/snippets/css/css-conic-gradient/
+	 * method where there is a hard transition). For this reason, this method
+	 * generally gives nice looking (more gradient-like) results.
 	 * 
 	 * @param gradient
 	 * @param midPoint
@@ -465,61 +404,22 @@ public final class PeasyGradients {
 	 * @return
 	 * @see #conicGradient(Gradient, PVector, float, float)
 	 */
-	public PImage conicGradientSmooth(Gradient gradient, PVector midPoint, float angle) {
+	public void conicGradientSmooth(Gradient gradient, PVector midPoint, float angle) {
 		gradient.push(gradient.colourAt(0)); // add copy of first colour to end
-		PImage out = conicGradient(gradient, midPoint, angle);
+		conicGradient(gradient, midPoint, angle);
 		gradient.removeLast(); // remove colour copy
-		return out;
 	}
 
-	public PImage diamondGradient(Gradient gradient, PVector midPoint, float angle, float zoom) {
-
-		gradient.prime();
-
-		for (int i = 0; i < pixelCache.length; i++) { // calc LUT
-			pixelCache[i] = gradient.evalRGB(i / (float) pixelCache.length);
-		}
-
-		final double denominator = (Math.max(renderHeight, renderWidth) / 2) * zoom; // calc here, not in loop
-		angle += PConstants.QUARTER_PI; // angled at 0
-		final double sin = FastMath.sin(angle);
-		final double cos = FastMath.cos(angle);
-
-		double dist = 0;
-
-		double newXpos;
-		double newYpos;
-
-		for (int y = 0, x; y < renderHeight; ++y) {
-			final double yTranslate = (y - midPoint.y);
-			for (x = 0; x < renderWidth; ++x) {
-
-				newXpos = (x - midPoint.x) * cos - yTranslate * sin + midPoint.x; // rotate x about midpoint
-				newYpos = yTranslate * cos + (x - midPoint.x) * sin + midPoint.y; // rotate y about midpoint
-
-				dist = Math.max(Math.abs(newYpos - midPoint.y), Math.abs(newXpos - midPoint.x)) / denominator; // max
-
-				if (dist > 1) {
-					dist = 1;
-				}
-
-				final int stepInt = (int) (dist * cacheSize);
-
-				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCache[stepInt];
-			}
-		}
-
-		gradientPG.updatePixels();
-
-		if (renderInternal) {
-			gradientPG.endDraw();
-			return gradientPG;
-		} else {
-			return emptyPGraphics;
-		}
-	}
-
-	public PImage crossGradient(Gradient gradient, PVector midPoint, float angle, float zoom) {
+	/**
+	 * A spiral gradient is similar to a conic gradient, where instead of colours
+	 * extending at the same angle from the midpoint,
+	 * 
+	 * @param gradient
+	 * @param midPoint
+	 * @param angle
+	 * @param curveCount
+	 */
+	public void spiralGradient(Gradient gradient, PVector midPoint, final float angle, float curveCount) {
 
 		gradient.prime();
 
@@ -527,6 +427,118 @@ public final class PeasyGradients {
 			pixelCacheConic[i] = gradient.evalRGB(i / (float) pixelCacheConic.length);
 		}
 
+		float rise, run;
+		double t = 0;
+		double spiralOffset = 0;
+
+		final double curveDenominator = 1d / (renderWidth * renderWidth + renderHeight * renderHeight);
+		curveCount *= TWO_PI;
+
+		final float renderMidpointX = (midPoint.x / gradientPG.width) * renderWidth;
+		final float renderMidpointY = (midPoint.y / gradientPG.height) * renderHeight;
+
+		for (int y = 0, x; y < renderHeight; ++y) {
+
+			rise = renderMidpointY - y;
+			final double riseSquared = rise * rise;
+			run = renderMidpointX;
+
+			for (x = 0; x < renderWidth; ++x) {
+
+				t = Functions.fastAtan2b(rise, run) - angle; // -PI...PI
+				spiralOffset = curveCount * Math.sqrt((riseSquared + run * run) * curveDenominator);
+				t += spiralOffset;
+
+				t *= INV_TWO_PI; // normalise
+				t -= Math.floor(t); // modulo
+
+				int stepInt = (int) (t * cacheSizeConic);
+				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCacheConic[stepInt];
+
+				run--;
+			}
+		}
+
+		gradientPG.updatePixels();
+
+	}
+
+	/**
+	 * Specifiy curviness
+	 * 
+	 * @param gradient
+	 * @param midPoint
+	 * @param angle
+	 * @param curveCount
+	 * @param curviness
+	 * @return
+	 */
+	public void spiralGradient(Gradient gradient, PVector midPoint, final float angle, float curveCount, float curviness) {
+
+		gradient.prime();
+
+		for (int i = 0; i < pixelCacheConic.length; i++) { // calc LUT
+			pixelCacheConic[i] = gradient.evalRGB(i / (float) pixelCacheConic.length);
+		}
+
+		float rise, run;
+		double t = 0;
+		double spiralOffset = 0;
+
+		final double curveDenominator = 1d / (renderWidth * renderWidth + renderHeight * renderHeight);
+		curveCount *= TWO_PI;
+
+		curviness = 1 / curviness;
+		curviness *= 0.5; // curviness of 1 == exponenent of 0.5
+
+		final float renderMidpointX = (midPoint.x / gradientPG.width) * renderWidth;
+		final float renderMidpointY = (midPoint.y / gradientPG.height) * renderHeight;
+
+		for (int y = 0, x; y < renderHeight; ++y) {
+
+			rise = renderMidpointY - y;
+			final double riseSquared = rise * rise;
+			run = renderMidpointX;
+
+			for (x = 0; x < renderWidth; ++x) {
+
+				t = Functions.fastAtan2b(rise, run) - angle; // -PI...PI
+				spiralOffset = curveCount * FastPow.fastPow((riseSquared + run * run) * curveDenominator, curviness);
+				t += spiralOffset;
+
+				t *= INV_TWO_PI; // normalise
+				t -= Math.floor(t); // modulo
+
+				int stepInt = (int) (t * cacheSizeConic);
+				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCacheConic[stepInt];
+
+				run--;
+			}
+		}
+
+		gradientPG.updatePixels();
+
+	}
+
+	/**
+	 * Leading to a 'X' shape.
+	 * 
+	 * @param gradient
+	 * @param midPoint
+	 * @param angle
+	 * @param zoom
+	 */
+	public void crossGradient(Gradient gradient, PVector midPoint, float angle, float zoom) {
+
+		gradient.prime();
+
+		for (int i = 0; i < pixelCacheConic.length; i++) { // calc LUT
+			pixelCacheConic[i] = gradient.evalRGB(i / (float) pixelCacheConic.length);
+		}
+
+		final float renderMidpointX = (midPoint.x / gradientPG.width) * renderWidth;
+		final float renderMidpointY = (midPoint.y / gradientPG.height) * renderHeight;
+
 		final double denominator = (Math.max(renderHeight, renderWidth) / 2) * zoom; // calc here, not in loop
 		angle += PConstants.QUARTER_PI; // angled at 0
 		final double sin = FastMath.sin(angle);
@@ -538,13 +550,13 @@ public final class PeasyGradients {
 		double newYpos;
 
 		for (int y = 0, x; y < renderHeight; ++y) {
-			final double yTranslate = (y - midPoint.y);
+			final double yTranslate = (y - renderMidpointY);
 			for (x = 0; x < renderWidth; ++x) {
 
-				newXpos = (x - midPoint.x) * cos - yTranslate * sin + midPoint.x; // rotate x about midpoint
-				newYpos = yTranslate * cos + (x - midPoint.x) * sin + midPoint.y; // rotate y about midpoint
+				newXpos = (x - renderMidpointX) * cos - yTranslate * sin + renderMidpointX; // rotate x about midpoint
+				newYpos = yTranslate * cos + (x - renderMidpointX) * sin + renderMidpointY; // rotate y about midpoint
 
-				dist = Math.min(Math.abs(newYpos - midPoint.y), Math.abs(newXpos - midPoint.x)) / denominator; // min
+				dist = Math.min(Math.abs(newYpos - renderMidpointY), Math.abs(newXpos - renderMidpointY)) / denominator; // min
 
 				if (dist > 1) {
 					dist = 1;
@@ -557,13 +569,6 @@ public final class PeasyGradients {
 		}
 
 		gradientPG.updatePixels();
-
-		if (renderInternal) {
-			gradientPG.endDraw();
-			return gradientPG;
-		} else {
-			return emptyPGraphics;
-		}
 	}
 
 	/**
@@ -573,15 +578,17 @@ public final class PeasyGradients {
 	 * @param angle
 	 * @param zoom
 	 * @param sides    at least 3
-	 * @return
 	 */
-	public PImage polygonGradient(Gradient gradient, PVector midPoint, float angle, float zoom, int sides) {
+	public void polygonGradient(Gradient gradient, PVector midPoint, float angle, float zoom, int sides) {
 
 		gradient.prime();
 
 		for (int i = 0; i < pixelCacheConic.length; i++) { // calc LUT
 			pixelCacheConic[i] = gradient.evalRGB(i / (float) pixelCacheConic.length);
 		}
+
+		final float renderMidpointX = (midPoint.x / gradientPG.width) * renderWidth;
+		final float renderMidpointY = (midPoint.y / gradientPG.height) * renderHeight;
 
 		/**
 		 * Calculate minlength/maxlength of distances between edges of unit-length
@@ -601,16 +608,16 @@ public final class PeasyGradients {
 		double yDist; // y distance between midpoint and a given pixel
 		double xDist; // x distance between midpoint and a given pixel
 
-		final double midpointXSquared = midPoint.x * midPoint.x;
-		final double twoMidpointX = 2 * midPoint.x;
+		final double midpointXSquared = renderMidpointX * renderMidpointX;
+		final double twoMidpointX = 2 * renderMidpointX;
 
 		final int LUT_SIZE = 1000;
-		final int HALF_LUT_SIZE = (int) (LUT_SIZE/TWO_PI);
+		final int HALF_LUT_SIZE = (int) (LUT_SIZE / TWO_PI);
 		final double[] ratioLookup = new double[(int) (LUT_SIZE) + 1]; // LUT
 
 		for (int i = 0; i < ratioLookup.length; i++) {
-			double theta = (float) (i * 2) / (LUT_SIZE) ; // *2 for
-			theta*=Math.PI;
+			double theta = (float) (i * 2) / (LUT_SIZE); // *2 for
+			theta *= Math.PI;
 			theta -= angle;
 			theta = Math.abs(theta) % SEGMENT_ANGLE;
 			ratioLookup[i] = (MIN_LENGTH_RATIO * FastMath.cosQuick(theta) + FastMath.sinQuick(theta)) * denominator;
@@ -618,7 +625,7 @@ public final class PeasyGradients {
 
 		for (int y = 0, x; y < renderHeight; ++y) {
 
-			yDist = (midPoint.y - y) * (midPoint.y - y);
+			yDist = (renderMidpointY - y) * (renderMidpointY - y);
 			xDist = midpointXSquared + 1;
 			int inc = 1; // (N+x*i)^2, difference between successive ones.
 			for (x = 0; x < renderWidth; ++x) {
@@ -628,7 +635,7 @@ public final class PeasyGradients {
 				double pointDistance = Math.sqrt(yDist + xDist); // euclidean dist between (x,y) and midpoint
 				inc += 2;
 
-				double theta = Functions.fastAtan2b((midPoint.y - y), (midPoint.x - x)); // -PI...PI
+				double theta = Functions.fastAtan2b((renderMidpointY - y), (renderMidpointX - x)); // -PI...PI
 
 				// Use LUT: +PI to makes array index positive 0...2PI
 				double polygonRatio = ratioLookup[(int) ((theta + Math.PI) * HALF_LUT_SIZE)]; // use LUT
@@ -648,75 +655,62 @@ public final class PeasyGradients {
 
 		gradientPG.updatePixels();
 
-		if (renderInternal) {
-			gradientPG.endDraw();
-			return gradientPG;
-		} else {
-			return emptyPGraphics;
-		}
 	}
 
-	public PImage spiralGradient(Gradient gradient, PVector midPoint, final float angle, final float curve) {
+	/**
+	 * A gradient where colours are according to the manhattan distance between the
+	 * point and midpoint, leading to a diamond shape.
+	 * 
+	 * @param gradient
+	 * @param midPoint
+	 * @param angle
+	 * @param zoom
+	 */
+	public void diamondGradient(Gradient gradient, PVector midPoint, float angle, float zoom) {
 
 		gradient.prime();
 
-		for (int i = 0; i < pixelCacheConic.length; i++) { // calc LUT
-			pixelCacheConic[i] = gradient.evalRGB(i / (float) pixelCacheConic.length);
+		for (int i = 0; i < pixelCache.length; i++) { // calc LUT
+			pixelCache[i] = gradient.evalRGB(i / (float) pixelCache.length);
 		}
-
-		float rise, run;
-		double t = 0;
-		double spiralOffset = 0;
-
-		final double curveDenominator = 1d / (renderWidth * renderWidth + renderHeight * renderHeight);
-		final double curviness = TWO_PI * curve;
 
 		final float renderMidpointX = (midPoint.x / gradientPG.width) * renderWidth;
 		final float renderMidpointY = (midPoint.y / gradientPG.height) * renderHeight;
 
+		final double denominator = (Math.max(renderHeight, renderWidth) / 2) * zoom; // calc here, not in loop
+		angle += PConstants.QUARTER_PI; // angled at 0
+		final double sin = FastMath.sin(angle);
+		final double cos = FastMath.cos(angle);
+
+		double dist = 0;
+
+		double newXpos;
+		double newYpos;
+
 		for (int y = 0, x; y < renderHeight; ++y) {
-
-			rise = renderMidpointY - y;
-			final double riseSquared = rise * rise;
-			run = renderMidpointX;
-
+			final double yTranslate = (y - renderMidpointY);
 			for (x = 0; x < renderWidth; ++x) {
 
-				t = Functions.fastAtan2b(rise, run) - angle;
-				spiralOffset = curviness * Math.sqrt((riseSquared + run * run) * curveDenominator);
-				t += spiralOffset;
+				newXpos = (x - renderMidpointX) * cos - yTranslate * sin + renderMidpointX; // rotate x about midpoint
+				newYpos = yTranslate * cos + (x - renderMidpointX) * sin + renderMidpointY; // rotate y about midpoint
 
-				// if & whiles are slightly faster than Functions.floorMod()
-				if (t < 0) {
-					while (t < 0) {
-						t += TWO_PI;
-					}
-				} else {
-					while (t > TWO_PI) {
-						t -= TWO_PI;
-					}
+				dist = Math.max(Math.abs(newYpos - renderMidpointY), Math.abs(newXpos - renderMidpointX)) / denominator; // max
+
+				if (dist > 1) {
+					dist = 1;
 				}
 
-				t *= INV_TWO_PI;
+				final int stepInt = (int) (dist * cacheSize);
 
-				int stepInt = (int) (t * cacheSizeConic);
-				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCacheConic[stepInt];
-
-				run--;
+				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCache[stepInt];
 			}
 		}
 
 		gradientPG.updatePixels();
 
-		if (renderInternal) {
-			gradientPG.endDraw();
-			return gradientPG;
-		} else {
-			return emptyPGraphics;
-		}
 	}
 
-	public PImage noiseGradient(Gradient gradient, PVector midPoint, float angle, float zoom) {
+	public void noiseGradient(Gradient gradient, PVector midPoint, float angle, float zoom) {
 		gradient.prime();
 
 		for (int i = 0; i < pixelCache.length; i++) { // calc LUT
@@ -764,17 +758,14 @@ public final class PeasyGradients {
 			}
 		}
 
-		if (renderInternal) {
-			gradientPG.endDraw();
-			return gradientPG;
-		} else {
-			return emptyPGraphics;
-		}
 	}
 
-	public PImage coneGradient(Gradient gradient, PVector midPoint, float angle) {
+	public void coneGradient(Gradient gradient, PVector midPoint, float angle) {
 
 		gradient.prime(); // prime curr color stop
+
+		final float renderMidpointX = (midPoint.x / gradientPG.width) * renderWidth;
+		final float renderMidpointY = (midPoint.y / gradientPG.height) * renderHeight;
 
 		double step = 0;
 		final float sin = (float) FastMath.sin(-angle);
@@ -809,13 +800,6 @@ public final class PeasyGradients {
 
 		gradientPG.updatePixels();
 
-		if (renderInternal) {
-			gradientPG.endDraw();
-			return gradientPG;
-		} else {
-			return emptyPGraphics; // avoid caller null pointer
-		}
-
 	}
 
 	public void multiGradient() {
@@ -831,11 +815,14 @@ public final class PeasyGradients {
 	 * @param zoom     default = 1
 	 * @return
 	 */
-	public PImage hourglassGradient(Gradient gradient, PVector midPoint, float angle, float zoom) {
+	public void hourglassGradient(Gradient gradient, PVector midPoint, float angle, float zoom) {
 
 		gradient.prime();
 
-		double denominator = 1 / ((Math.max(renderHeight, renderWidth)) * zoom);
+		final float renderMidpointX = (midPoint.x / gradientPG.width) * renderWidth;
+		final float renderMidpointY = (midPoint.y / gradientPG.height) * renderHeight;
+
+		final double denominator = 1 / ((Math.max(renderHeight, renderWidth)) * zoom);
 
 		for (int i = 0; i < pixelCacheConic.length; i++) { // calc LUT
 			pixelCacheConic[i] = gradient.evalRGB(i / (float) pixelCacheConic.length);
@@ -851,14 +838,14 @@ public final class PeasyGradients {
 		float xDist;
 
 		for (int y = 0, x; y < renderHeight; ++y) {
-			yDist = (midPoint.y - y) * (midPoint.y - y);
-			final float yTranslate = (y - midPoint.y);
+			yDist = (renderMidpointY - y) * (renderMidpointY - y);
+			final float yTranslate = (y - renderMidpointY);
 
 			for (x = 0; x < renderWidth; ++x) {
-				xDist = (midPoint.x - x) * (midPoint.x - x);
+				xDist = (renderMidpointX - x) * (renderMidpointX - x);
 
-				newXpos = (x - midPoint.x) * cos - yTranslate * sin + midPoint.x; // rotate x about midpoint
-				newYpos = yTranslate * cos + (x - midPoint.x) * sin + midPoint.y; // rotate y about midpoint
+				newXpos = (x - renderMidpointX) * cos - yTranslate * sin + renderMidpointX; // rotate x about midpoint
+				newYpos = yTranslate * cos + (x - renderMidpointX) * sin + renderMidpointY; // rotate y about midpoint
 
 				/**
 				 * In the 2 lines below, we are effectively calculating dist = eDist/(cos(angle)
@@ -868,7 +855,7 @@ public final class PeasyGradients {
 				 * equations below.
 				 */
 
-				float z = (midPoint.y - newYpos) / (midPoint.x - newXpos); // atan2(y,x) === atan(y/x), so calc y/x here
+				float z = (renderMidpointY - newYpos) / (renderMidpointX - newXpos); // atan2(y,x) === atan(y/x), so calc y/x here
 
 				double dist = Math.sqrt((yDist + xDist) * (z * z + 1)) * denominator; // sqrt(z * z + 1) === cos(atan(x))
 
@@ -884,53 +871,5 @@ public final class PeasyGradients {
 
 		gradientPG.updatePixels();
 
-		if (renderInternal) {
-			gradientPG.endDraw();
-			return gradientPG;
-		} else {
-			return emptyPGraphics;
-		}
-	}
-
-	/**
-	 * Rasterize gradient and export as PImage
-	 * 
-	 * @return
-	 */
-	public PImage get() {
-		return gradientPG.get();
-	}
-
-	/**
-	 * Draws a bezier curve with a gradient.
-	 */
-	public void drawBezierCurveWithGradient(PVector headPos, PVector tailPos, Gradient gradient, float curviness, int curveDirection,
-			int strokeWeight) {
-		final float theta2 = Functions.angleBetween(tailPos, headPos);
-		final PVector centerPoint = new PVector((headPos.x + tailPos.x) / 2, (headPos.y + tailPos.y) / 2);
-		final PVector bezierCPoint = new PVector(centerPoint.x + (PApplet.sin(-theta2) * (curviness * 2 * curveDirection)),
-				centerPoint.y + (PApplet.cos(-theta2) * (curviness * 2 * curveDirection)));
-
-		PVector point = headPos.copy(); // initial point
-
-		for (float t = 0; t <= 1; t += 0.01) {
-			float x1 = p.bezierPoint(headPos.x, bezierCPoint.x, bezierCPoint.x, tailPos.x, t);
-			float y1 = p.bezierPoint(headPos.y, bezierCPoint.y, bezierCPoint.y, tailPos.y, t);
-			PVector pointB = new PVector(x1, y1);
-			p.stroke(gradient.evalRGB(PApplet.abs(PApplet.sin(t + p.frameCount * 0.02f))));
-			p.line(point.x, point.y, pointB.x, pointB.y);
-			point = pointB.copy(); // previous point
-		}
-	}
-
-	/**
-	 * Use a pshape as an alpha mask
-	 * 
-	 * @param gradient
-	 * @param shape
-	 * @return
-	 */
-	public PImage maskWithPShape(PImage gradient, PShape shape) {
-		return null;
 	}
 }

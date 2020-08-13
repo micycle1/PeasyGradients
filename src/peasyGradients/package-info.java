@@ -1,8 +1,8 @@
 /**
  * Easy gradients in Processing.
  * 
- * Builds upon much of the work by Jeremy Behreandt, as found in "Color
- * Gradients in Processing" treatise.
+ * Builds considerably upon the work by Jeremy Behreandt, as found in "Color
+ * Gradients in Processing".
  * 
  * @author micycle1
  *

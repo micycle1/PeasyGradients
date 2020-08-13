@@ -14,11 +14,10 @@ import processing.core.PVector;
  * processing.
  * 
  * @author micycle1
- * @author Jeremy Behreand (colour composition methods)
  */
 public final class Functions {
 
-	private static final FastLog fastLog = new DFastLog(12);
+	private static final FastLog fastLog = new DFastLog(10); // Used in veryFastPow()
 
 	private static final float PI = (float) Math.PI;
 	private static final float TWO_PI = (float) (2 * Math.PI);
@@ -69,30 +68,6 @@ public final class Functions {
 	}
 
 	/**
-	 * TODO https://discourse.processing.org/t/per-vertex-color-gradient-fill/9679/7
-	 * 
-	 * @param w
-	 * @param h
-	 * @param corners
-	 * @return
-	 */
-	static int[] interpolateBilinear(int w, int h, int[] corners) {
-		int[] arr = new int[w * h];
-//		  for (int x = 0; x < w; x++) {
-//		    float xinc = (float) x/w;
-//		    RGB.interpolate(decomposeclr(corners[0], corners[0]), col2, st, out)
-//		    int t = lerpint(corners[0], corners[2], xinc);
-//		    int b = lerpint(corners[1], corners[3], xinc);
-//		    for (int y = 0; y < h; y++) {
-//		      float yinc = (float) y/h;
-//		      int m = lerpint(t, b, yinc);
-//		      arr[x + y*w] = m;
-//		    }
-//		  }
-		return arr;
-	}
-
-	/**
 	 * Project a given 2D pixel coordinate (x, y) onto a position (0...1) of a
 	 * imaginary 1D spine of a linear gradient given by its start and end points.
 	 * 
@@ -130,16 +105,13 @@ public final class Functions {
 	 * @return float θ in radians.
 	 */
 	public static float angleBetween(PVector tail, PVector head) {
-		float a = (float) Math.atan2(tail.y - head.y, tail.x - head.x);
+		float a = fastAtan2b(tail.y - head.y, tail.x - head.x);
 		if (a < 0) {
 			a += TWO_PI;
 		}
 		return a;
 	}
 
-	/*
-	 * Calls fastAtan2
-	 */
 	public static double angleBetween(PVector head, float tailX, float tailY) {
 		double a = fastAtan2b(tailY - head.y, tailX - head.x);
 		if (a < 0) {
@@ -550,11 +522,11 @@ public final class Functions {
 			return (-angle); // negate if in quad III or IV
 		else
 			return (angle);
-
 	}
 
 	/**
-	 * Very accurate
+	 * Average error of 0.00231 radians (0.1323 degrees), largest error of 0.00488
+	 * radians (0.2796 degrees).
 	 * 
 	 * @param y
 	 * @param x

@@ -86,9 +86,4 @@ public final class ColorStop implements Comparable<ColorStop> {
 		return Arrays.toString(Functions.composeclrTo255(Functions.decomposeclrDouble(clr)));
 	}
 
-	static boolean approxPercent(ColorStop cs, float tolerance) {
-//		return Math.abs(cs.percent - cs.percent) < tolerance;
-		return false;
-	}
-
 }

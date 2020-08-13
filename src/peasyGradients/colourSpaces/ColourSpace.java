@@ -11,15 +11,15 @@ public interface ColourSpace {
 	public double[] toRGB(double[] colour); // convert from colour space to RGB
 
 	public double[] fromRGB(double[] RGB); // convert from RGB to colour space
-	
+
 	/**
-	 * Default linear interpolation method. Most classes use this; a few (like HSB)
-	 * may need to override.
+	 * Default linear interpolation method -- colourspace independent. Most colour
+	 * spaces use this; a few (like HSB) may need to override.
 	 * 
-	 * @param a
-	 * @param b
+	 * @param a    colourA
+	 * @param b    colourB
 	 * @param step
-	 * @param out
+	 * @param out  interpolated colour
 	 * @return
 	 */
 	public default double[] interpolateLinear(double[] a, double[] b, double step, double[] out) {
