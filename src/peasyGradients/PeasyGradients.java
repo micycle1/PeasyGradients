@@ -41,7 +41,9 @@ import peasyGradients.utilities.Functions;
 public final class PeasyGradients {
 
 	private static final double TWO_PI = (2 * Math.PI);
+	private static final float TWO_PIf = (float) (2 * Math.PI);
 	private static final double HALF_PI = (0.5f * Math.PI);
+	private static final double QRTR_PI = (0.25 * Math.PI);
 	private static final float INV_TWO_PI = 1f / PConstants.TWO_PI;
 
 	private final PApplet p;
@@ -220,17 +222,6 @@ public final class PeasyGradients {
 	 * * It’s called “linear” because the colors flow from left-to-right,
 	 * top-to-bottom, or at any angle you chose in a single direction.
 	 * 
-	 * Preset: Several predefined configurations are provided in this menu for your
-	 * use. Start Point: Use these controls to define the location of the start
-	 * point of the gradient.
-	 * 
-	 * 
-	 * Ramp Scatter: Adds subtle noise into the gradient areas between colors, which
-	 * can help to improve naturalness.
-	 * 
-	 * Blend: Select the blend mode used to combine the gradient with the contents
-	 * of the layer to which it is applied.
-	 * 
 	 * @param gradient
 	 * @param centerPoint
 	 * @param controlPoint1 the location for the start point, using X (horizontal)
@@ -262,7 +253,7 @@ public final class PeasyGradients {
 		 * Usually, we'd call Functions.linearProject() to calculate step, but the
 		 * function is inlined here to optimise speed.
 		 */
-		for (int y = 0, x; y < renderHeight; ++y) { // loop for quality = 0 (every pixel)
+		for (int y = 0, x; y < renderHeight; ++y) {
 			opXod += odY * scaleY;
 			xOff = 0;
 			for (x = 0; x < renderWidth; ++x) {
@@ -371,18 +362,14 @@ public final class PeasyGradients {
 			run = renderMidpointX;
 			for (x = 0; x < renderWidth; ++x) {
 
-				t = Functions.fastAtan2b(rise, run) + Math.PI - angle;
-
-				// Ensure a positive value if angle is negative.
-				t = Functions.floorMod(t, PConstants.TWO_PI);
-
-				// Divide by TWO_PI to get value in range 0...1
-				t *= INV_TWO_PI;
+				t = Functions.fastAtan2b(rise, run) + Math.PI - angle; // + PI to align bump with angle
+				t *= INV_TWO_PI; // normalise
+				t -= Math.floor(t); // modulo
 
 				int stepInt = (int) (t * cacheSizeConic);
 				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCacheConic[stepInt];
 
-				run -= 1;
+				run--;
 			}
 		}
 
@@ -419,7 +406,7 @@ public final class PeasyGradients {
 	 * @param angle
 	 * @param curveCount
 	 */
-	public void spiralGradient(Gradient gradient, PVector midPoint, final float angle, float curveCount) {
+	public void spiralGradient(Gradient gradient, PVector midPoint, float angle, float curveCount) {
 
 		gradient.prime();
 
@@ -430,6 +417,7 @@ public final class PeasyGradients {
 		float rise, run;
 		double t = 0;
 		double spiralOffset = 0;
+		angle %= TWO_PIf;
 
 		final double curveDenominator = 1d / (renderWidth * renderWidth + renderHeight * renderHeight);
 		curveCount *= TWO_PI;
@@ -488,7 +476,7 @@ public final class PeasyGradients {
 		final double curveDenominator = 1d / (renderWidth * renderWidth + renderHeight * renderHeight);
 		curveCount *= TWO_PI;
 
-		curviness = 1 / curviness;
+		curviness = 1f / curviness;
 		curviness *= 0.5; // curviness of 1 == exponenent of 0.5
 
 		final float renderMidpointX = (midPoint.x / gradientPG.width) * renderWidth;

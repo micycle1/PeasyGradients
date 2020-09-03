@@ -129,6 +129,16 @@ public final class Functions {
 	public static int composeclr(float[] RGBA) {
 		return (int) (RGBA[3] * 255) << 24 | (int) (RGBA[0] * 255) << 16 | (int) (RGBA[1] * 255) << 8 | (int) (RGBA[2] * 255);
 	}
+	
+	/**
+	 * Compose a 32 bit sARGB int from float[] 0...255
+	 * 
+	 * @param in
+	 * @return
+	 */
+	public static int composeclr255(float[] RGBA) {
+		return (int) (RGBA[3]) << 24 | (int) (RGBA[0]) << 16 | (int) (RGBA[1]) << 8 | (int) (RGBA[2]);
+	}
 
 	/**
 	 * Compose an RGBA color using a float[] of values in range 0...1
@@ -193,10 +203,11 @@ public final class Functions {
 	 * @return [R,G,B] 0...255
 	 */
 	public static float[] decomposeclrRGB(int clr) {
-		float[] out = new float[3];
+		float[] out = new float[4];
 		out[0] = (clr >> 16 & 0xff);
 		out[1] = (clr >> 8 & 0xff);
 		out[2] = (clr & 0xff);
+		out[3] = (clr >> 24 & 0xff);
 		return out;
 	}
 
@@ -429,6 +440,16 @@ public final class Functions {
 	 */
 	public static float veryFastInvSqrt(float x) {
 		return Float.intBitsToFloat(0x5F37624F - (Float.floatToIntBits(x) >> 1));
+	}
+	
+	/**
+	 * Fast round from float to int. This is faster than Math.round() though it may
+	 * return slightly different results. It does not try to handle NaN or
+	 * infinities.
+	 */
+	public static int fastRound(float value) {
+		long lx = (long) (value * (65536 * 256f));
+		return (int) ((lx + 0x800000) >> 24);
 	}
 
 	/**

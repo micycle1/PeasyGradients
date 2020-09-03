@@ -1,7 +1,7 @@
 package peasyGradients.utilities;
 
 /**
- * Interpolation functions affect the interpolation factor between any 2 colour
+ * Interpolation functions affect the interpolation factor (0.0...1.0) between any 2 colour
  * stops and therefore the appearance (ramp) of a gradient.
  * 
  * <P>

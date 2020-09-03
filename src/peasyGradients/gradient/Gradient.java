@@ -35,7 +35,7 @@ public final class Gradient {
 	private ColorStop currStop, prevStop;
 	private float denom;
 
-	double[] colorOut; // TODO color (in Gradient's current colourspace)
+//	double[] colorOut; // TODO color (in Gradient's current colourspace)
 
 	public ColourSpaces colourSpace = ColourSpaces.XYZ; // TODO public for testing
 	ColourSpace colourSpaceInstance = colourSpace.getColourSpace(); // call toRGB on this instance
@@ -97,6 +97,7 @@ public final class Gradient {
 	}
 
 	/**
+	 * Sets the animation offset to a specific value.
 	 * 
 	 * @param offset
 	 * @see #animate(float)
@@ -105,8 +106,15 @@ public final class Gradient {
 		this.offset = offset;
 	}
 
+	/**
+	 * Mutates the colour of all colour stops in the RGB255 space by the amount
+	 * given. Mutation randomises between adding or subtracting the mutation amount
+	 * from each of the R,G,B channels.
+	 * 
+	 * @param amt magnitude of mutation [0...255]
+	 */
 	public void mutateColour(float amt) {
-		// TODO mutate all colour stops
+		colorStops.forEach(c -> c.mutate(amt));
 	}
 
 	/**
@@ -158,6 +166,7 @@ public final class Gradient {
 
 	/**
 	 * Returns this gradient's last colour.
+	 * 
 	 * @return 32bit ARGB colour int
 	 */
 	public int lastColor() {
@@ -170,11 +179,11 @@ public final class Gradient {
 	 * @param percent 0...1
 	 * @param clr
 	 */
-	void add(final float percent, final int clr) {
+	public void add(final float percent, final int clr) {
 		add(new ColorStop(clr, percent));
 	}
 
-	void add(final ColorStop colorStop) {
+	public void add(final ColorStop colorStop) {
 		colorStops.add(colorStop);
 		java.util.Collections.sort(colorStops); // sort colorstops by value
 	}
@@ -197,11 +206,11 @@ public final class Gradient {
 	public int evalRGB(float step) {
 
 		step += offset;
-		if (step != 1) { // 1 % 1 == 0, which we want to avoid
+		if (step < 0) { // (if animation offset negative)
+			step += 1; // equivalent to floormod function
+		}
+		if (step > 1) { // 1 % 1 == 0, which we want to avoid
 			step %= 1;
-			if (step < 0) { // (if animation offset negative)
-				step += 1; // equivalent to floormod function
-			}
 		}
 
 		/**
@@ -240,6 +249,7 @@ public final class Gradient {
 				denom = 1 / (prevStop.percent - currStop.percent); // compute denominator inverse
 			}
 		}
+
 		/**
 		 * Since we pre-compute results into a LUT, this function works with
 		 * monotonically increasing step. HOWEVER, doesn't work if animating.

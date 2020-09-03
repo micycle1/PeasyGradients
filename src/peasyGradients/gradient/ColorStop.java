@@ -5,6 +5,7 @@ import java.util.HashMap;
 
 import peasyGradients.colourSpaces.*;
 import peasyGradients.utilities.Functions;
+import processing.core.PApplet;
 
 /**
  * A container for colour (in every colour space) and the percentage position
@@ -24,14 +25,16 @@ public final class ColorStop implements Comparable<ColorStop> {
 	int alpha; // 0-255 alpha
 
 	private HashMap<ColourSpaces, double[]> coloursMap;
-	double[] colorOut; // TODO current color space's raw colour to save hashmap lookup each time.
+	double[] colorOut;
+
+	private ColourSpaces colourSpace; // used to update colorOut when colour is changed
 
 	/**
 	 * 
-	 * @param clr      color int (bit shifted ARGB)
-	 * @param fraction decimal fraction between 0...1 (otherwise constrained)
-	 *                 defining how far along the gradient the colour defined by
-	 *                 this stop is at.
+	 * @param clr      color int (32bit ARGB)
+	 * @param fraction decimal fraction between 0...1 (otherwise constrained) that
+	 *                 defines how far along the gradient the colour defined by this
+	 *                 stop is at.
 	 */
 	public ColorStop(int clr, float fraction) {
 		percent = fraction > 1 ? 1 : fraction < 0 ? 0 : fraction; // constrain 0...1
@@ -40,6 +43,7 @@ public final class ColorStop implements Comparable<ColorStop> {
 	}
 
 	/**
+	 * Compute the colour value for all colour spaces given a ARGB integer.
 	 * 
 	 * @param color 32bit ARGB
 	 */
@@ -49,10 +53,12 @@ public final class ColorStop implements Comparable<ColorStop> {
 		this.alpha = (color >> 24) & 0xff;
 
 		final double[] clrRGBDouble = Functions.decomposeclrDouble(color);
-		
+
 		for (int i = 0; i < ColourSpaces.size; i++) {
 			coloursMap.put(ColourSpaces.get(i), ColourSpaces.get(i).getColourSpace().fromRGB(clrRGBDouble));
 		}
+
+		colorOut = coloursMap.get(colourSpace);
 	}
 
 	/**
@@ -64,13 +70,24 @@ public final class ColorStop implements Comparable<ColorStop> {
 	double[] getColor(ColourSpaces colourSpace) {
 		return coloursMap.get(colourSpace);
 	}
-	
+
 	/**
 	 * Sets colourStop colourOut to value from given colourSpace (parent gradient).
+	 * 
 	 * @param colourSpace
 	 */
 	void setColourSpace(ColourSpaces colourSpace) {
+		this.colourSpace = colourSpace;
 		colorOut = coloursMap.get(colourSpace);
+	}
+
+	protected void mutate(float amt) {
+		// TODO fix with amt < 1
+		float[] decomposed = Functions.decomposeclrRGB(clr);
+		for (int i = 0; i < decomposed.length - 1; i++) {
+			decomposed[i] = PApplet.constrain(decomposed[i] + (Functions.randomFloat() < 0.5 ? -1 : 1) * amt, 0, 255);
+		}
+		setColor(Functions.composeclr255(decomposed));
 	}
 
 	/**
