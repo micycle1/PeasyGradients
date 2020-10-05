@@ -851,7 +851,7 @@ public final class PeasyGradients {
 					dist = 1;
 				}
 
-				final int stepInt = (int) (dist * cacheSize);
+				final int stepInt = (int) (dist * cacheSizeConic);
 
 				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCacheConic[stepInt];
 			}

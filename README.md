@@ -14,7 +14,7 @@ PeasyGradients is a library for Processing to make drawing colour gradients easy
 ## Overview
 
 ### Key Features:
-* ### 11 Gradient Types
+* ### 10 Gradient Types
 * ### 10 Colour Spaces
 * ### 13 Colour Interpolation functions
 * ### Fast!
@@ -65,20 +65,46 @@ PeasyGradients provides 11 types of 2D gradients. Screenshot and examples for ea
 Most gradient methods allow zoom and rotation to be defined; certain gradient types might offer additional parameters.
 
 ### Linear
+<a href="https://github.com/micycle1/PeasyGradients">
+<img src="resources/gradient_type_examples/linear.png" alt="PeasyGradients"/></a><br>
 <details><summary>More...</summary>
   * `linearGradient(Gradient gradient, float angle)`
 </details>
 
 ### Radial
+<a href="https://github.com/micycle1/PeasyGradients">
+<img src="resources/gradient_type_examples/radial.png" alt="PeasyGradients"/></a><br>
+
 ### Conic
-### Conic Smooth
+<a href="https://github.com/micycle1/PeasyGradients">
+<img src="resources/gradient_type_examples/conic.png" alt="PeasyGradients"/></a><br>
+
 ### Spiral
+<a href="https://github.com/micycle1/PeasyGradients">
+<img src="resources/gradient_type_examples/spiral.png" alt="PeasyGradients"/></a><br>
+
 ### Diamond
+<a href="https://github.com/micycle1/PeasyGradients">
+<img src="resources/gradient_type_examples/diamond.png" alt="PeasyGradients"/></a><br>
+
 ### Cross
+<a href="https://github.com/micycle1/PeasyGradients">
+<img src="resources/gradient_type_examples/cross.png" alt="PeasyGradients"/></a><br>
+
 ### Polygon
+<a href="https://github.com/micycle1/PeasyGradients">
+<img src="resources/gradient_type_examples/polygon(6).png" alt="PeasyGradients"/></a><br>
+
 ### Cone
+#### TODO
+
 ### Hourglass
+<a href="https://github.com/micycle1/PeasyGradients">
+<img src="resources/gradient_type_examples/hourglass.png" alt="PeasyGradients"/></a><br>
+
 ### Noise
+<a href="https://github.com/micycle1/PeasyGradients">
+<img src="resources/gradient_type_examples/noise.png" alt="PeasyGradients"/></a><br>
 <details><summary>More...</summary>
 This is slow and not suitable for live dynamic rendering.
 </details>
@@ -97,15 +123,55 @@ Remember that a 1D gradient consists of only a few defined colour stops; all oth
  PeasyGradients supports many different colour spaces — these are the possible colour spaces (accessible via `ColourSpaces.class`):
 
 * `RGB`
+
+<a href="https://github.com/micycle1/PeasyGradients">
+<img src="resources/colour_space_examples/RGB.png" alt="PeasyGradients"/></a><br>
+
 * `RYB`
+
+<a href="https://github.com/micycle1/PeasyGradients">
+<img src="resources/colour_space_examples/RYB.png" alt="PeasyGradients"/></a><br>
+
 * `HSB`
+
+<a href="https://github.com/micycle1/PeasyGradients">
+<img src="resources/colour_space_examples/HSB.png" alt="PeasyGradients"/></a><br>
+
 * `XYZ` (CIE 1931) [**gradient default**]
+
+<a href="https://github.com/micycle1/PeasyGradients">
+<img src="resources/colour_space_examples/XYZ.png" alt="PeasyGradients"/></a><br>
+
 * `LAB` (CIE L\*a\*b*)
-* `DIN99`
-* `ITP` (ICtCp)
+
+<a href="https://github.com/micycle1/PeasyGradients">
+<img src="resources/colour_space_examples/LAB.png" alt="PeasyGradients"/></a><br>
+
 * `HLAB` (Hunter LAB)
+
+<a href="https://github.com/micycle1/PeasyGradients">
+<img src="resources/colour_space_examples/HLAB.png" alt="PeasyGradients"/></a><br>
+
+* `DIN99`
+
+<a href="https://github.com/micycle1/PeasyGradients">
+<img src="resources/colour_space_examples/DIN99.png" alt="PeasyGradients"/></a><br>
+
+* `ITP` (ICtCp)
+
+<a href="https://github.com/micycle1/PeasyGradients">
+<img src="resources/colour_space_examples/ITP.png" alt="PeasyGradients"/></a><br>
+
 * `LUV` (CIE 1976 L*, u*, v*)
+
+<a href="https://github.com/micycle1/PeasyGradients">
+<img src="resources/colour_space_examples/LUV.png" alt="PeasyGradients"/></a><br>
+
 * `JAB` (JzAzBz)
+
+<a href="https://github.com/micycle1/PeasyGradients">
+<img src="resources/colour_space_examples/JAB.png" alt="PeasyGradients"/></a><br>
+
 
 
 
