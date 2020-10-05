@@ -68,45 +68,45 @@ The following examples are taken `LUV` colourspace with `SMOOTH_STEP` interpolat
 
 ### Linear
 <a href="https://github.com/micycle1/PeasyGradients">
-<img src="resources/gradient_type_examples/linear.png" alt="PeasyGradients"/></a><br>
-<details><summary>More...</summary>
+<img src="resources/gradient_type_examples/linear.png" alt="PeasyGradients" width="375" height="375"/></a><br>
+<details><summary>Code Example...</summary>
   * `linearGradient(Gradient gradient, float angle)`
 </details>
 
 ### Radial
 <a href="https://github.com/micycle1/PeasyGradients">
-<img src="resources/gradient_type_examples/radial.png" alt="PeasyGradients"/></a><br>
+<img src="resources/gradient_type_examples/radial.png" alt="PeasyGradients" width="375" height="375"/></a><br>
 
 ### Conic
 <a href="https://github.com/micycle1/PeasyGradients">
-<img src="resources/gradient_type_examples/conic.png" alt="PeasyGradients"/></a><br>
+<img src="resources/gradient_type_examples/conic.png" alt="PeasyGradients" width="375" height="375"/></a><br>
 
 ### Spiral
 <a href="https://github.com/micycle1/PeasyGradients">
-<img src="resources/gradient_type_examples/spiral.png" alt="PeasyGradients"/></a><br>
+<img src="resources/gradient_type_examples/spiral.png" alt="PeasyGradients" width="375" height="375"/></a><br>
 
 ### Diamond
 <a href="https://github.com/micycle1/PeasyGradients">
-<img src="resources/gradient_type_examples/diamond.png" alt="PeasyGradients"/></a><br>
+<img src="resources/gradient_type_examples/diamond.png" alt="PeasyGradients" width="375" height="375"/></a><br>
 
 ### Cross
 <a href="https://github.com/micycle1/PeasyGradients">
-<img src="resources/gradient_type_examples/cross.png" alt="PeasyGradients"/></a><br>
+<img src="resources/gradient_type_examples/cross.png" alt="PeasyGradients" width="375" height="375"/></a><br>
 
 ### Polygon
 <a href="https://github.com/micycle1/PeasyGradients">
-<img src="resources/gradient_type_examples/polygon(6).png" alt="PeasyGradients"/></a><br>
+<img src="resources/gradient_type_examples/polygon(6).png" alt="PeasyGradients" width="375" height="375"/></a><br>
 
 ### Cone
 #### TODO
 
 ### Hourglass
 <a href="https://github.com/micycle1/PeasyGradients">
-<img src="resources/gradient_type_examples/hourglass.png" alt="PeasyGradients"/></a><br>
+<img src="resources/gradient_type_examples/hourglass.png" alt="PeasyGradients" width="375" height="375"/></a><br>
 
 ### Noise
 <a href="https://github.com/micycle1/PeasyGradients">
-<img src="resources/gradient_type_examples/noise.png" alt="PeasyGradients"/></a><br>
+<img src="resources/gradient_type_examples/noise.png" alt="PeasyGradients" width="375" height="375"/></a><br>
 <details><summary>More...</summary>
 This is slow and not suitable for live dynamic rendering.
 </details>
@@ -124,7 +124,7 @@ Remember that a 1D gradient consists of only a few defined colour stops; all oth
 
  PeasyGradients supports many different colour spaces — these are the possible colour spaces (accessible via `ColourSpaces.class`):
 
-<details><summary style="font-size:135%; color:blue">See examples...</summary>
+<details><summary style="font-size:135%; color:blue">See colour spaces & examples...</summary>
 
 * `RGB`
 
@@ -175,7 +175,7 @@ Remember that a 1D gradient consists of only a few defined colour stops; all oth
 
 <a href="https://github.com/micycle1/PeasyGradients">
 <img src="resources/colour_space_examples/JAB.png" alt="PeasyGradients"/></a><br>
-</details>&nbsp;
+</details>
 
 
 ## Interpolation: Easing Functions
@@ -207,17 +207,22 @@ These are the the available interpolation easing functions in PeasyGradients (ac
 
 ## Animating Gradients
 
-The colours in a gradient can 'move' (or be animated) by shifting the position of the all the colour stops.
+The position of all colour stops within a `Gradient` can be offset using `setOffset(amount)`. The `animate(amount)` method increases. 
 
-Call `animate(amount)` on a 1D `Gradient` to animate the gradient by the given amount [-1...1].
+can 'move' (or be animated) by shifting the position of the all the colour stops.
 
-Call `setOffset(amount)` to set the animation offset to a fixed amount.
+Call  on a 1D `Gradient` to animate the gradient by the given amount [-1...1].
 
 ### Priming a gradient for Animation
 
 Naively animating a gradient may lead to unwanted harsh transition where the first and last colour stops bump right up against each other, as below:
 
 To alleviate this, call the `primeAnimation()` method on the gradient (once) before animating it. This method pushes a copy of the first colour of the gradient to the end, (scaling the other colour stops), so that there is a smooth transition during all animation.
+
+Calling `primeAnimation()` on spiral and conic gradients has the added benefit of smoothing the transition, regardless of whether you wish to animate them, as below:
+
+<a href="https://github.com/micycle1/PeasyGradients">
+<img src="resources/other_examples/all_smooth.png" alt="PeasyGradients" width="500" height="500"/></a><br>
 
 ## Library Optimisation
 PeasyGradients has been written to target the CPU (as opposed to the GPU) as to not be dependent on OPENGL libraries. To this end, there have been many internal optimisations to make the library suitable for dynamic animation and interaction (rather than just static rendering). Rendering (most) gradients at 60fps at 1080p is more than achievable on modern processors.
