@@ -64,6 +64,8 @@ PeasyGradients provides 11 types of 2D gradients. Screenshot and examples for ea
 
 Most gradient methods allow zoom and rotation to be defined; certain gradient types might offer additional parameters.
 
+The following examples are taken `LUV` colourspace with `SMOOTH_STEP` interpolation and rotation set to 0 where applicable.
+
 ### Linear
 <a href="https://github.com/micycle1/PeasyGradients">
 <img src="resources/gradient_type_examples/linear.png" alt="PeasyGradients"/></a><br>
@@ -122,6 +124,8 @@ Remember that a 1D gradient consists of only a few defined colour stops; all oth
 
  PeasyGradients supports many different colour spaces — these are the possible colour spaces (accessible via `ColourSpaces.class`):
 
+<details><summary style="font-size:135%; color:blue">See examples...</summary>
+
 * `RGB`
 
 <a href="https://github.com/micycle1/PeasyGradients">
@@ -171,8 +175,7 @@ Remember that a 1D gradient consists of only a few defined colour stops; all oth
 
 <a href="https://github.com/micycle1/PeasyGradients">
 <img src="resources/colour_space_examples/JAB.png" alt="PeasyGradients"/></a><br>
-
-
+</details>&nbsp;
 
 
 ## Interpolation: Easing Functions
