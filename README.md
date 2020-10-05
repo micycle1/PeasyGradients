@@ -23,7 +23,7 @@ By default, the library draws directly into the sketch; you can give it a specif
 
 ### Creating a 1D gradient
 
-The `PeasyGradients` class renders 1D `Gradients` as 2D images in your Processing sketch. A 1D `Gradient` consists solely of colour stops — these define both a colour and a position (percentage) that the colour occurs at on the 1D axis.
+The `PeasyGradients` class renders 1D `Gradients` as 2D images in your Processing sketch. A 1D `Gradient` consists solely of colour stops — these define the colours and the position (percentage) each colour occurs at on the 1D axis.
 
 A simple black-to-white gradient is created as such:
 
@@ -34,8 +34,7 @@ Gradient blackToWhite = new Gradient(colour(0), colour(255));
 Here, `blackToWhite` is a 1D gradient with two equidistant colour stops — black is at *0.00*, and white is at *1.00*.
 
 ### Rendering a 2D gradient
-Merely instantiating a 1D gradient doesn't draw anything. How should this spectrum be 1D drawn? Do we want to render a black-to-white linear gradient? A black-to-white radial gradient? Or something else? This is where the *PeasyGradients* class comes in. We pass a gradient to one of a variety of methods to draw a 2D gradient
-`blackToWhite` gradient 
+Merely instantiating a 1D gradient doesn't draw anything. How should this 1D spectrum be drawn? Do we want to render a black-to-white linear gradient? A black-to-white radial gradient? Or something else? This is where the *PeasyGradients* class comes in. We pass a `Gradient` (here, the `blackToWhite` 1D gradient) to one of a variety of methods to draw a 2D gradient.
 
 ```
 PeasyGradients peasyGradients;
@@ -50,20 +49,20 @@ void draw() {
 }
 ```
 
-That's it! Now a horizontal black-to-white linear gradient will be drawn in the sketch. See the `Gradients` section below for more information about each (2D) gradient type.
+That's it! Now a horizontal black-to-white linear gradient will be drawn in the sketch. See the *Gradients* section below for more information about each (2D) gradient type.
 
 
 ## Installation
 
 * To use PeasyGradients in a Java IDE, simply download the most recent .jar from [releases](https://github.com/micycle1/PeasyGradients/releases/) and include it in your project's classpath.
 
-* To use it in the Processing IDE (for it to appear in the contribution manager), see [this](https://github.com/processing/processing/wiki/How-to-Install-a-Contributed-Library).
+* To use it in the Processing IDE (for it to appear in the contribution manager), download the .jar as above and then see [this](https://github.com/processing/processing/wiki/How-to-Install-a-Contributed-Library).
 
 ## Gradients
 
-With PeasyGradients, there are a number of different gradients 
+PeasyGradients provides 11 types of 2D gradients. Screenshot and examples for each gradient type are provided in the sub-sections below.
 
-Zoom and rotation can be ; certain gradient types might offer additional parameters.
+Most gradient methods allow zoom and rotation to be defined; certain gradient types might offer additional parameters.
 
 ### Linear
 <details><summary>More...</summary>
@@ -86,7 +85,7 @@ This is slow and not suitable for live dynamic rendering.
 
 ## Colour Spaces
 
-Remember that a 1D gradient consists of only a few defined colour stops; all other colours in a gradient's spectrum are constructed by **interpolating** between any two adjacent colour stops. Colour spaces define how the colour at each colour stop is represented and this can have a noticeable effect on how a gradient transitions between colours (so experimentation with different colour spaces is encouraged). A rule of thumb: avoid the `RGB`, `RYB` and `HSB` colour spaces as they don't interpolate luminosity well.
+Remember that a 1D gradient consists of only a few defined colour stops; all other colours in a gradient's spectrum are constructed by **interpolating** between any two adjacent colour stops. Colour spaces define how the colour at each colour stop is represented and this can have a noticeable effect on how these interpolated colours are (so experimentation with different colour spaces is encouraged). A rule of thumb: avoid the `RGB`, `RYB` and `HSB` colour spaces as they don't interpolate luminosity well.
 
 
  The colour space for a given `Gradient`  is set with `setColSpace()` as such:

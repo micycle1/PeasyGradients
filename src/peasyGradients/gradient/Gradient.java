@@ -37,7 +37,7 @@ public final class Gradient {
 
 //	double[] colorOut; // TODO color (in Gradient's current colourspace)
 
-	public ColourSpaces colourSpace = ColourSpaces.XYZ; // TODO public for testing
+	public ColourSpaces colourSpace = ColourSpaces.LUV; // TODO public for testing
 	ColourSpace colourSpaceInstance = colourSpace.getColourSpace(); // call toRGB on this instance
 	public Interpolation interpolationMode = Interpolation.SMOOTH_STEP;
 

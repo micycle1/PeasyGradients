@@ -13,7 +13,7 @@ import peasyGradients.utilities.FastPow;
 import peasyGradients.utilities.Functions;
 
 /**
- * Turns 1D gradient into 2D image.
+ * Turns 1D gradients into 2D images.
  * 
  * Offers both quick constructors for more simple gradients (such as 2 color
  * horizontal) and more powerful constructors for more __ gradients
