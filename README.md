@@ -19,11 +19,11 @@ PeasyGradients is a library for Processing to make drawing colour gradients easy
 * ### 13 Colour Interpolation functions
 * ### Fast!
 
-By default, the library draws directly into the sketch; you can give it a specific `PGraphics` pane to draw into with the `setRenderTarget()` method.
+By default, the library draws directly into the sketch; you can give it a specific `PGraphics` pane to draw into with the `.setRenderTarget()` method.
 
 ### Creating a 1D gradient
 
-The `PeasyGradients` class renders 1D `Gradients` as 2D images in your Processing sketch. A 1D `Gradient` consists solely of colour stops — these define the colours and the position (percentage) each colour occurs at on the 1D axis.
+The `PeasyGradients` class renders 1D `Gradients` as 2D images in your Processing sketch. A 1D `Gradient` consists solely of colour stops — these define the colours and the discrete position (percentage) each colour occurs at on the 1D axis.
 
 A simple black-to-white gradient is created as such:
 
@@ -71,6 +71,8 @@ The following examples are taken `LUV` colourspace with `SMOOTH_STEP` interpolat
 <img src="resources/gradient_type_examples/linear.png" alt="PeasyGradients" width="375" height="375"/></a><br>
 <details><summary>Code Example...</summary>
   * `linearGradient(Gradient gradient, float angle)`
+  
+`peasyGradients.linearGradient(my1DGradient, 0)`
 </details>
 
 ### Radial
@@ -124,7 +126,7 @@ Remember that a 1D gradient consists of only a few defined colour stops; all oth
 
  PeasyGradients supports many different colour spaces — these are the possible colour spaces (accessible via `ColourSpaces.class`):
 
-<details><summary style="font-size:135%; color:blue">See colour spaces & examples...</summary>
+<details><summary style="font-size:135%; color:blue">💥See colour spaces & examples...</summary>
 
 * `RGB`
 
@@ -179,15 +181,17 @@ Remember that a 1D gradient consists of only a few defined colour stops; all oth
 
 
 ## Interpolation: Easing Functions
-Easing functions affect the behaviour of the gradient ramp between 2 adjacent colour stops. For a given percentage between two colour stops, an easing function maps this initial percentage to another, usually in some kind of non-linear relationship; this can result in more interesting gradients.
+Easing functions affect how the colours between two adjacent colour stops are composed. For example, with *linear* interpolation, a point in a `Gradient` which is midway between 2 colour stops is composed of 50% of the first colour and 50% of the second colour — there is a linear relationship between its position and the weighting of colour it receives from each colour stop. Other easing functions are non-linear (for example a point closer to one colour stop may in some cases receive more colour from the second colour stop) which can result in more interesting gradients.
  
-Certain easing functions suit some gradient types better than others — for example, `BOUNCE` works well with polygon gradients but rather more poorly with linear gradients.
+Certain easing functions suit some gradient types better than others — for example, the `BOUNCE` function works well with polygon gradients but rather more poorly with linear gradients. Therefore, as with colour spaces, experimentation with different interpolation functions is encouraged.
 
 ```
-todo
+todo code xample
 ```
 
 These are results:
+
+[image]
 
 These are the the available interpolation easing functions in PeasyGradients (accessible via the `Interpolation` enum):
 
@@ -207,22 +211,22 @@ These are the the available interpolation easing functions in PeasyGradients (ac
 
 ## Animating Gradients
 
-The position of all colour stops within a `Gradient` can be offset using `setOffset(amount)`. The `animate(amount)` method increases. 
+### Animating Colour
 
-can 'move' (or be animated) by shifting the position of the all the colour stops.
-
-Call  on a 1D `Gradient` to animate the gradient by the given amount [-1...1].
+The position of all colour stops within a `Gradient` can be offset using `.setOffset(amount)`. The `.animate(amount)` method changes the offset by `amount` each time it is called; with this you can animate a `Gradient`'s colour by calling `.animate(0.01f)` each frame.
 
 ### Priming a gradient for Animation
 
-Naively animating a gradient may lead to unwanted harsh transition where the first and last colour stops bump right up against each other, as below:
+Naively animating a gradient may lead to unwanted harsh transition in the colours where the first and last colour stops bump right up against each other, as below:
 
-To alleviate this, call the `primeAnimation()` method on the gradient (once) before animating it. This method pushes a copy of the first colour of the gradient to the end, (scaling the other colour stops), so that there is a smooth transition during all animation.
+[image]
 
-Calling `primeAnimation()` on spiral and conic gradients has the added benefit of smoothing the transition, regardless of whether you wish to animate them, as below:
+To alleviate this, call `.primeAnimation()` on a `Gradient` (once) before animating it. This pushes a copy of the first colour stop of the `Gradient` to its end (scaling all the other colour stops accordingly), maintaining a smooth colour transition despite the offset.
+
+Calling `.primeAnimation()` on a `Gradient` before rendering it as a **conic** or **spiral** gradient has the added benefit of smoothing the transition between the first and last colours, regardless of whether you wish to animate the gradient, as below:
 
 <a href="https://github.com/micycle1/PeasyGradients">
 <img src="resources/other_examples/all_smooth.png" alt="PeasyGradients" width="500" height="500"/></a><br>
 
 ## Library Optimisation
-PeasyGradients has been written to target the CPU (as opposed to the GPU) as to not be dependent on OPENGL libraries. To this end, there have been many internal optimisations to make the library suitable for dynamic animation and interaction (rather than just static rendering). Rendering (most) gradients at 60fps at 1080p is more than achievable on modern processors.
+PeasyGradients has been written to target the CPU (as opposed to the GPU) as to not be dependent on OPENGL libraries. To this end, there have been many internal optimisations to make the library suitable for dynamic animation and interaction rather than just static rendering. Rendering (most) gradients at 60fps at 1080p is more than achievable on modern processors.

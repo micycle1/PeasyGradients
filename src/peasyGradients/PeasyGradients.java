@@ -153,11 +153,13 @@ public final class PeasyGradients {
 	}
 
 	/**
-	 * Renders into the parent sketch unless otherwise
-	 * {@link #setRenderTarget(PGraphics) specified}.
+	 * Renders a linear gradient with its midpoint at the centre of the sketch (or a
+	 * PGraphics object as given by {@link #setRenderTarget(PGraphics)}).
 	 * 
 	 * @param gradient 1D Gradient to use as the basis for the linear gradient
-	 * @param angle    radians. East is 0, moves clockwise
+	 * @param angle    radians. East is 0 (meaning gradient will change colour from
+	 *                 west to east, meaning each line of colour is drawn parallel
+	 *                 to the angle); moves clockwise
 	 * @return
 	 */
 	public void linearGradient(Gradient gradient, float angle) {
@@ -174,6 +176,8 @@ public final class PeasyGradients {
 	}
 
 	/**
+	 * Specify a gradient midpoint. The start and will be automatically at the edges
+	 * of the sketch boundary.
 	 * 
 	 * @param gradient
 	 * @param centerPoint
@@ -217,16 +221,20 @@ public final class PeasyGradients {
 	}
 
 	/**
-	 * User defined control points. try to make on a line.
+	 * Renders a linear gradient using two user-defined control points, specifying
+	 * the position of the first and last colours (the angle of the gradient is the
+	 * angle between the two control points).
 	 * 
-	 * * It’s called “linear” because the colors flow from left-to-right,
+	 * <p>
+	 * It’s called “linear” because the colors flow from left-to-right,
 	 * top-to-bottom, or at any angle you chose in a single direction.
 	 * 
 	 * @param gradient
-	 * @param centerPoint
 	 * @param controlPoint1 the location for the start point, using X (horizontal)
-	 *                      and Y (vertical) values.
-	 * @param controlPoint2 location of the end point of the gradient.
+	 *                      and Y (vertical) values (can extend past the coordinates
+	 *                      of the sketch)
+	 * @param controlPoint2 location of the end point of the gradient (can extend
+	 *                      past the coordinates of the sketch)
 	 * @param angle
 	 * @return
 	 */
@@ -270,11 +278,11 @@ public final class PeasyGradients {
 	}
 
 	/**
-	 * A radial gradient differs from a linear gradient in that it starts at a
-	 * single point and emanates outward.
+	 * A radial gradient starts at a single point and emanates outward.
 	 * 
 	 * @param gradient
-	 * @param midPoint
+	 * @param midPoint The midpoint of the gradient -- the position where it
+	 *                 emanates from.
 	 * @param zoom
 	 * @return
 	 */
@@ -304,8 +312,9 @@ public final class PeasyGradients {
 
 				distSq = run + rise;
 				dist = zoom * distSq;
-				if (dist > 1) {
-					dist = 1; // constrain
+
+				if (dist > 1) { // clamp to a high of 1
+					dist = 1;
 				}
 
 				int stepInt = (int) (dist * cacheSize);
@@ -398,8 +407,15 @@ public final class PeasyGradients {
 	}
 
 	/**
-	 * A spiral gradient is similar to a conic gradient, where instead of colours
-	 * extending at the same angle from the midpoint,
+	 * A spiral gradient builds upon a conic gradient. Where instead of colours
+	 * extending at the same angle from the midpoint in a conic gradient, the angle
+	 * is offset by an amount proportional to the distance, creating a spiral
+	 * pattern.
+	 * 
+	 * <p>
+	 * Consider calling .primeAnimation() on the gradient before rendering as a
+	 * spiral gradient to produce a completely smoothed gradient which does not
+	 * suffer from a hard stop between the first and last colours.
 	 * 
 	 * @param gradient
 	 * @param midPoint
@@ -546,7 +562,7 @@ public final class PeasyGradients {
 
 				dist = Math.min(Math.abs(newYpos - renderMidpointY), Math.abs(newXpos - renderMidpointY)) / denominator; // min
 
-				if (dist > 1) {
+				if (dist > 1) { // clamp to a high of 1
 					dist = 1;
 				}
 
@@ -565,7 +581,7 @@ public final class PeasyGradients {
 	 * @param midPoint
 	 * @param angle
 	 * @param zoom
-	 * @param sides    at least 3
+	 * @param sides    Number of polgyon sides. Should be at least 3 (a triangle)
 	 */
 	public void polygonGradient(Gradient gradient, PVector midPoint, float angle, float zoom, int sides) {
 
@@ -603,6 +619,10 @@ public final class PeasyGradients {
 		final int HALF_LUT_SIZE = (int) (LUT_SIZE / TWO_PI);
 		final double[] ratioLookup = new double[(int) (LUT_SIZE) + 1]; // LUT
 
+		/*
+		 * Pre-compute the ratio needed to scale euclidean distances by. I've explained
+		 * this calculation here: https://stackoverflow.com/q/11812300/63264634#63264634
+		 */
 		for (int i = 0; i < ratioLookup.length; i++) {
 			double theta = (float) (i * 2) / (LUT_SIZE); // *2 for
 			theta *= Math.PI;
@@ -623,14 +643,14 @@ public final class PeasyGradients {
 				double pointDistance = Math.sqrt(yDist + xDist); // euclidean dist between (x,y) and midpoint
 				inc += 2;
 
-				double theta = Functions.fastAtan2b((renderMidpointY - y), (renderMidpointX - x)); // -PI...PI
+				double theta = Functions.fastAtan2b((renderMidpointY - y), (renderMidpointX - x)); // range = -PI...PI
 
-				// Use LUT: +PI to makes array index positive 0...2PI
+				// Use LUT: +PI to make theta in range 0...2PI and array index positive
 				double polygonRatio = ratioLookup[(int) ((theta + Math.PI) * HALF_LUT_SIZE)]; // use LUT
 
 				dist = polygonRatio * pointDistance;
 
-				if (dist > 1) { // clamp gradient
+				if (dist > 1) { // clamp to a high of 1
 					dist = 1;
 				}
 
@@ -647,7 +667,7 @@ public final class PeasyGradients {
 
 	/**
 	 * A gradient where colours are according to the manhattan distance between the
-	 * point and midpoint, leading to a diamond shape.
+	 * point and midpoint, forming a diamond pattern.
 	 * 
 	 * @param gradient
 	 * @param midPoint
@@ -684,7 +704,7 @@ public final class PeasyGradients {
 
 				dist = Math.max(Math.abs(newYpos - renderMidpointY), Math.abs(newXpos - renderMidpointX)) / denominator; // max
 
-				if (dist > 1) {
+				if (dist > 1) { // clamp to a high of 1
 					dist = 1;
 				}
 
@@ -698,6 +718,18 @@ public final class PeasyGradients {
 
 	}
 
+	/**
+	 * Uses the FastNoise library to generate noise values, then colour-maps the
+	 * noise using the gradient provided. By default,the method maps gradients to
+	 * cellular noise using Euclidean cellular distance function.
+	 * 
+	 * TODO use FastNoiseLite (https://github.com/Auburn/FastNoise/)
+	 * 
+	 * @param gradient
+	 * @param midPoint
+	 * @param angle
+	 * @param zoom
+	 */
 	public void noiseGradient(Gradient gradient, PVector midPoint, float angle, float zoom) {
 		gradient.prime();
 
@@ -748,6 +780,13 @@ public final class PeasyGradients {
 
 	}
 
+	/**
+	 * Generates a cone-shaped (stagelight) gradient. TODO finish!
+	 * 
+	 * @param gradient
+	 * @param midPoint
+	 * @param angle
+	 */
 	public void coneGradient(Gradient gradient, PVector midPoint, float angle) {
 
 		gradient.prime(); // prime curr color stop
@@ -790,6 +829,9 @@ public final class PeasyGradients {
 
 	}
 
+	/**
+	 * aka quad gradient, aka grid gradient
+	 */
 	public void multiGradient() {
 		// TODO two/n pass
 	}
@@ -845,9 +887,9 @@ public final class PeasyGradients {
 
 				float z = (renderMidpointY - newYpos) / (renderMidpointX - newXpos); // atan2(y,x) === atan(y/x), so calc y/x here
 
-				double dist = Math.sqrt((yDist + xDist) * (z * z + 1)) * denominator; // sqrt(z * z + 1) === cos(atan(x))
+				double dist = Math.sqrt((yDist + xDist) * (z * z + 1)) * denominator; // cos(atan(x)) === sqrt(z * z + 1)
 
-				if (dist > 1) {
+				if (dist > 1) { // clamp to a high of 1
 					dist = 1;
 				}
 
