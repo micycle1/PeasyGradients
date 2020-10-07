@@ -1,3 +1,17 @@
+<head>
+<style>
+table, th, td {
+  border: 0px solid black;
+  text-align: center;
+  vertical-align: middle;
+}
+table.center {
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
+</head>
+
 <h1 align="center">
   <a href="https://github.com/micycle1/PeasyGradients">
   <img src="resources/logo-small.png" alt="PeasyGradients"/></a><br>
@@ -60,11 +74,23 @@ That's it! Now a horizontal black-to-white linear gradient will be drawn in the 
 
 ## Gradients
 
-PeasyGradients provides 11 types of 2D gradients. Screenshot and examples for each gradient type are provided in the sub-sections below.
+PeasyGradients provides methods to render 11 types of 2D gradients.
 
-Most gradient methods allow zoom and rotation to be defined; certain gradient types might offer additional parameters.
+Zoom and rotation can be adjusted for most gradient types; certain gradient types offer additional parameters.
 
-The following examples are taken `LUV` colourspace with `SMOOTH_STEP` interpolation and rotation set to 0 where applicable.
+Screenshots and code examples for each gradient type are provided in the sub-sections below. The screenshots are taken using the `LUV` colour space with `SMOOTH_STEP` interpolation, and rotation set to 0 where applicable.
+
+<table style="padding:5px"   class="center">
+<tr>
+<td>Linear</td><td>Radial</td></tr>
+  <tr><td> <img src="resources/gradient_type_examples/linear.png" alt="PeasyGradients" width="375" height="375" ></td>
+  <td> <img src="resources/gradient_type_examples/radial.png" alt="PeasyGradients" width="375" height="375" ></td></tr>
+<td>Conic</td><td>Spiral</td></tr>
+  <tr><td> <img src="resources/gradient_type_examples/conic.png" alt="PeasyGradients" width="375" height="375" ></td>
+  <td> <img src="resources/gradient_type_examples/spiral.png" alt="PeasyGradients" width="375" height="375" ></td></tr>
+  </tr>
+
+</table>
 
 ### Linear
 <a href="https://github.com/micycle1/PeasyGradients">
@@ -115,10 +141,12 @@ This is slow and not suitable for live dynamic rendering.
 
 ## Colour Spaces
 
-Remember that a 1D gradient consists of only a few defined colour stops; all other colours in a gradient's spectrum are constructed by **interpolating** between any two adjacent colour stops. Colour spaces define how the colour at each colour stop is represented and this can have a noticeable effect on how these interpolated colours are (so experimentation with different colour spaces is encouraged). A rule of thumb: avoid the `RGB`, `RYB` and `HSB` colour spaces as they don't interpolate luminosity well.
+Colour spaces define how the colour value at each colour stop is represented.
+
+Remember that a 1D `Gradient` consists of only a few defined colour stops; all other colours in a `Gradient`'s spectrum are **composed** by **interpolating** between any two adjacent colour stops. Representing colour stops differently affects the results of interpolation and this can have a noticeable effect on the overall spectrum of a gradient (so experimentation with different colour spaces is encouraged). A rule of thumb: avoid the `RGB`, `RYB` and `HSB` colour spaces as they don't interpolate luminosity well.
 
 
- The colour space for a given `Gradient`  is set with `setColSpace()` as such:
+ The colour space for a given `Gradient`  is set with `.setColSpace()`, as such:
  
  ```
  myGradient.setColSpace(ColourSpaces.RGB);
@@ -126,54 +154,65 @@ Remember that a 1D gradient consists of only a few defined colour stops; all oth
 
  PeasyGradients supports many different colour spaces — these are the possible colour spaces (accessible via `ColourSpaces.class`):
 
-<details><summary style="font-size:135%; color:blue">💥See colour spaces & examples...</summary>
-
 * `RGB`
+* `RYB`
+* `HSB`
+* `XYZ` (CIE 1931) [**gradient default**]
+* `LAB` (CIE L\*a\*b*)
+* `DIN99`
+* `ITP` (ICtCp)
+* `HLAB` (Hunter LAB)
+* `LUV` (CIE 1976 L*, u*, v*)
+* `JAB` (JzAzBz)
+
+<details><summary style="font-size:135%; color:blue">💥See Examples...</summary>
+
+### `RGB`
 
 <a href="https://github.com/micycle1/PeasyGradients">
 <img src="resources/colour_space_examples/RGB.png" alt="PeasyGradients"/></a><br>
 
-* `RYB`
+### `RYB`
 
 <a href="https://github.com/micycle1/PeasyGradients">
 <img src="resources/colour_space_examples/RYB.png" alt="PeasyGradients"/></a><br>
 
-* `HSB`
+### `HSB`
 
 <a href="https://github.com/micycle1/PeasyGradients">
 <img src="resources/colour_space_examples/HSB.png" alt="PeasyGradients"/></a><br>
 
-* `XYZ` (CIE 1931) [**gradient default**]
+### `XYZ` (CIE 1931) [**gradient default**]
 
 <a href="https://github.com/micycle1/PeasyGradients">
 <img src="resources/colour_space_examples/XYZ.png" alt="PeasyGradients"/></a><br>
 
-* `LAB` (CIE L\*a\*b*)
+### `LAB` (CIE L\*a\*b*)
 
 <a href="https://github.com/micycle1/PeasyGradients">
 <img src="resources/colour_space_examples/LAB.png" alt="PeasyGradients"/></a><br>
 
-* `HLAB` (Hunter LAB)
+### `HLAB` (Hunter LAB)
 
 <a href="https://github.com/micycle1/PeasyGradients">
 <img src="resources/colour_space_examples/HLAB.png" alt="PeasyGradients"/></a><br>
 
-* `DIN99`
+### `DIN99`
 
 <a href="https://github.com/micycle1/PeasyGradients">
 <img src="resources/colour_space_examples/DIN99.png" alt="PeasyGradients"/></a><br>
 
-* `ITP` (ICtCp)
+### `ITP` (ICtCp)
 
 <a href="https://github.com/micycle1/PeasyGradients">
 <img src="resources/colour_space_examples/ITP.png" alt="PeasyGradients"/></a><br>
 
-* `LUV` (CIE 1976 L*, u*, v*)
+### `LUV` (CIE 1976 L*, u*, v*)
 
 <a href="https://github.com/micycle1/PeasyGradients">
 <img src="resources/colour_space_examples/LUV.png" alt="PeasyGradients"/></a><br>
 
-* `JAB` (JzAzBz)
+### `JAB` (JzAzBz)
 
 <a href="https://github.com/micycle1/PeasyGradients">
 <img src="resources/colour_space_examples/JAB.png" alt="PeasyGradients"/></a><br>
@@ -181,17 +220,15 @@ Remember that a 1D gradient consists of only a few defined colour stops; all oth
 
 
 ## Interpolation: Easing Functions
-Easing functions affect how the colours between two adjacent colour stops are composed. For example, with *linear* interpolation, a point in a `Gradient` which is midway between 2 colour stops is composed of 50% of the first colour and 50% of the second colour — there is a linear relationship between its position and the weighting of colour it receives from each colour stop. Other easing functions are non-linear (for example a point closer to one colour stop may in some cases receive more colour from the second colour stop) which can result in more interesting gradients.
+Easing functions affect how the colours between two adjacent colour stops are composed.
+
+For example, with *linear* interpolation, a point in a `Gradient` which is midway between 2 colour stops is composed of 50% of the first colour and 50% of the second colour — there is a linear relationship between its position and the weighting of colour it receives from each colour stop. Other easing functions are non-linear (for example a point closer to one colour stop may in some cases receive more colour from the second colour stop) which can result in more interesting gradients.
  
 Certain easing functions suit some gradient types better than others — for example, the `BOUNCE` function works well with polygon gradients but rather more poorly with linear gradients. Therefore, as with colour spaces, experimentation with different interpolation functions is encouraged.
 
 ```
 todo code xample
 ```
-
-These are results:
-
-[image]
 
 These are the the available interpolation easing functions in PeasyGradients (accessible via the `Interpolation` enum):
 
@@ -209,24 +246,63 @@ These are the the available interpolation easing functions in PeasyGradients (ac
 * `GAIN2` (as above, but with different constant)
 * `EXPIMPULSE` (Exponential Impulse)
 
+<table>
+  <tr>
+<td> <img src="resources/interpolation_examples/linear.png"  alt="1" ></td>
+<td> <img src="resources/interpolation_examples/linear.png"  alt="1" ></td>
+   </tr> 
+   <tr>
+p
+  </td>
+  </tr>
+</table>
+
+<details><summary style="font-size:135%; color:blue">💥See Examples...</summary>
+
+### `LINEAR`
+
+<a href="https://github.com/micycle1/PeasyGradients">
+<img src="resources/interpolation_examples/linear.png" alt="PeasyGradients"/></a><br>
+
+### `RYB`
+
+<a href="https://github.com/micycle1/PeasyGradients">
+<img src="resources/colour_space_examples/RYB.png" alt="PeasyGradients"/></a><br>
+
+</details>
+
 ## Animating Gradients
 
-### Animating Colour
+### Animating Colour Stops
 
-The position of all colour stops within a `Gradient` can be offset using `.setOffset(amount)`. The `.animate(amount)` method changes the offset by `amount` each time it is called; with this you can animate a `Gradient`'s colour by calling `.animate(0.01f)` each frame.
+The position of all colour stops within a `Gradient` can be offset using `.setOffset(amount)`.
+
+Furthermore, the `.animate(amount)` method changes this offset by the given `amount` each time it is called; with this you can animate a `Gradient`'s colour by calling `.animate(0.01f)` each frame for example.
 
 ### Priming a gradient for Animation
 
-Naively animating a gradient may lead to unwanted harsh transition in the colours where the first and last colour stops bump right up against each other, as below:
+Naively animating a gradient may lead to an ugly and undesirable seam in the gradient where the first and last colour stops (at positions 0.00 and 1.00 respectively) bump right up against each other, like in the linear gradient below:
 
-[image]
+<a href="https://github.com/micycle1/PeasyGradients">
+<img src="resources/animation_examples/with_seam.gif" alt="PeasyGradients"/></a><br>
 
-To alleviate this, call `.primeAnimation()` on a `Gradient` (once) before animating it. This pushes a copy of the first colour stop of the `Gradient` to its end (scaling all the other colour stops accordingly), maintaining a smooth colour transition despite the offset.
+To alleviate this, call `.primeAnimation()` on a `Gradient` (once) before animating it. This pushes a copy of the first colour stop of the `Gradient` to its end (scaling all the other colour stops accordingly), to produce a seamless gradient, regardless of offset.
+
+<a href="https://github.com/micycle1/PeasyGradients">
+<img src="resources/animation_examples/seamless.gif" alt="PeasyGradients"/></a><br>
 
 Calling `.primeAnimation()` on a `Gradient` before rendering it as a **conic** or **spiral** gradient has the added benefit of smoothing the transition between the first and last colours, regardless of whether you wish to animate the gradient, as below:
 
 <a href="https://github.com/micycle1/PeasyGradients">
 <img src="resources/other_examples/all_smooth.png" alt="PeasyGradients" width="500" height="500"/></a><br>
 
+### Animating Colour 2
+
+## Other Stuff
+
+### Posterisation
+
+Use posterisation to define the maximum number of colours a gradient uses.
+
 ## Library Optimisation
-PeasyGradients has been written to target the CPU (as opposed to the GPU) as to not be dependent on OPENGL libraries. To this end, there have been many internal optimisations to make the library suitable for dynamic animation and interaction rather than just static rendering. Rendering (most) gradients at 60fps at 1080p is more than achievable on modern processors.
+PeasyGradients targets the CPU (as opposed to the GPU) as to not be dependent on OPENGL libraries. To this end, there have been many internal optimisations to make the library suitable for dynamic animation and interaction rather than just static rendering. Rendering (most) gradients at 60fps at 1080p is more than achievable on modern processors.
