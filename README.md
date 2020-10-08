@@ -88,68 +88,14 @@ Remember that a 1D `Gradient` consists of only a few defined colour stops; all o
 
  PeasyGradients supports many different colour spaces — these are the possible colour spaces (accessible via `ColourSpaces.class`):
 
-* `RGB`
-* `RYB`
-* `HSB`
-* `XYZ` (CIE 1931) [**gradient default**]
-* `LAB` (CIE L\*a\*b*)
-* `DIN99`
-* `ITP` (ICtCp)
-* `HLAB` (Hunter LAB)
-* `LUV` (CIE 1976 L*, u*, v*)
-* `JAB` (JzAzBz)
+| **RGB**![](resources/colour_space_examples/RGB.png ) | **RYB**![](resources/colour_space_examples/RYB.png) |
+|:---:|:---:|
+| **HSB**![](resources/colour_space_examples/HSB.png ) | **XYZ (CIE 1931)**![](resources/colour_space_examples/XYZ.png) |
+| **LAB (CIE L\*a\*b\*)**![](resources/colour_space_examples/LAB.png ) | **HLAB (Hunter LAB)**![](resources/colour_space_examples/HLAB.png) |
+| **DIN99**![](resources/colour_space_examples/DIN99.png ) | **ITP (ICtCp)**![](resources/colour_space_examples/ITP.png) |
+| **LUV (CIE 1976 L\*, u\*, v\*)**![](resources/colour_space_examples/DIN99.png ) | **`JAB` (JzAzBz)**![](resources/colour_space_examples/JAB.png) |
 
 <details><summary style="font-size:135%; color:blue">💥See Examples...</summary>
-
-### `RGB`
-
-<a href="https://github.com/micycle1/PeasyGradients">
-<img src="resources/colour_space_examples/RGB.png" alt="PeasyGradients"/></a><br>
-
-### `RYB`
-
-<a href="https://github.com/micycle1/PeasyGradients">
-<img src="resources/colour_space_examples/RYB.png" alt="PeasyGradients"/></a><br>
-
-### `HSB`
-
-<a href="https://github.com/micycle1/PeasyGradients">
-<img src="resources/colour_space_examples/HSB.png" alt="PeasyGradients"/></a><br>
-
-### `XYZ` (CIE 1931) [**gradient default**]
-
-<a href="https://github.com/micycle1/PeasyGradients">
-<img src="resources/colour_space_examples/XYZ.png" alt="PeasyGradients"/></a><br>
-
-### `LAB` (CIE L\*a\*b*)
-
-<a href="https://github.com/micycle1/PeasyGradients">
-<img src="resources/colour_space_examples/LAB.png" alt="PeasyGradients"/></a><br>
-
-### `HLAB` (Hunter LAB)
-
-<a href="https://github.com/micycle1/PeasyGradients">
-<img src="resources/colour_space_examples/HLAB.png" alt="PeasyGradients"/></a><br>
-
-### `DIN99`
-
-<a href="https://github.com/micycle1/PeasyGradients">
-<img src="resources/colour_space_examples/DIN99.png" alt="PeasyGradients"/></a><br>
-
-### `ITP` (ICtCp)
-
-<a href="https://github.com/micycle1/PeasyGradients">
-<img src="resources/colour_space_examples/ITP.png" alt="PeasyGradients"/></a><br>
-
-### `LUV` (CIE 1976 L*, u*, v*)
-
-<a href="https://github.com/micycle1/PeasyGradients">
-<img src="resources/colour_space_examples/LUV.png" alt="PeasyGradients"/></a><br>
-
-### `JAB` (JzAzBz)
-
-<a href="https://github.com/micycle1/PeasyGradients">
-<img src="resources/colour_space_examples/JAB.png" alt="PeasyGradients"/></a><br>
 </details>
 
 
@@ -166,30 +112,14 @@ todo code xample
 
 These are the the available interpolation easing functions in PeasyGradients (accessible via the `Interpolation` enum):
 
-* `LINEAR`
-* `IDENTITY`
-* `SMOOTH_STEP` [**gradient default**]
-* `SMOOTHER_STEP` (Ken Perlin’s smoother step)
-* `EXPONENTIAL`
-* `CUBIC`
-* `BOUNCE`
-* `CIRCULAR`
-* `SINE`
-* `PARABOLA`
-* `GAIN1` (gain function with a certain constant)
-* `GAIN2` (as above, but with different constant)
-* `EXPIMPULSE` (Exponential Impulse)
-
-<table>
-  <tr>
-<td> <img src="resources/interpolation_examples/linear.png"  alt="1" ></td>
-<td> <img src="resources/interpolation_examples/linear.png"  alt="1" ></td>
-   </tr> 
-   <tr>
-p
-  </td>
-  </tr>
-</table>
+| **Linear**![](resources/interpolation_examples/linear.png ) | **Identity**![](resources/interpolation_examples/identity.png) |
+|:---:|:---:|
+| **Smooth Step**![](resources/interpolation_examples/smooth_step.png ) | **Smoother Step**![](resources/interpolation_examples/smoother_step.png) |
+| **Exponential**![](resources/interpolation_examples/exponential.png ) | **Cubic**![](resources/interpolation_examples/cubic.png) |
+| **Circular**![](resources/interpolation_examples/circular.png ) | **Bounce**![](resources/interpolation_examples/bounce.png) |
+| **Sine**![](resources/interpolation_examples/sine.png ) | **Parabola**![](resources/interpolation_examples/parabola.png) |
+| **Gain 1**![](resources/interpolation_examples/gain1.png ) | **Gain 2**![](resources/interpolation_examples/gain2.png) |
+| **Exponential Impulse**![](resources/interpolation_examples/expimpulse.png ) |
 
 <details><summary style="font-size:135%; color:blue">💥See Examples...</summary>
 
@@ -217,18 +147,18 @@ Furthermore, the `.animate(amount)` method changes this offset by the given `amo
 
 Naively animating a gradient may lead to an ugly and undesirable seam in the gradient where the first and last colour stops (at positions 0.00 and 1.00 respectively) bump right up against each other, like in the linear gradient below:
 
-<a href="https://github.com/micycle1/PeasyGradients">
-<img src="resources/animation_examples/with_seam.gif" alt="PeasyGradients"/></a><br>
+<center><a href="https://github.com/micycle1/PeasyGradients">
+<img src="resources/animation_examples/with_seam.gif" alt="PeasyGradients" /></a><br></center>
 
 To alleviate this, call `.primeAnimation()` on a `Gradient` (once) before animating it. This pushes a copy of the first colour stop of the `Gradient` to its end (scaling all the other colour stops accordingly), to produce a seamless gradient, regardless of offset.
 
-<a href="https://github.com/micycle1/PeasyGradients">
-<img src="resources/animation_examples/seamless.gif" alt="PeasyGradients"/></a><br>
+<center><a href="https://github.com/micycle1/PeasyGradients">
+<img src="resources/animation_examples/seamless.gif" alt="PeasyGradients"/></a><br></center>
 
 Calling `.primeAnimation()` on a `Gradient` before rendering it as a **conic** or **spiral** gradient has the added benefit of smoothing the transition between the first and last colours, regardless of whether you wish to animate the gradient, as below:
 
-<a href="https://github.com/micycle1/PeasyGradients">
-<img src="resources/other_examples/all_smooth.png" alt="PeasyGradients" width="500" height="500"/></a><br>
+<center><a href="https://github.com/micycle1/PeasyGradients">
+<img src="resources/other_examples/all_smooth.png" alt="PeasyGradients" width="500" height="500"/></a><br></center>
 
 ### Animating Colour 2
 
