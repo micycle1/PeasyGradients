@@ -1,17 +1,3 @@
-<head>
-<style>
-table, th, td {
-  border: 0px solid black;
-  text-align: center;
-  vertical-align: middle;
-}
-table.center {
-  margin-left: auto;
-  margin-right: auto;
-}
-</style>
-</head>
-
 <h1 align="center">
   <a href="https://github.com/micycle1/PeasyGradients">
   <img src="resources/logo-small.png" alt="PeasyGradients"/></a><br>
@@ -80,6 +66,14 @@ Zoom and rotation can be adjusted for most gradient types; certain gradient type
 
 Screenshots and code examples for each gradient type are provided in the sub-sections below. The screenshots are taken using the `LUV` colour space with `SMOOTH_STEP` interpolation, and rotation set to 0 where applicable.
 
+|  |  |
+|:---:|:---:|
+| Linear![](resources/gradient_type_examples/linear.png ) | Radial![](resources/gradient_type_examples/radial.png) |
+| Conic![](resources/gradient_type_examples/conic.png) | Spiral![](resources/gradient_type_examples/spiral.png) |
+| Diamond![](resources/gradient_type_examples/diamond.png) | Cross![](resources/gradient_type_examples/cross.png) |
+| Polygon![](resources/gradient_type_examples/polygon(6).png) | Hourglass![](resources/gradient_type_examples/hourglass.png) |
+| Noise![](resources/gradient_type_examples/noise.png) | <img src="resources/gradient_type_examples/hourglass.png" alt="drawing" width="350"/>|
+
 <table style="padding:5px"   class="center">
 <tr>
 <td>Linear</td><td>Radial</td></tr>
@@ -103,7 +97,7 @@ Screenshots and code examples for each gradient type are provided in the sub-sec
 
 ### Radial
 <a href="https://github.com/micycle1/PeasyGradients">
-<img src="resources/gradient_type_examples/radial.png" alt="PeasyGradients" width="375" height="375"/></a><br>
+<img src="resources/gradient_type_examples/radial.png " alt="PeasyGradients" width="375" height="375"/></a><br>
 
 ### Conic
 <a href="https://github.com/micycle1/PeasyGradients">
