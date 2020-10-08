@@ -16,14 +16,12 @@ PeasyGradients is a library for Processing to make drawing colour gradients easy
 ### Key Features:
 * ### 10 Gradient Types
 * ### 10 Colour Spaces
-* ### 13 Colour Interpolation functions
+* ### 13 Colour Interpolation Functions
 * ### Fast!
-
-By default, the library draws directly into the sketch; you can give it a specific `PGraphics` pane to draw into with the `.setRenderTarget()` method.
 
 ### Creating a 1D gradient
 
-The `PeasyGradients` class renders 1D `Gradients` as 2D images in your Processing sketch. A 1D `Gradient` consists solely of colour stops — these define the colours and the discrete position (percentage) each colour occurs at on the 1D axis.
+The `PeasyGradients` class renders 1D `Gradients` as 2D spectrums in your Processing sketch. A 1D `Gradient` consists solely of colour stops — these define the colours and the discrete position (percentage) each colour occurs at on the 1D axis.
 
 A simple black-to-white gradient is created as such:
 
@@ -34,7 +32,7 @@ Gradient blackToWhite = new Gradient(colour(0), colour(255));
 Here, `blackToWhite` is a 1D gradient with two equidistant colour stops — black is at *0.00*, and white is at *1.00*.
 
 ### Rendering a 2D gradient
-Merely instantiating a 1D gradient doesn't draw anything. How should this 1D spectrum be drawn? Do we want to render a black-to-white linear gradient? A black-to-white radial gradient? Or something else? This is where the *PeasyGradients* class comes in. We pass a `Gradient` (here, the `blackToWhite` 1D gradient) to one of a variety of methods to draw a 2D gradient.
+Merely instantiating a 1D gradient doesn't draw anything. How should this 1D spectrum be drawn? Do we want to render a black-to-white linear gradient? A radial gradient? Or something else? This is where the *PeasyGradients* class comes in... We pass a `Gradient` (here, the `blackToWhite` 1D gradient) to one of a variety of methods to draw a 2D gradient.
 
 ```
 PeasyGradients peasyGradients;
@@ -49,8 +47,9 @@ void draw() {
 }
 ```
 
-That's it! Now a horizontal black-to-white linear gradient will be drawn in the sketch. See the *Gradients* section below for more information about each (2D) gradient type.
+That's it! Now a horizontal black-to-white linear gradient will be drawn in the sketch (by default, the library draws directly into the sketch; you can give it a specific `PGraphics` pane to draw into with the `.setRenderTarget()` method).
 
+See the *Gradients* section below for a showcase of each (2D) gradient type.
 
 ## Installation
 
@@ -60,11 +59,11 @@ That's it! Now a horizontal black-to-white linear gradient will be drawn in the 
 
 ## Gradients
 
-PeasyGradients provides methods to render 11 types of 2D gradients.
+PeasyGradients provides methods to render 10 types of 2D gradients.
 
-Zoom and rotation can be adjusted for most gradient types; certain gradient types offer additional parameters.
+Zoom and rotation can be adjusted for most gradient types; certain gradient types offer additional parameters — for example, the polygon gradient requires a parameter specifying the number of polygon sides.
 
-Screenshots and code examples for each gradient type are provided in the sub-sections below. The screenshots are taken using the `LUV` colour space with `SMOOTH_STEP` interpolation, and rotation set to 0 where applicable.
+Each gradient type is shown below. The screenshots are taken using the `LUV` colour space with `SMOOTH_STEP` interpolation, and rotation set to 0 where applicable.
 
 | **Linear**![](resources/gradient_type_examples/linear.png ) | **Radial**![](resources/gradient_type_examples/radial.png) |
 |:---:|:---:|
@@ -73,34 +72,37 @@ Screenshots and code examples for each gradient type are provided in the sub-sec
 | **Polygon**![](resources/gradient_type_examples/polygon(6).png) | **Hourglass**![](resources/gradient_type_examples/hourglass.png) |
 | **Noise**![](resources/gradient_type_examples/noise.png) |
 
+
 ## Colour Spaces
 
 Colour spaces define how the colour value at each colour stop is represented.
 
-Remember that a 1D `Gradient` consists of only a few defined colour stops; all other colours in a `Gradient`'s spectrum are **composed** by **interpolating** between any two adjacent colour stops. Representing colour stops differently affects the results of interpolation and this can have a noticeable effect on the overall spectrum of a gradient (so experimentation with different colour spaces is encouraged). A rule of thumb: avoid the `RGB`, `RYB` and `HSB` colour spaces as they don't interpolate luminosity well.
+Remember that a 1D `Gradient` consists of only a few defined colour stops; all other colours in a `Gradient`'s spectrum are **composed** by **interpolating** between any two adjacent colour stops. Representing colour stops differently (in different colour spaces) affects the results of interpolation, and this can have a noticeable effect on the overall spectrum of a gradient (so experimentation with different colour spaces is encouraged). A rule of thumb: avoid the `RGB`, `RYB` and `HSB` colour spaces as they don't interpolate luminosity well.
 
 
- The colour space for a given `Gradient`  is set with `.setColSpace()`, as such:
+ The colour space for a given `Gradient`  is set with `.setColSpace()`, like so:
  
  ```
  myGradient.setColSpace(ColourSpaces.RGB);
  ```
 
- PeasyGradients supports many different colour spaces — these are the possible colour spaces (accessible via `ColourSpaces.class`):
+ PeasyGradients supports many different colour spaces — all possible colour spaces are accessible via `ColourSpaces.class` and examples of each are shown below:
+
+<details><summary style="font-size:135%; color:blue">💥See Colour Space Comparison...</summary>
 
 | **RGB**![](resources/colour_space_examples/RGB.png ) | **RYB**![](resources/colour_space_examples/RYB.png) |
 |:---:|:---:|
 | **HSB**![](resources/colour_space_examples/HSB.png ) | **XYZ (CIE 1931)**![](resources/colour_space_examples/XYZ.png) |
 | **LAB (CIE L\*a\*b\*)**![](resources/colour_space_examples/LAB.png ) | **HLAB (Hunter LAB)**![](resources/colour_space_examples/HLAB.png) |
 | **DIN99**![](resources/colour_space_examples/DIN99.png ) | **ITP (ICtCp)**![](resources/colour_space_examples/ITP.png) |
-| **LUV (CIE 1976 L\*, u\*, v\*)**![](resources/colour_space_examples/DIN99.png ) | **`JAB` (JzAzBz)**![](resources/colour_space_examples/JAB.png) |
+| **LUV (CIE 1976 L\*, u\*, v\*)**![](resources/colour_space_examples/DIN99.png ) | **JAB (JzAzBz)**![](resources/colour_space_examples/JAB.png) |
 
-<details><summary style="font-size:135%; color:blue">💥See Examples...</summary>
 </details>
 
 
 ## Interpolation: Easing Functions
-Easing functions affect how the colours between two adjacent colour stops are composed.
+In areas between colour stops, colours are composed via interpolation. Easing functions affect how the colours between two adjacent colour stops are composed. 
+affect how colour stops are interpolated to generate colours between them
 
 For example, with *linear* interpolation, a point in a `Gradient` which is midway between 2 colour stops is composed of 50% of the first colour and 50% of the second colour — there is a linear relationship between its position and the weighting of colour it receives from each colour stop. Other easing functions are non-linear (for example a point closer to one colour stop may in some cases receive more colour from the second colour stop) which can result in more interesting gradients.
  
@@ -112,26 +114,16 @@ todo code xample
 
 These are the the available interpolation easing functions in PeasyGradients (accessible via the `Interpolation` enum):
 
+<details><summary style="font-size:135%; color:blue">💥See Interpolation Comparison...</summary>
+
 | **Linear**![](resources/interpolation_examples/linear.png ) | **Identity**![](resources/interpolation_examples/identity.png) |
-|:---:|:---:|
+|:---:|:--:|
 | **Smooth Step**![](resources/interpolation_examples/smooth_step.png ) | **Smoother Step**![](resources/interpolation_examples/smoother_step.png) |
 | **Exponential**![](resources/interpolation_examples/exponential.png ) | **Cubic**![](resources/interpolation_examples/cubic.png) |
 | **Circular**![](resources/interpolation_examples/circular.png ) | **Bounce**![](resources/interpolation_examples/bounce.png) |
 | **Sine**![](resources/interpolation_examples/sine.png ) | **Parabola**![](resources/interpolation_examples/parabola.png) |
 | **Gain 1**![](resources/interpolation_examples/gain1.png ) | **Gain 2**![](resources/interpolation_examples/gain2.png) |
 | **Exponential Impulse**![](resources/interpolation_examples/expimpulse.png ) |
-
-<details><summary style="font-size:135%; color:blue">💥See Examples...</summary>
-
-### `LINEAR`
-
-<a href="https://github.com/micycle1/PeasyGradients">
-<img src="resources/interpolation_examples/linear.png" alt="PeasyGradients"/></a><br>
-
-### `RYB`
-
-<a href="https://github.com/micycle1/PeasyGradients">
-<img src="resources/colour_space_examples/RYB.png" alt="PeasyGradients"/></a><br>
 
 </details>
 
@@ -143,30 +135,56 @@ The position of all colour stops within a `Gradient` can be offset using `.setOf
 
 Furthermore, the `.animate(amount)` method changes this offset by the given `amount` each time it is called; with this you can animate a `Gradient`'s colour by calling `.animate(0.01f)` each frame for example.
 
-### Priming a gradient for Animation
+### Priming a Gradient for Animation
 
 Naively animating a gradient may lead to an ugly and undesirable seam in the gradient where the first and last colour stops (at positions 0.00 and 1.00 respectively) bump right up against each other, like in the linear gradient below:
 
-<center><a href="https://github.com/micycle1/PeasyGradients">
-<img src="resources/animation_examples/with_seam.gif" alt="PeasyGradients" /></a><br></center>
+<p align="center"><a href="https://github.com/micycle1/PeasyGradients">
+<img src="resources/animation_examples/with_seam.gif" alt="PeasyGradients" /></a><br></p>
 
-To alleviate this, call `.primeAnimation()` on a `Gradient` (once) before animating it. This pushes a copy of the first colour stop of the `Gradient` to its end (scaling all the other colour stops accordingly), to produce a seamless gradient, regardless of offset.
+To avoid this, call `.primeAnimation()` on a `Gradient` (once) before animating it. This pushes a copy of the first colour stop of the `Gradient` to its end (scaling all other colour stops accordingly), to produce a **seamless gradient spectrum**, regardless of offset.
 
-<center><a href="https://github.com/micycle1/PeasyGradients">
-<img src="resources/animation_examples/seamless.gif" alt="PeasyGradients"/></a><br></center>
+<p align="center"><a href="https://github.com/micycle1/PeasyGradients">
+<img src="resources/animation_examples/seamless.gif" alt="PeasyGradients"/></a><br></p>
 
 Calling `.primeAnimation()` on a `Gradient` before rendering it as a **conic** or **spiral** gradient has the added benefit of smoothing the transition between the first and last colours, regardless of whether you wish to animate the gradient, as below:
 
-<center><a href="https://github.com/micycle1/PeasyGradients">
-<img src="resources/other_examples/all_smooth.png" alt="PeasyGradients" width="500" height="500"/></a><br></center>
+<p align="center"><a href="https://github.com/micycle1/PeasyGradients">
+<img src="resources/other_examples/all_smooth.png" alt="PeasyGradients" width="500" height="500"/></a><br></p>
 
 ### Animating Colour 2
+
+```
+.mutate()
+```
 
 ## Other Stuff
 
 ### Posterisation
 
-Use posterisation to define the maximum number of colours a gradient uses.
+Use posterisation to define the maximum number of colours the PeasyGradient renderer will use to render `Gradients`. Smaller numbers are more restrictive and increase the colour banding effect — there may be times when this artistic effect is desirable.
+
+```
+peasyGradients.posterise(10); // renderer will now render gradients with 10 colours at most 
+```
+
+| **No Posterisation**![](resources/posterise_examples/posterise_none.png ) | **Posterisation = 10**![](resources/posterise_examples/posterise_10.png) | **Posterisation = 25**![](resources/posterise_examples/posterise_25.png) |
+|:---:|:---:|:---:|
+
+Use `.clearPosterisation()` to clear any posterisation setting and reset the renderer.
+
+
+### Generating Random Gradients
+
+The `Palette` class provides some helper methods for generating `Gradient` colour palettes.
+
+```
+randomGradient = new Gradient(Palette.complementary()); // two random colours that are on opposite sides of the color wheel
+randomGradient = new Gradient(Palette.triadic()); // 3 random colors that are evenly spaced on the color wheel
+randomGradient = new Gradient(Palette.tetradic()); // 4 random colors that are evenly spaced on the color wheel
+randomGradient = new Gradient(Palette.randomColors(7)); // N random colours distributed according to the golden ratio
+randomGradient = new Gradient(Palette.randomRandomColors(8)); // N random colours also distributed randomly
+```
 
 ## Library Optimisation
 PeasyGradients targets the CPU (as opposed to the GPU) as to not be dependent on OPENGL libraries. To this end, there have been many internal optimisations to make the library suitable for dynamic animation and interaction rather than just static rendering. Rendering (most) gradients at 60fps at 1080p is more than achievable on modern processors.
