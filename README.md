@@ -66,72 +66,12 @@ Zoom and rotation can be adjusted for most gradient types; certain gradient type
 
 Screenshots and code examples for each gradient type are provided in the sub-sections below. The screenshots are taken using the `LUV` colour space with `SMOOTH_STEP` interpolation, and rotation set to 0 where applicable.
 
-|  |  |
+| **Linear**![](resources/gradient_type_examples/linear.png ) | **Radial**![](resources/gradient_type_examples/radial.png) |
 |:---:|:---:|
-| Linear![](resources/gradient_type_examples/linear.png ) | Radial![](resources/gradient_type_examples/radial.png) |
-| Conic![](resources/gradient_type_examples/conic.png) | Spiral![](resources/gradient_type_examples/spiral.png) |
-| Diamond![](resources/gradient_type_examples/diamond.png) | Cross![](resources/gradient_type_examples/cross.png) |
-| Polygon![](resources/gradient_type_examples/polygon(6).png) | Hourglass![](resources/gradient_type_examples/hourglass.png) |
-| Noise![](resources/gradient_type_examples/noise.png) | <img src="resources/gradient_type_examples/hourglass.png" alt="drawing" width="350"/>|
-
-<table style="padding:5px"   class="center">
-<tr>
-<td>Linear</td><td>Radial</td></tr>
-  <tr><td> <img src="resources/gradient_type_examples/linear.png" alt="PeasyGradients" width="375" height="375" ></td>
-  <td> <img src="resources/gradient_type_examples/radial.png" alt="PeasyGradients" width="375" height="375" ></td></tr>
-<td>Conic</td><td>Spiral</td></tr>
-  <tr><td> <img src="resources/gradient_type_examples/conic.png" alt="PeasyGradients" width="375" height="375" ></td>
-  <td> <img src="resources/gradient_type_examples/spiral.png" alt="PeasyGradients" width="375" height="375" ></td></tr>
-  </tr>
-
-</table>
-
-### Linear
-<a href="https://github.com/micycle1/PeasyGradients">
-<img src="resources/gradient_type_examples/linear.png" alt="PeasyGradients" width="375" height="375"/></a><br>
-<details><summary>Code Example...</summary>
-  * `linearGradient(Gradient gradient, float angle)`
-  
-`peasyGradients.linearGradient(my1DGradient, 0)`
-</details>
-
-### Radial
-<a href="https://github.com/micycle1/PeasyGradients">
-<img src="resources/gradient_type_examples/radial.png " alt="PeasyGradients" width="375" height="375"/></a><br>
-
-### Conic
-<a href="https://github.com/micycle1/PeasyGradients">
-<img src="resources/gradient_type_examples/conic.png" alt="PeasyGradients" width="375" height="375"/></a><br>
-
-### Spiral
-<a href="https://github.com/micycle1/PeasyGradients">
-<img src="resources/gradient_type_examples/spiral.png" alt="PeasyGradients" width="375" height="375"/></a><br>
-
-### Diamond
-<a href="https://github.com/micycle1/PeasyGradients">
-<img src="resources/gradient_type_examples/diamond.png" alt="PeasyGradients" width="375" height="375"/></a><br>
-
-### Cross
-<a href="https://github.com/micycle1/PeasyGradients">
-<img src="resources/gradient_type_examples/cross.png" alt="PeasyGradients" width="375" height="375"/></a><br>
-
-### Polygon
-<a href="https://github.com/micycle1/PeasyGradients">
-<img src="resources/gradient_type_examples/polygon(6).png" alt="PeasyGradients" width="375" height="375"/></a><br>
-
-### Cone
-#### TODO
-
-### Hourglass
-<a href="https://github.com/micycle1/PeasyGradients">
-<img src="resources/gradient_type_examples/hourglass.png" alt="PeasyGradients" width="375" height="375"/></a><br>
-
-### Noise
-<a href="https://github.com/micycle1/PeasyGradients">
-<img src="resources/gradient_type_examples/noise.png" alt="PeasyGradients" width="375" height="375"/></a><br>
-<details><summary>More...</summary>
-This is slow and not suitable for live dynamic rendering.
-</details>
+| **Conic**![](resources/gradient_type_examples/conic.png) | **Spiral**![](resources/gradient_type_examples/spiral.png) |
+| **Diamond**![](resources/gradient_type_examples/diamond.png) | **Cross**![](resources/gradient_type_examples/cross.png) |
+| **Polygon**![](resources/gradient_type_examples/polygon(6).png) | **Hourglass**![](resources/gradient_type_examples/hourglass.png) |
+| **Noise**![](resources/gradient_type_examples/noise.png) |
 
 ## Colour Spaces
 
