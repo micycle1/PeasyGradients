@@ -1,13 +1,13 @@
 package peasyGradients.utilities;
 
 /**
- * Interpolation functions affect the interpolation factor (0.0...1.0) between any 2 colour
+ * Interpolation functions affect the interpolation factor (0.0...1.0) between any 2 color
  * stops and therefore the appearance (ramp) of a gradient.
  * 
  * <P>
  * For example, in linear mode, a point mid-way between two control points will
  * use 50% of the left and 50% of the right; in exponential interpolation, the
- * same point be an average of x% of left colour and y% of right colour.
+ * same point be an average of x% of left color and y% of right color.
  * 
  * @author micycle1
  *

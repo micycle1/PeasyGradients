@@ -1,16 +1,16 @@
-package peasyGradients.colourSpaces;
+package peasyGradients.colorSpaces;
 
 import peasyGradients.utilities.Functions;
 
 /**
- * Red, yellow, blue RYB Color Compositing:
+ * Red, yellow, blue RYB color Compositing:
  * http://nishitalab.org/user/UEI/publication/Sugita_IWAIT2015.pdf
  * http://nishitalab.org/user/UEI/publication/Sugita_SIG2015.pdf
  * // TODO check working properly
  * @author micycle1
  *
  */
-final class RYB implements ColourSpace {
+final class RYB implements ColorSpace {
 	
 	RYB() {
 	}

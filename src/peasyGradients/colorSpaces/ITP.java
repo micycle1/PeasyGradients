@@ -1,4 +1,4 @@
-package peasyGradients.colourSpaces;
+package peasyGradients.colorSpaces;
 
 import net.jafama.FastMath;
 
@@ -10,7 +10,7 @@ import net.jafama.FastMath;
  * @author micycle1
  *
  */
-final class ITP implements ColourSpace {
+final class ITP implements ColorSpace {
 
 	private static final double m1 = 2610d / 16384;
 	private static final double m2 = 2523d / 4096 * 128;
@@ -99,7 +99,7 @@ final class ITP implements ColourSpace {
 	 * SMPTE ST 2084:2014 optimised perceptual inverse electro-optical transfer
 	 * function (EOTF / EOCF).
 	 * 
-	 * https://colour.readthedocs.io/en/develop/_modules/colour/models/rgb/transfer_functions/st_2084.html#eotf_inverse_ST2084
+	 * https://color.readthedocs.io/en/develop/_modules/color/models/rgb/transfer_functions/st_2084.html#eotf_inverse_ST2084
 	 */
 	private static double inverseEOTF(double F) {
 		double Y = Math.pow(F, m1); // reference implementation is F / 10000

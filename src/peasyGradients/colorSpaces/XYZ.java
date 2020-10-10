@@ -1,4 +1,4 @@
-package peasyGradients.colourSpaces;
+package peasyGradients.colorSpaces;
 
 import net.jafama.FastMath;
 
@@ -13,7 +13,7 @@ import peasyGradients.utilities.Functions;
  * @author micycle1
  *
  */
-final class XYZ implements ColourSpace {
+final class XYZ implements ColorSpace {
 
 	private static final double constA = 1 / 2.4d;
 

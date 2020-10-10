@@ -1,14 +1,14 @@
-package peasyGradients.colourSpaces;
+package peasyGradients.colorSpaces;
 
 /**
  * DIN99 is a further development of the CIELAB color space system developed by
- * the Working Committee FNF / FNL 2 Colorimetry.
+ * the Working Committee FNF / FNL 2 colorimetry.
  * https://github.com/frickels/colorspace/blob/master/src/main/java/info/kuechler/frickels/colorspace/DIN99.java
  * 
  * @author micycle1
  *
  */
-final class DIN99 implements ColourSpace {
+final class DIN99 implements ColorSpace {
 
 	private static final double SIN_16DEG = Math.sin(Math.toRadians(16.));
 	private static final double COS_16DEG = Math.cos(Math.toRadians(16.));

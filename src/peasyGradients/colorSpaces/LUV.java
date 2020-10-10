@@ -1,4 +1,4 @@
-package peasyGradients.colourSpaces;
+package peasyGradients.colorSpaces;
 
 /**
  * CIE-L*uv
@@ -6,7 +6,7 @@ package peasyGradients.colourSpaces;
  * @author micycle1
  *
  */
-final class LUV implements ColourSpace {
+final class LUV implements ColorSpace {
 
 	private static final double refU = 0.19783000664283;
 	private static final double refV = 0.46831999493879;

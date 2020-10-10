@@ -10,14 +10,14 @@ import peasyGradients.utilities.fastLog.FastLog;
 import processing.core.PVector;
 
 /**
- * This class contains static functions mostly related to colour/gradient
+ * This class contains static functions mostly related to color/gradient
  * processing.
  * 
  * @author micycle1
  */
 public final class Functions {
 
-	private static final FastLog fastLog = new DFastLog(10); // Used in veryFastPow()
+	private static final FastLog fastLog = new DFastLog(10); // Used in veryFastPow(), 10 => 2KB table
 
 	private static final float PI = (float) Math.PI;
 	private static final float TWO_PI = (float) (2 * Math.PI);
@@ -31,7 +31,7 @@ public final class Functions {
 	private static final Random random = new Random();
 
 	/**
-	 * Linearly interpolate between 2 colours (color-space independent) using the
+	 * Linearly interpolate between 2 colors (color-space independent) using the
 	 * given step.
 	 * 
 	 * @param a    double[3] (col 1)
@@ -49,7 +49,7 @@ public final class Functions {
 
 	/**
 	 * Returns a color by interpolating between two given colors. An alternative to
-	 * Processing's native lerpColor() method (which is linear).
+	 * Processing's native lerpcolor() method (which is linear).
 	 * 
 	 * @param col1 First color, represented as [R,G,B,A] array; each value between
 	 *             0...1.
@@ -343,19 +343,21 @@ public final class Functions {
 	 * @param array
 	 * @param decimalPlaces number of decimal places to retain
 	 * @param padding       default is 3 when decimal places = 0
-	 * @return
+	 * @param open character to open the array. e.g. '['
+	 * @param close character to close the array. e.g. ']'
+	 * @return something like "[1, 2, 3, 4]"
 	 */
-	public static String formatArray(double[] array, int decimalPlaces, int padding) {
+	public static String formatArray(double[] array, int decimalPlaces, int padding, char open, char close) {
 		double[] out = array.clone();
 
 		int i = 0;
 		if (decimalPlaces == 0) { // assuming array values > 1
-			String outString = "[" + String.format("%03d", Math.round(out[0])) + ", ";
+			String outString = open + String.format("%03d", Math.round(out[0])) + ", ";
 
 			for (int j = 1; j < out.length - 1; j++) {
 				outString += String.format("%03d", Math.round(out[j])) + ", ";
 			}
-			outString += String.format("%03d", Math.round(out[out.length - 1])) + "]";
+			outString += String.format("%03d", Math.round(out[out.length - 1])) + close;
 			return outString;
 		} else {
 			DecimalFormat df = new DecimalFormat(
@@ -366,6 +368,17 @@ public final class Functions {
 			}
 		}
 		return Arrays.toString(out);
+	}
+	
+	/**
+	 * Format array, opening and closing with '[....]'
+	 * @param array
+	 * @param decimalPlaces
+	 * @param padding
+	 * @return
+	 */
+	public static String formatArray(double[] array, int decimalPlaces, int padding) {
+		return formatArray(array, decimalPlaces, padding, '[', ']');
 	}
 
 	/**

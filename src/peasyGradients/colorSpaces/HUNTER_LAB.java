@@ -1,4 +1,4 @@
-package peasyGradients.colourSpaces;
+package peasyGradients.colorSpaces;
 
 import net.jafama.FastMath;
 
@@ -12,7 +12,7 @@ import net.jafama.FastMath;
  * @author micycle1
  *
  */
-final class HUNTER_LAB implements ColourSpace {
+final class HUNTER_LAB implements ColorSpace {
 
 	/**
 	 * D65/2° Illuminants: Daylight, sRGB, Adobe-RGB

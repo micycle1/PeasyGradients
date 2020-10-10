@@ -1,4 +1,4 @@
-package peasyGradients.colourSpaces;
+package peasyGradients.colorSpaces;
 
 import net.jafama.FastMath;
 import peasyGradients.utilities.FastPow;
@@ -11,11 +11,11 @@ import peasyGradients.utilities.FastPow;
  * http://im.snibgo.com/jzazbz.htm
  * 
  * <p>
- * JAB (JzAzBz) is a a colour space designed for perceptul uniformity in high
- * dynamic range (HDR) and wide colour gamut (WCG) applications. Conceptually it
+ * JAB (JzAzBz) is a a color space designed for perceptul uniformity in high
+ * dynamic range (HDR) and wide color gamut (WCG) applications. Conceptually it
  * is similar to CIE L*a*b*, but has claimed improvements:
  * 
- * Perceptual colour difference is predicted by Euclidean distance. Perceptually
+ * Perceptual color difference is predicted by Euclidean distance. Perceptually
  * uniform: MacAdam ellipses of just-noticable-difference (JND) are more
  * circular, and closer to the same sizes. Hue linearity: changing saturation or
  * lightness has less shift in hue.
@@ -25,7 +25,7 @@ import peasyGradients.utilities.FastPow;
  * @author micycle1
  *
  */
-final class JAB implements ColourSpace {
+final class JAB implements ColorSpace {
 
 	private static final double b = 1.15;
 	private static final double g = 0.66;

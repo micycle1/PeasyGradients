@@ -1,4 +1,4 @@
-package peasyGradients.colourSpaces;
+package peasyGradients.colorSpaces;
 
 import peasyGradients.utilities.Functions;
 
@@ -8,7 +8,7 @@ import peasyGradients.utilities.Functions;
  * @author micycle1
  *
  */
-final class HSB implements ColourSpace {
+final class HSB implements ColorSpace {
 
 	HSB() {
 	}
@@ -111,7 +111,7 @@ final class HSB implements ColourSpace {
 
 	/**
 	 * Returns a color by interpolating between two given colors. An alternative to
-	 * Processing's native lerpColor() method (which is linear). The shortest path
+	 * Processing's native lerpcolor() method (which is linear). The shortest path
 	 * between hues is used.
 	 * 
 	 * @param col1 First color, represented as [H,S,B] array; each value between

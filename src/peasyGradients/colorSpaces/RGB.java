@@ -1,4 +1,4 @@
-package peasyGradients.colourSpaces;
+package peasyGradients.colorSpaces;
 
 /***
  * Standard RGB (1996), not to be confused with CIERGB (1931).
@@ -6,7 +6,7 @@ package peasyGradients.colourSpaces;
  * @author micycle1
  *
  */
-final class RGB implements ColourSpace {
+final class RGB implements ColorSpace {
 	
 	RGB() {
 	}

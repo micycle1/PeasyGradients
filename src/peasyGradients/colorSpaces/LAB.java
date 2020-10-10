@@ -1,4 +1,4 @@
-package peasyGradients.colourSpaces;
+package peasyGradients.colorSpaces;
 
 /**
  * A uniform (Opponent color scale) color space in which colors are located
@@ -13,7 +13,7 @@ package peasyGradients.colourSpaces;
  * @author micycle1
  *
  */
-final class LAB implements ColourSpace {
+final class LAB implements ColorSpace {
 
 	/**
 	 * D65/2° Illuminants: Daylight, sRGB, Adobe-RGB
