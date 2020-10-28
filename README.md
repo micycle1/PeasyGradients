@@ -1,15 +1,15 @@
 <h1 align="center">
   <a href="https://github.com/micycle1/PeasyGradients">
-  <img src="resources/logo-small.png" alt="PeasyGradients"/></a><br>
+  <img src="resources/logo/logo-small.png" alt="PeasyGradients"/></a><br>
 PeasyGradients
 <br></br>
 </h1>
 <p align="center">🚧<em>~~A Work in Progress~~</em>🚧</p>
 
 
+*PeasyGradients* is a library for [Processing](https://processing.org/) that makes drawing color gradients easy-peasy. This library was inspired by Jeremy Behreandt's [*Color Gradients in Processing*](https://medium.com/@behreajj/color-gradients-in-processing-v-2-0-e5c0b87cdfd2) but has greatly developed the concepts and functionality presented there.
 
-
-PeasyGradients is a library for Processing to make drawing color gradients easy-peasy. This library was inspired by Jeremy Behreandt's [*color Gradients in Processing*](https://medium.com/@behreajj/color-gradients-in-processing-v-2-0-e5c0b87cdfd2) but has greatly developed the concepts and functionality presented there.
+This `README` provides an overview of the library — read it to get a good idea of what the library is capable of and how to use it. Access examples (Processing sketches) [here](); access documentation (online Javadocs) [here]().
 
 ## Overview
 
@@ -36,7 +36,6 @@ Merely instantiating a 1D gradient doesn't draw anything. How should this 1D spe
 
 ```
 PeasyGradients peasyGradients;
-
 
 void setup() {
     peasyGradients = new PeasyGradients(this);
@@ -161,12 +160,12 @@ Set the color of a specific color stop with `.setColorStopCol()`, shown below:
 ```
 angle += PI / 180; // increment angle
 
-colorMode(HSB, 360, 100, 100); // switch to HSB mode to set hue more easily
+colorMode(HSB, 360, 100, 100); // switch Processing to HSB mode to set hue more easily
 
 myGradient.setColorStopCol(0, color(frameCount % 360, 100, 100)); // set color stop at index 0
 myGradient.setColorStopCol(1, color((frameCount + 180) % 360, 100, 100)); // set color stop at index 1
 
-peasyGradients.linearGradient(gradient3, angle); // render gradient
+peasyGradients.linearGradient(myGradient, angle); // render gradient
 ```
 
 <p align="center"><a href="https://github.com/micycle1/PeasyGradients">
@@ -176,12 +175,12 @@ peasyGradients.linearGradient(gradient3, angle); // render gradient
 
 The **position** of `Colorstop`s within a `Gradient` can also be modified after the `Gradient` has been instantiated.
 
-Set the position of a specific color stop with `.setColorStopPosition()`, shown below:
+Set the position (0...1.0) of a specific color stop with `.setColorStopPosition()`, shown below:
 
 ```
 myGradient.setColorStopPosition(1, map(mouseX, 0, width, 0, 1)); // set position of middle color (index = 1)
 
-peasyGradients.linearGradient(gradient3, 0);
+peasyGradients.linearGradient(myGradient, 0);
 ```
 
 <p align="center"><a href="https://github.com/micycle1/PeasyGradients">
@@ -197,7 +196,7 @@ Use posterisation to define the maximum number of colors the PeasyGradient rende
 peasyGradients.posterise(10); // renderer will now render gradients with 10 colors at most 
 ```
 
-| **No Posterisation (default)**![](resources/posterise_examples/posterise_none.png ) | **Posterisation = 10**![](resources/posterise_examples/posterise_10.png) |  **Posterisation = 25**![](resources/posterise_examples/posterise_25.png) |
+| **No Posterisation (default)**![](resources/posterise_examples/posterise_none.png) | **Posterisation = 10**![](resources/posterise_examples/posterise_10.png) |  **Posterisation = 25**![](resources/posterise_examples/posterise_25.png) |
 |:---:|:---:|:---:|
 
 Use `.clearPosterisation()` to clear any posterisation setting and render gradients with full color.
@@ -217,9 +216,7 @@ randomGradient = new Gradient(Palette.randomRandomcolors(8)); // N random colors
 
 ### Masking
 
-Strictly, this functionality isn't defined by PeasyGradients (rather its defined by Processing itself). But I think it's worthwhile to show how masking can be used in conjunction with PeasyGradients. 
-
-mask other graphics with gradients generated from PeasyGradients. An example which uses text ("N") to mask a gradient is provided below:
+Strictly speaking, this functionality isn't defined by PeasyGradients (rather, it's defined by Processing itself). But I think it's worthwhile to show how masking can be used in conjunction with PeasyGradients. An example which uses text ("P") to mask a gradient is provided below:
 
 ```
 void setup() {
@@ -257,4 +254,15 @@ void draw() {
 <img src="resources/animation_examples/masking_example.gif" alt="PeasyGradients"/></a><br></p>
 
 ## Library Optimisation
-PeasyGradients targets the CPU (as opposed to the GPU) as to not be dependent on OPENGL libraries. To this end, there have been many internal optimisations to make the library suitable for dynamic animation and interaction rather than just static rendering. Rendering (most) gradients at 60fps at 1080p is more than achievable on modern processors.
+PeasyGradients targets the **CPU** (as opposed to the GPU) as to not be dependent on `OPENGL` libraries. To this end, there have been many internal optimisations to make the library suitable for dynamic animation and interaction rather than just static rendering. Rendering (most) gradients at 60fps at 1080p is more than achievable on modern processors.
+
+## Known Issues
+
+Known bugs, shortcomings or other issues.
+
+* Gamut out of range on LAB etc for some (high value) colours.
+
+## Improvements
+
+* Implement [four-corner](https://graphicdesign.stackexchange.com/questions/19477/4-colors-corners-gradient-with-illustrator-or-photoshop) gradients (or a more general form which distributes *N* by placing colors around the edge, interpolating towards the middle)
+* Implement [this](https://www.filterforge.com/wiki/index.php/Spiral_Gradient) type of spiral gradient
