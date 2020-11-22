@@ -8,20 +8,21 @@ import peasyGradients.colorSpaces.*;
 import peasyGradients.utilities.FastPow;
 import peasyGradients.utilities.Functions;
 import peasyGradients.utilities.Interpolation;
+import processing.core.PApplet;
 
 /**
- * A gradient comprises of {@link #colorStops}, which each specify a color and
- * a percentage position that the color occurs on a 1D gradient. Supports
- * opacity. Gradients define the gradient curve function (such as sine()) -- the
- * function governing how the gradient's color transtions (the step used during
- * interpolation).
+ * A Gradient comprises of {@link peasyGradients.gradient.ColorStop color stops}
+ * (each specifying a color and a position) arranged on a 1D axis. Gradients
+ * define the gradient curve function (such as sine()) -- the function governing
+ * how the gradient's color transtions (the step used during interpolation) and
+ * the color space this gradient will be rendered using.
  * 
  * <p>
  * Use a {@link #peasyGradients.PeasyGradients} instance to render Gradients.
  * 
- * @author micycle1
+ * TODO export as JSON / load from JSON
  * 
- *         TODO export as JSON
+ * @author micycle1
  *
  */
 public final class Gradient {
@@ -48,10 +49,12 @@ public final class Gradient {
 	public Gradient() {
 		this(Palette.complementary()); // random 2 colors
 	}
-	
+
 	/**
 	 * Creates a gradient with equidistant color stops.
-	 * @param colors ARGB color integers (the kind returned by Processing's  color() method)
+	 * 
+	 * @param colors ARGB color integers (the kind returned by Processing's color()
+	 *               method)
 	 */
 	public Gradient(int... colors) {
 		int sz = colors.length;
@@ -62,6 +65,9 @@ public final class Gradient {
 		this.colorStops.forEach(c -> c.setcolorSpace(colorSpace));
 	}
 
+	/*
+	 * TODO
+	 */
 	public Gradient(ColorStop... colorStops) {
 		int sz = colorStops.length;
 		for (int i = 0; i < sz; i++) {
@@ -71,6 +77,9 @@ public final class Gradient {
 		this.colorStops.forEach(c -> c.setcolorSpace(colorSpace));
 	}
 
+	/*
+	 * TODO
+	 */
 	public Gradient(ArrayList<ColorStop> colorStops) {
 		this.colorStops = colorStops;
 		java.util.Collections.sort(this.colorStops);
@@ -78,31 +87,51 @@ public final class Gradient {
 	}
 
 	/**
-	 * Set a given color stop a color
+	 * Sets the color of a color stop (given by its index).
 	 * 
 	 * @param stopIndex
 	 * @param col       ARGB color integer representation
 	 */
-	public void setcolorStopCol(int stopIndex, int col) {
+	public void setStopColor(int stopIndex, int col) {
 		if (stopIndex > -1 && stopIndex < colorStops.size()) {
 			colorStops.get(stopIndex).setcolor(col);
 		} else {
-			System.err.println("Index out of bounds.");
+			System.err.println("Color stop index out of bounds.");
 		}
 	}
 
 	/**
-	 * Increases the offset of all color stops by the amount given (call this each frame to animate a gradient).
+	 * TODO Sets the 1D position of a color stop (given by its index) to a certain
+	 * position on the 1D gradient axis. Positions < 0 or > 1 will wrap around the
+	 * gradient.
+	 * 
+	 * @param index
+	 * @param position
+	 */
+	public void setStopPosition(int index, float position) {
+		if (index > -1 && index < colorStops.size()) {
+			colorStops.get(index).setPosition(position);
+			java.util.Collections.sort(colorStops);
+		} else {
+			System.err.println("Color stop index out of bounds.");
+		}
+	}
+
+	/**
+	 * Increases the positional offset of all color stops by the amount given (call
+	 * this each frame (within draw() for example) to animate a gradient).
 	 * 
 	 * @param amt 0...1 smaller is less change
 	 * @see #setOffset(float)
+	 * @see #primeAnimation() primeAnimation() -- consider calling this method
+	 *      before animate() to prevent a color seam
 	 */
 	public void animate(float amt) {
 		offset += amt;
 	}
 
 	/**
-	 * Sets the offset of all color stops to a specific value.
+	 * Sets the offset of <b>all color stops</b> to a specific value.
 	 * 
 	 * @param offset
 	 * @see #animate(float)
@@ -112,9 +141,9 @@ public final class Gradient {
 	}
 
 	/**
-	 * Mutates the color of all color stops in the RGB255 space by the amount
-	 * given. Mutation randomises between adding or subtracting the mutation amount
-	 * from each of the R,G,B channels.
+	 * Mutates the color of all color stops in the RGB255 space by the amount given.
+	 * Mutation randomises between adding or subtracting the mutation amount from
+	 * each of the R,G,B channels.
 	 * 
 	 * @param amt magnitude of mutation [0...255]
 	 */
@@ -123,31 +152,38 @@ public final class Gradient {
 	}
 
 	/**
-	 * Primes the gradient for animation (pushes the a copy of the first color of
-	 * the gradient to the end and scales the rest).
+	 * Primes the gradient for animation (pushes copy of the first color in the
+	 * gradient to the end, and repositions all other color stops proportionally to
+	 * where they were before), to ensure a seamless gradient spectrum, regardless
+	 * of offset.
+	 * 
+	 * <p>
+	 * Animating a gradient without calling {@link #primeAnimation()} may lead to an
+	 * ugly and undesirable seam in the gradient where the first and last color
+	 * stops (at positions 0.00 and 1.00 respectively) bump right up against each
+	 * other.
 	 */
 	public void primeAnimation() {
 		push(colorAt(0));
 	}
 
 	/**
-	 * Pushes a new colorstop to the end of the gradient (and shuffle the rest proportional to where
-	 * they were before).
+	 * Pushes a new color stop to the end of the gradient (position = 1.00), and
+	 * repositions all other color stops proportionally to where they were before.
 	 * 
 	 * @param color
-	 * @return
 	 * @see #removeLast()
 	 */
 	public void push(int color) {
 		for (ColorStop colorStop : colorStops) {
-			colorStop.percent *= ((colorStops.size() - 1) / (float) colorStops.size()); // scale down existing stop positions
+			colorStop.position *= ((colorStops.size() - 1) / (float) colorStops.size()); // scale down existing stop positions
 		}
 		add(1, color);
 	}
 
 	/**
 	 * Removes the last color stop from the gradient and scale the rest to fill the
-	 * gradient.
+	 * gradient. TODO test
 	 * 
 	 * @see #push(int)
 	 */
@@ -155,12 +191,12 @@ public final class Gradient {
 		colorStops.remove(colorStops.size() - 1);
 		// scale up remaining stop positions
 		for (ColorStop colorStop : colorStops) {
-			colorStop.percent *= ((colorStops.size()) / (float) (colorStops.size() - 1f)); // scale down existing stop positions
+			colorStop.position *= ((colorStops.size()) / (float) (colorStops.size() - 1f)); // scale down existing stop positions
 		}
 	}
 
 	/**
-	 * Returns the ARGB color of the colorstop at a given index.
+	 * Returns the ARGB color of the color stop at a given index.
 	 * 
 	 * @param colorStopIndex
 	 * @return 32bit ARGB color int
@@ -190,15 +226,16 @@ public final class Gradient {
 
 	/**
 	 * Adds a color stop to the gradient.
+	 * 
 	 * @param colorStop
 	 */
 	public void add(final ColorStop colorStop) {
 		colorStops.add(colorStop);
-		java.util.Collections.sort(colorStops); // sort colorstops by value
+		java.util.Collections.sort(colorStops); // sort color stops by value
 	}
 
 	/**
-	 * Prime for rendering (TODO protected?)
+	 * Primes for rendering (TODO protected?)
 	 */
 	public void prime() {
 		lastCurrStopIndex = 0;
@@ -208,17 +245,18 @@ public final class Gradient {
 	}
 
 	/**
-	 * Evalutes the ARGB color of the gradient at the given position (0.0...1.0).
+	 * Evalutes the ARGB color value of the gradient at the given step through the
+	 * 1D axis (0.0...1.0).
 	 * 
 	 * <p>
-	 * This is the main method of Gradient class. Computes the RGB value at a given
-	 * percentage of the gradient. Internally, the the position input undergoes is
-	 * transformed by the current interpolation function.
+	 * This is the main method of Gradient class. Internally, the the position input
+	 * undergoes is transformed by the current interpolation function.
 	 * 
-	 * @param position a linear position expressed as a decimal between 0...1
+	 * @param position a linear position expressed as a decimal between numbers
+	 *                 outside the range of 0...1 will wrap back into the gradient
 	 * @return ARGB integer for Processing pixel array.
 	 */
-	public int getcolor(float position) {
+	public int getColor(float position) {
 
 		position += offset;
 		if (position < 0) { // (if animation offset negative)
@@ -229,12 +267,12 @@ public final class Gradient {
 		}
 
 		/**
-		 * Calculate whether the current step has gone beyond the existing colorstop
+		 * Calculate whether the current step has gone beyond the existing color stop
 		 * boundary (either above or below). If the first color stop is at a position >
 		 * 0 or last color stop at a position < 1, then when step > currStop.percent or
 		 * step < currStop.percent is true, we don't want to inc/decrement currStop.
 		 */
-		if (position > currStop.percent) { // if at end, stay, otherwise next
+		if (position > currStop.position) { // if at end, stay, otherwise next
 			if (lastCurrStopIndex == (colorStops.size() - 1)) {
 				prevStop = colorStops.get(lastCurrStopIndex);
 				denom = 1;
@@ -243,13 +281,13 @@ public final class Gradient {
 					lastCurrStopIndex++; // increment
 					currStop = colorStops.get(lastCurrStopIndex);
 					// sometimes step might jump more than 1 color, hence while()
-				} while (position > currStop.percent && lastCurrStopIndex < (colorStops.size() - 1));
+				} while (position > currStop.position && lastCurrStopIndex < (colorStops.size() - 1));
 				prevStop = colorStops.get(lastCurrStopIndex - 1);
 
-				denom = 1 / (prevStop.percent - currStop.percent); // compute denominator inverse
+				denom = 1 / (prevStop.position - currStop.position); // compute denominator inverse
 			}
 
-		} else if (position <= prevStop.percent) {
+		} else if (position <= prevStop.position) {
 			if (lastCurrStopIndex == 0) { // if at zero stay, otherwise prev
 				denom = 1;
 				currStop = colorStops.get(0);
@@ -257,18 +295,18 @@ public final class Gradient {
 				do {
 					lastCurrStopIndex--; // decrement
 					prevStop = colorStops.get(Math.max(lastCurrStopIndex - 1, 0));
-				} while (position < prevStop.percent); // sometimes step might jump back more than 1 color
+				} while (position < prevStop.position); // sometimes step might jump back more than 1 color
 
 				currStop = colorStops.get(lastCurrStopIndex);
 
-				denom = 1 / (prevStop.percent - currStop.percent); // compute denominator inverse
+				denom = 1 / (prevStop.position - currStop.position); // compute denominator inverse
 			}
 		}
 
 		/**
-		 * Since we pre-compute results into a LUT, this function works with
-		 * monotonically increasing step. HOWEVER, doesn't work if animating, hence
-		 * commented out.
+		 * A simpler approach. Since we pre-compute results into a LUT, this function
+		 * works with monotonically increasing step. HOWEVER, doesn't work if animating,
+		 * hence commented out.
 		 */
 //		if (step > currStop.percent && lastCurrStopIndex != (colorStops.size() - 1) ) {
 //			prevStop = colorStops.get(lastCurrStopIndex);
@@ -277,7 +315,7 @@ public final class Gradient {
 //			denom = 1 / (prevStop.percent - currStop.percent); // compute denominator inverse
 //		}
 
-		double smoothStep = functStep((position - currStop.percent) * denom); // apply interpolation function
+		double smoothStep = functStep((position - currStop.position) * denom); // apply interpolation function
 
 		// interpolate within given colorspace
 		colorSpaceInstance.interpolateLinear(currStop.colorOut, prevStop.colorOut, smoothStep, interpolatedcolorOUT);
@@ -288,11 +326,12 @@ public final class Gradient {
 	}
 
 	/**
-	 * color space is defined for user at peasyGradients level, not gradient (1D)
+	 * TODO color space is defined for user at peasyGradients level, not gradient
+	 * (1D)?
 	 * 
 	 * @param colorSpace
 	 */
-	public void setColSpace(ColorSpaces colorSpace) {
+	public void setColorSpace(ColorSpaces colorSpace) {
 		this.colorSpace = colorSpace;
 		colorSpaceInstance = colorSpace.getColorSpace();
 		colorStops.forEach(c -> c.setcolorSpace(colorSpace));
@@ -309,7 +348,7 @@ public final class Gradient {
 		colorSpaceInstance = colorSpace.getColorSpace();
 		colorStops.forEach(c -> c.setcolorSpace(colorSpace));
 	}
-	
+
 	public void setInterpolationMode(Interpolation interpolationMode) {
 		this.interpolationMode = interpolationMode;
 	}
@@ -331,7 +370,8 @@ public final class Gradient {
 	}
 
 	/**
-	 * Return randomised gradient (random colors and stop positions).
+	 * Return randomised gradient (random colors and stop positions). TODO use
+	 * pallete?
 	 * 
 	 * @param numcolors
 	 * @return
@@ -382,7 +422,7 @@ public final class Gradient {
 		sb.append("color Stops (" + colorStops.size() + "):\n");
 		sb.append(String.format("    " + "%-10s%-25s%-12s%-20s\n", "Position", "RGBA", "clrInteger", "clrCurrentColSpace"));
 		for (ColorStop colorStop : colorStops) {
-			sb.append(String.format("    " + "%-10s%-25s%-12s%-20s\n", colorStop.percent,
+			sb.append(String.format("    " + "%-10s%-25s%-12s%-20s\n", colorStop.position,
 					Functions.formatArray(Functions.decomposeclrRGBDouble(colorStop.clr, colorStop.alpha), 0, 2), colorStop.clr,
 					Functions.formatArray(colorStop.getcolor(colorSpace), 2, 3)));
 		}
@@ -390,8 +430,9 @@ public final class Gradient {
 	}
 
 	/**
-	 * Java source to paste. Use this if a randomly generated gradient is pleasant.
-	 * Export ready to construct the gradient using Processing color().
+	 * Returns Java source to paste. Call this method if a randomly generated
+	 * gradient is pleasant. Export ready to construct the gradient using Processing
+	 * color().
 	 * 
 	 * @return eg "Gradient(color(0, 0, 50), color(125, 55, 25));"
 	 */
@@ -414,11 +455,12 @@ public final class Gradient {
 	}
 
 	/**
-	 * Calculate the step by passing it to the selected smoothing function. Allows
-	 * gradient renderer to easily change how the gradient is smoothed.
+	 * Calculates the eased step by passing the original (linear) step to the
+	 * Gradient's current interpolation function. Allows gradient renderer to easily
+	 * change how the gradient is smoothed.
 	 * 
 	 * @param step 0...1
-	 * @return the new step
+	 * @return the eased/transformed step (0...1)
 	 */
 	private double functStep(float step) {
 		switch (interpolationMode) {

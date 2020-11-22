@@ -19,7 +19,7 @@ public final class ColorStop implements Comparable<ColorStop> {
 	static final float TOLERANCE = 0.05f;
 
 //	float originalPercent; // percent at which this stop occurs (0...1.0)
-	float percent; // percent, taking into account animation offset, etc.
+	float position; // percent, taking into account animation offset, etc.
 
 	int clr; // 32bit ARGB color int
 	int alpha; // 0-255 alpha
@@ -37,7 +37,7 @@ public final class ColorStop implements Comparable<ColorStop> {
 	 *                 stop is at.
 	 */
 	public ColorStop(int clr, float fraction) {
-		percent = fraction > 1 ? 1 : fraction < 0 ? 0 : fraction; // constrain 0...1
+		position = fraction > 1 ? 1 : fraction < 0 ? 0 : fraction; // constrain 0...1
 		colorsMap = new HashMap<>(ColorSpaces.size);
 		setcolor(clr);
 	}
@@ -59,6 +59,16 @@ public final class ColorStop implements Comparable<ColorStop> {
 		}
 
 		colorOut = colorsMap.get(colorSpace);
+	}
+	
+	void setPosition(float position) {
+		if (position < 0) {
+			position += 1; // equivalent to floormod function
+		}
+		if (position > 1) { // 1 % 1 == 0, which we want to avoid
+			position %= 1;
+		}
+		this.position = position;
 	}
 
 	/**
@@ -83,6 +93,7 @@ public final class ColorStop implements Comparable<ColorStop> {
 
 	protected void mutate(float amt) {
 		// TODO fix with amt < 1
+		// TODO use noise function for better / more natural variance
 		float[] decomposed = Functions.decomposeclrRGB(clr);
 		for (int i = 0; i < decomposed.length - 1; i++) {
 			decomposed[i] = PApplet.constrain(decomposed[i] + (Functions.randomFloat() < 0.5 ? -1 : 1) * amt, 0, 255);
@@ -95,7 +106,7 @@ public final class ColorStop implements Comparable<ColorStop> {
 	 * on the percent of each stop.
 	 */
 	public int compareTo(ColorStop cs) {
-		return percent > cs.percent ? 1 : percent < cs.percent ? -1 : 0;
+		return position > cs.position ? 1 : position < cs.position ? -1 : 0;
 	}
 
 	@Override

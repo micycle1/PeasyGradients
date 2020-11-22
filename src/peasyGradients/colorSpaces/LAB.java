@@ -5,7 +5,10 @@ package peasyGradients.colorSpaces;
  * within a threedimensional rectangular coordinate system; the three dimensions
  * are lightness (L*), redness/ greenness (a*) and yellowness/blueness (b*).
  * Equal distances in the space approximately represent equal color differences
- * Also known as L*a*b* or CIE-L*ab.
+ * 
+ * The standard CIE 1976 L*a*b* color space. L* is scaled to vary from 0 to 100;
+ * a* and b* are likewise scaled to roughly the range -50 to 50. Also known as
+ * L*a*b* or CIE-L*ab.
  * 
  * TODO
  * https://community.khronos.org/t/converting-to-and-from-color-space-in-glsl-only-works-for-few-colors/72107
@@ -21,14 +24,14 @@ final class LAB implements ColorSpace {
 	protected static final double illuminantX = 95.047;
 	protected static final double illuminantY = 100.000;
 	protected static final double illuminantZ = 108.883;
-	
+
 	LAB() {
 	}
-	
+
 	public double[] fromRGB(double[] rgb) {
 		return rgb2lab(rgb);
 	}
-	
+
 	public double[] toRGB(double[] lab) {
 		return lab2rgb(lab);
 	}
