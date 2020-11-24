@@ -9,7 +9,7 @@ PeasyGradients
 
 *PeasyGradients* is a library for [Processing](https://processing.org/) that makes drawing color gradients easy-peasy. This library was inspired by Jeremy Behreandt's [*Color Gradients in Processing*](https://medium.com/@behreajj/color-gradients-in-processing-v-2-0-e5c0b87cdfd2) but has greatly developed the concepts and functionality presented there.
 
-This `README` provides an overview of the library — read it to get a good idea of what the library is capable of and how to use it. Access examples (Processing sketches) [here](); access documentation (online Javadocs) [here]().
+This `README` provides an overview of the library — read it to get a good idea of what the library is capable of and how to use it. Access examples (Processing sketches) [here](https://github.com/micycle1/PeasyGradients/tree/master/examples); access documentation (online Javadocs) [here]().
 
 ## Overview
 
@@ -69,7 +69,7 @@ Each gradient type is shown below. The screenshots are taken using the `LUV` col
 | **Conic**![](resources/gradient_type_examples/conic.png) | **Spiral**![](resources/gradient_type_examples/spiral.png) |
 | **Diamond**![](resources/gradient_type_examples/diamond.png) | **Cross**![](resources/gradient_type_examples/cross.png) |
 | **Polygon**![](resources/gradient_type_examples/polygon(6).png) | **Hourglass**![](resources/gradient_type_examples/hourglass.png) |
-| **Noise**![](resources/gradient_type_examples/noise.png) |
+| **Noise**![](resources/gradient_type_examples/noise.png) | **Fractal Noise**![](resources/gradient_type_examples/noise_fractal.png)
 
 
 ## Interpolation: Easing Functions
@@ -141,7 +141,7 @@ Naively animating a gradient may lead to an ugly and undesirable seam in the gra
 <p align="center"><a href="https://github.com/micycle1/PeasyGradients">
 <img src="resources/animation_examples/with_seam.gif" alt="PeasyGradients" /></a><br></p>
 
-To avoid this, call `.primeAnimation()` on a `Gradient` (once) before animating it. This pushes a copy of the first color stop of the `Gradient` to its end (scaling all other color stops accordingly), to produce a **seamless gradient spectrum**, regardless of offset.
+To avoid this, call `.primeAnimation()` on a `Gradient` (once) before animating it. This pushes a copy of the first color stop of the `Gradient` to its end (scaling all other color stops accordingly), to ensure a **seamless gradient spectrum**, regardless of offset.
 
 <p align="center"><a href="https://github.com/micycle1/PeasyGradients">
 <img src="resources/animation_examples/seamless.gif" alt="PeasyGradients"/></a><br></p>
@@ -155,15 +155,15 @@ Calling `.primeAnimation()` on a `Gradient` before rendering it as a **conic** o
 
 The **color** of `Colorstop`s within a `Gradient` can be modified after the `Gradient` has been instantiated.
 
-Set the color of a specific color stop with `.setColorStopCol()`, shown below:
+Set the color of a specific color stop with `.setStopColor()`, shown below:
 
 ```
 angle += PI / 180; // increment angle
 
 colorMode(HSB, 360, 100, 100); // switch Processing to HSB mode to set hue more easily
 
-myGradient.setColorStopCol(0, color(frameCount % 360, 100, 100)); // set color stop at index 0
-myGradient.setColorStopCol(1, color((frameCount + 180) % 360, 100, 100)); // set color stop at index 1
+myGradient.setStopColor(0, color(frameCount % 360, 100, 100)); // set color stop at index 0
+myGradient.setStopColor(1, color((frameCount + 180) % 360, 100, 100)); // set color stop at index 1
 
 peasyGradients.linearGradient(myGradient, angle); // render gradient
 ```
@@ -175,10 +175,10 @@ peasyGradients.linearGradient(myGradient, angle); // render gradient
 
 The **position** of `Colorstop`s within a `Gradient` can also be modified after the `Gradient` has been instantiated.
 
-Set the position (0...1.0) of a specific color stop with `.setColorStopPosition()`, shown below:
+Set the position (0...1.0) of a specific color stop with `.setStopPosition()`, shown below:
 
 ```
-myGradient.setColorStopPosition(1, map(mouseX, 0, width, 0, 1)); // set position of middle color (index = 1)
+myGradient.setStopPosition(1, map(mouseX, 0, width, 0, 1)); // set position of middle color (index = 1)
 
 peasyGradients.linearGradient(myGradient, 0);
 ```
@@ -199,24 +199,26 @@ peasyGradients.posterise(10); // renderer will now render gradients with 10 colo
 | **No Posterisation (default)**![](resources/posterise_examples/posterise_none.png) | **Posterisation = 10**![](resources/posterise_examples/posterise_10.png) |  **Posterisation = 25**![](resources/posterise_examples/posterise_25.png) |
 |:---:|:---:|:---:|
 
-Use `.clearPosterisation()` to clear any posterisation setting and render gradients with full color.
+Use `.clearPosterisation()` to clear any posterisation setting and render gradients with in full color.
 
 
 ### Generating Random Gradients
 
-The `Palette` class provides some helper methods for generating (random) `Gradient` color palettes.
+The `Palette` class provides some helper methods for generating random `Gradient` color palettes.
+
+Note this palette generation is not entirely random -- the class produces gradients spectrums that are more aesthetic than what a truly random method would generate.
 
 ```
 randomGradient = new Gradient(Palette.complementary()); // two random colors that are on opposite sides of the color wheel
 randomGradient = new Gradient(Palette.triadic()); // 3 random colors that are evenly spaced on the color wheel
 randomGradient = new Gradient(Palette.tetradic()); // 4 random colors that are evenly spaced on the color wheel
-randomGradient = new Gradient(Palette.randomcolors(7)); // N random colors distributed according to the golden ratio
+randomGradient = new Gradient(Palette.randomcolors(7)); // N random colors with hue distributed according to the golden ratio
 randomGradient = new Gradient(Palette.randomRandomcolors(8)); // N random colors also distributed randomly
 ```
 
 ### Masking
 
-Strictly speaking, this functionality isn't defined by PeasyGradients (rather, it's defined by Processing itself). But I think it's worthwhile to show how masking can be used in conjunction with PeasyGradients. An example which uses text ("P") to mask a gradient is provided below:
+Strictly speaking, this functionality isn't defined by PeasyGradients (rather, it's defined by Processing itself). But I think it's worthwhile to show how masking can be used in conjunction with PeasyGradients. An example which uses text ("P") to mask a spiral gradient is provided below:
 
 ```
 void setup() {
@@ -242,8 +244,7 @@ void draw() {
   
   // render gradient into PGraphics layer
   peasyGradients.setRenderTarget(gradientLayer);
-  peasyGradients.spiralGradient(gradient, mousePos, map(mouseY, 0, height, 0.5f, PI * 6), 2);
-
+  peasyGradients.spiralGradient(gradient, mousePos, map(mouseY, 0, height, 0.5f, PI * 6), 2); // map spiral rotation to mouse position
   gradientLayer.mask(textLayer.get()); // mask gradient layer using text (keep only the text)
 
   image(gradientLayer, 0, 0); // draw (now masked) gradient image
@@ -258,11 +259,12 @@ PeasyGradients targets the **CPU** (as opposed to the GPU) as to not be dependen
 
 ## Known Issues
 
-Known bugs, shortcomings or other issues.
+*Known bugs, shortcomings or other issues.*
 
-* Gamut out of range on LAB etc for some (high value) colours.
+* Gamut out of range on some color spaces (LAB, etc.) for some (high value) colours.
 
 ## Improvements
 
-* Implement [four-corner](https://graphicdesign.stackexchange.com/questions/19477/4-colors-corners-gradient-with-illustrator-or-photoshop) gradients (or a more general form which distributes *N* by placing colors around the edge, interpolating towards the middle)
+* Implement [four-corner](https://graphicdesign.stackexchange.com/questions/19477/4-colors-corners-gradient-with-illustrator-or-photoshop) gradients (or a more general form which distributes *N* colors, placing them around the edge and interpolating towards the middle)
 * Implement [this](https://www.filterforge.com/wiki/index.php/Spiral_Gradient) type of spiral gradient
+* Allow easing functions to be passed in to render methods to affect curve of whole shape, not just between each successive pair of color stops.

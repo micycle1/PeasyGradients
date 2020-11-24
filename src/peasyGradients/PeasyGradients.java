@@ -12,6 +12,8 @@ import peasyGradients.gradient.Gradient;
 import peasyGradients.utilities.FastNoiseLite;
 import peasyGradients.utilities.FastPow;
 import peasyGradients.utilities.Functions;
+import peasyGradients.utilities.FastNoiseLite.CellularDistanceFunction;
+import peasyGradients.utilities.FastNoiseLite.CellularReturnType;
 import peasyGradients.utilities.FastNoiseLite.FractalType;
 import peasyGradients.utilities.FastNoiseLite.NoiseType;
 
@@ -51,7 +53,7 @@ public final class PeasyGradients {
 	private static final double QRTR_PI = (0.25 * Math.PI);
 	private static final float INV_TWO_PI = 1f / PConstants.TWO_PI;
 
-	private final FastNoiseLite fastNoiseLite = new FastNoiseLite(0); // using default seed
+	public final FastNoiseLite fastNoiseLite = new FastNoiseLite(0); // using default seed
 
 	private final PApplet p;
 //	int colorMode = PConstants.RGB;
@@ -73,6 +75,12 @@ public final class PeasyGradients {
 	 */
 	public PeasyGradients(PApplet p) {
 		this.p = p;
+
+		renderIntoSketch();
+
+		fastNoiseLite.SetCellularReturnType(CellularReturnType.Distance2Div);
+		fastNoiseLite.SetCellularDistanceFunction(CellularDistanceFunction.EuclideanSq);
+		fastNoiseLite.SetFractalPingPongStrength(1);
 	}
 
 	/**
@@ -88,7 +96,7 @@ public final class PeasyGradients {
 
 	/**
 	 * Tells this PeasyGradients renderer to render 2D gradients into the Processing
-	 * sketch, within region specified by input arguments.
+	 * sketch, within a certain region specified by input arguments.
 	 * 
 	 * @param offSetX x-axis offset of the region to render gradients into (0 is
 	 * @param offSetY
@@ -770,9 +778,9 @@ public final class PeasyGradients {
 	 * values.
 	 * 
 	 * <p>
-	 * This method uses (Open) Simplex noise with no fractalisation. Use
-	 * #noiseGradient (more params) to customise the noise renderer (noise type,
-	 * etc.).
+	 * This method uses Simplex noise with no fractalisation. Other noise gradient
+	 * methods allow parameters to customise the noise renderer (noise type and
+	 * fractalisation). etc.).
 	 * 
 	 * @param gradient
 	 * @param centerPoint used only when rotating
@@ -802,8 +810,8 @@ public final class PeasyGradients {
 
 		/**
 		 * Even the simpler noise types are quite expensive to compute for every pixel,
-		 * so we're calculate a noise value for every 4th pixel (every 2nd pixel on both
-		 * axes), and then interpolating these values for other pixels later. Visually
+		 * so we calculate a noise value for every 4th pixel (every 2nd pixel on both
+		 * axes), and then interpolate these values for other pixels later. Visually
 		 * this isn't apparent since the noise value for adjacent pixels is mostly
 		 * gradual anyway.
 		 */
@@ -938,8 +946,8 @@ public final class PeasyGradients {
 
 		/**
 		 * Even the simpler noise types are quite expensive to compute for every pixel,
-		 * so we're calculate a noise value for every 4th pixel (every 2nd pixel on both
-		 * axes), and then interpolating these values for other pixels later. Visually
+		 * so we calculate a noise value for every 4th pixel (every 2nd pixel on both
+		 * axes), and then interpolate these values for other pixels later. Visually
 		 * this isn't apparent since the noise value for adjacent pixels is mostly
 		 * gradual anyway.
 		 */
@@ -1000,9 +1008,10 @@ public final class PeasyGradients {
 
 			float step = fastNoiseLite.GetNoise(newXpos, newYpos);
 
+			min = Math.min(min, step);
+			max = Math.max(max, step);
 			float maxMinDenom = 1 / (max - min);
 			step = ((step - min) * (maxMinDenom));
-
 			final int stepInt = (int) (step * cacheSize);
 
 			gradientPG.pixels[gradientPG.width * (renderHeight - 1 + renderOffsetY) + (x + renderOffsetX)] = pixelCache[stepInt];
@@ -1019,6 +1028,8 @@ public final class PeasyGradients {
 
 			float step = fastNoiseLite.GetNoise(newXpos, newYpos);
 
+			min = Math.min(min, step);
+			max = Math.max(max, step);
 			float maxMinDenom = 1 / (max - min);
 			step = ((step - min) * (maxMinDenom));
 
@@ -1103,7 +1114,7 @@ public final class PeasyGradients {
 
 	/**
 	 * Renders what I've described as a an hourglass gradient, owing to it's
-	 * similarity with hourglass at certain angles.
+	 * similarity with an hourglass at certain angles.
 	 * 
 	 * @param gradient
 	 * @param centerPoint
