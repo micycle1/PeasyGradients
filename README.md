@@ -14,7 +14,7 @@ This `README` provides an overview of the library — read it to get a good idea
 ## Overview
 
 ### Key Features:
-* ### 10 Gradient Types
+* ### 11 Gradient Types
 * ### 10 Color Spaces
 * ### 13 Color Interpolation Functions
 * ### Fast!
@@ -70,6 +70,7 @@ Each gradient type is shown below. The screenshots are taken using the `LUV` col
 | **Diamond**![](resources/gradient_type_examples/diamond.png) | **Cross**![](resources/gradient_type_examples/cross.png) |
 | **Polygon**![](resources/gradient_type_examples/polygon(6).png) | **Hourglass**![](resources/gradient_type_examples/hourglass.png) |
 | **Noise**![](resources/gradient_type_examples/noise.png) | **Fractal Noise**![](resources/gradient_type_examples/noise_fractal.png)
+| **Spotlight**![](resources/gradient_type_examples/spotlight.png)|
 
 
 ## Interpolation: Easing Functions
@@ -220,6 +221,8 @@ randomGradient = new Gradient(Palette.randomRandomcolors(8)); // N random colors
 
 Strictly speaking, this functionality isn't defined by PeasyGradients (rather, it's defined by Processing itself). But I think it's worthwhile to show how masking can be used in conjunction with PeasyGradients. An example which uses text ("P") to mask a spiral gradient is provided below:
 
+<details><summary>💥See Code Example...</summary>
+
 ```
 void setup() {
 
@@ -250,6 +253,8 @@ void draw() {
   image(gradientLayer, 0, 0); // draw (now masked) gradient image
 }
 ```
+
+</details>
 
 <p align="center"><a href="https://github.com/micycle1/PeasyGradients">
 <img src="resources/animation_examples/masking_example.gif" alt="PeasyGradients"/></a><br></p>

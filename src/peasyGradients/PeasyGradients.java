@@ -56,7 +56,7 @@ public final class PeasyGradients {
 	public final FastNoiseLite fastNoiseLite = new FastNoiseLite(0); // using default seed
 
 	private final PApplet p;
-//	int colorMode = PConstants.RGB;
+//	int colorMode = PConstants.RGB; // TODO colour mode in this class?
 	private PImage gradientPG; // reference to object to render into
 
 	private int[] pixelCache;
@@ -334,7 +334,7 @@ public final class PeasyGradients {
 	 * @param gradient
 	 * @param centerPoint The midpoint of the gradient -- the position where it
 	 *                    radiates from.
-	 * @param zoom
+	 * @param zoom        default = 1
 	 */
 	public void radialGradient(Gradient gradient, PVector centerPoint, float zoom) {
 
@@ -413,7 +413,7 @@ public final class PeasyGradients {
 		}
 
 		float rise, run;
-		double t = 0;
+		float t = 0;
 
 		final float renderMidpointX = (centerPoint.x / gradientPG.width) * renderWidth;
 		final float renderMidpointY = (centerPoint.y / gradientPG.height) * renderHeight;
@@ -423,7 +423,7 @@ public final class PeasyGradients {
 			run = renderMidpointX;
 			for (x = 0; x < renderWidth; ++x) {
 
-				t = Functions.fastAtan2b(rise, run) + Math.PI - angle; // + PI to align bump with angle
+				t = Functions.fastAtan2b(rise, run) + PConstants.PI - angle; // + PI to align bump with angle
 				t *= INV_TWO_PI; // normalise
 				t -= Math.floor(t); // modulo
 
@@ -740,18 +740,18 @@ public final class PeasyGradients {
 		final float renderMidpointX = (centerPoint.x / gradientPG.width) * renderWidth;
 		final float renderMidpointY = (centerPoint.y / gradientPG.height) * renderHeight;
 
-		final double denominator = (Math.max(renderHeight, renderWidth) / 2) * zoom; // calc here, not in loop
+		final float denominator = (Math.max(renderHeight, renderWidth) / 2) * zoom; // calc here, not in loop
 		angle += PConstants.QUARTER_PI; // angled at 0
-		final double sin = FastMath.sin(angle);
-		final double cos = FastMath.cos(angle);
+		final float sin = (float) FastMath.sin(angle);
+		final float cos = (float) FastMath.cos(angle);
 
-		double dist = 0;
+		float dist = 0;
 
-		double newXpos;
-		double newYpos;
+		float newXpos;
+		float newYpos;
 
 		for (int y = 0, x; y < renderHeight; ++y) {
-			final double yTranslate = (y - renderMidpointY);
+			final float yTranslate = (y - renderMidpointY);
 			for (x = 0; x < renderWidth; ++x) {
 
 				newXpos = (x - renderMidpointX) * cos - yTranslate * sin + renderMidpointX; // rotate x about midpoint
@@ -887,6 +887,7 @@ public final class PeasyGradients {
 	}
 
 	/**
+	 * Renders a noise gradient in the given noise type.
 	 * 
 	 * @param gradient
 	 * @param centerPoint
@@ -1041,21 +1042,28 @@ public final class PeasyGradients {
 	}
 
 	/**
-	 * Generates a cone-shaped (stagelight) gradient. TODO finish! examples:
-	 * https://www.filterforge.com/filters/2312.html
+	 * Renders a spotlight-like gradient using a given origin point, angle and light
+	 * angle.
 	 * 
 	 * @param gradient
-	 * @param centerPoint
-	 * @param angle
+	 * @param originPoint          the point where the spotlight originates from
+	 * @param angle                the angle of the spotlightangle = 0 means
+	 *                             spotlight (facing down)
+	 * @param beamAngleCoefficient Determines the angle of the light beam. Smaller
+	 *                             values mean a narrower beam, larger values mean a
+	 *                             wider beam. A coefficient of 1 = angle of 45°.
 	 */
-	public void coneGradient(Gradient gradient, PVector centerPoint, float angle) {
+	public void spotlightGradient(Gradient gradient, PVector originPoint, float angle, float beamAngleCoefficient) { // TODO horizontal
+																														// falloff
+
+		angle += 0.0001f; // fudge angle slightly to prevent solid line drawn above the gradient when
+							// angle == 0
 
 		gradient.prime(); // prime curr color stop
 
-		final float renderMidpointX = (centerPoint.x / gradientPG.width) * renderWidth;
-		final float renderMidpointY = (centerPoint.y / gradientPG.height) * renderHeight;
+		final float renderMidpointX = (originPoint.x / gradientPG.width) * renderWidth; // TODO
+		final float renderMidpointY = (originPoint.y / gradientPG.height) * renderHeight; // TODO
 
-		double step = 0;
 		final float sin = (float) FastMath.sin(-angle);
 		final float cos = (float) FastMath.cos(-angle);
 
@@ -1064,52 +1072,46 @@ public final class PeasyGradients {
 		}
 
 		/**
-		 * Usually, we'd call Functions.linearProject() to calculate step, but the
-		 * function is inlined here to optimise speed.
+		 * Multiply by 'lightAngle' so that spectrum fall off changes linearly
+		 * (visually) when lightangle is also changed linearly
 		 */
+		final float xDiffMax = (renderWidth / 2f) * beamAngleCoefficient;
+
+		float step = 0;
+
 		for (int y = 0, x; y < renderHeight; ++y) { // loop for quality = 0 (every pixel)
-			final float yTranslate = (y - centerPoint.y);
+
+			final float yTranslate = (y - originPoint.y);
+
 			for (x = 0; x < renderWidth; ++x) {
-//				step = 1-(Math.abs(x-centerPoint.x)/renderWidth);
-//				step = Math.abs(x-centerPoint.x) < y? 1: 0;
-//				step*=(y/(float)renderHeight);
 
-				step = Math.abs(x - centerPoint.x) > ((y - centerPoint.y) / 2) ? 0
-						: 1 - Math.abs(x - centerPoint.x) / ((y - centerPoint.y) / 2);
-				float W = renderWidth - centerPoint.x;
-				step = (1 - (y / (float) renderHeight));
+				float newXpos = (x - originPoint.x) * cos - yTranslate * sin + originPoint.x; // rotate x about midpoint
+				float newYpos = yTranslate * cos + (x - originPoint.x) * sin + originPoint.y; // rotate y about midpoint
 
-				double test = 0;
-				if (x < (centerPoint.x + W * (y / renderHeight)) || x > (centerPoint.x - (y / renderHeight))) {
-					test = 1 - (Math.abs(x - centerPoint.x) / renderWidth);
+				/**
+				 * Calculate the max X difference between this pixel and centrepoint.x when
+				 * light fall off reaches the maximum (step = 1) for a given row (at an angle)
+				 */
+				float fallOffWidth = xDiffMax * ((newYpos - originPoint.y) / renderHeight * beamAngleCoefficient);
+				if (fallOffWidth < 0) { // may be negative if centrePoint.y out of screen
+					fallOffWidth = 0;
 				}
-//				* Math.max((y / (float) renderHeight), 0.00001)
-//				System.out.println(test);
-				step = step * test;
-//				System.out.println(step);
-//				System.out.println(step);
-//				System.out.println(step);
-//				  = x
-//				step *= (y / (float) renderHeight);
 
-//				float newXpos = (x - centerPoint.x) * cos - yTranslate * sin + centerPoint.x; // rotate x about midpoint
-//				float newYpos = yTranslate * cos + (x - centerPoint.x) * sin + centerPoint.y; // rotate y about midpoint
+				float xDiff = Math.abs(newXpos - originPoint.x); // actual difference in x between this pixel and centerpoint.x
 
-//				System.out.println(step);
+				step = xDiff / fallOffWidth; // calculate step
+				if (step > 1) { // clamp to a high of 1
+					step = 1;
+				}
+
 				int stepInt = (int) (step * cacheSize);
+
 				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCache[stepInt];
 			}
 		}
 
 		gradientPG.updatePixels();
 
-	}
-
-	/**
-	 * aka quad gradient, aka grid gradient
-	 */
-	public void multiGradient() {
-		// TODO two/n pass
 	}
 
 	/**
