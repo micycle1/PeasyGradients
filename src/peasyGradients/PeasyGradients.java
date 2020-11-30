@@ -18,24 +18,22 @@ import peasyGradients.utilities.FastNoiseLite.FractalType;
 import peasyGradients.utilities.FastNoiseLite.NoiseType;
 
 /**
- * Turns 1D gradients into 2D images.
+ * Renders 1D {@link Gradient gradients} as 2D spectrums in your Processing
+ * sketch.
  * 
  * <p>
- * Offers both quick constructors for more simple gradients (such as 2 color
- * horizontal) and more powerful constructors for more __ gradients
- * (centre-offset, angled, n-color gradient with color stops)
+ * The class offers both quick constructors for more simple gradients (such as 2
+ * color horizontal gradients) and more powerful constructors for more involved
+ * gradients (centre-offset, angled, n-color gradient with color stops).
  * 
  * <p>
- * TODO pshape masks TODO set color interpolation method shape, TODO
- * interpolation mode in this class! gradient
- * Shape.applycolorgradient(gradient).applyopacitygradient(shape.applyopacity))
+ * By default, a PeasyGradients instance draws directly into the Processing
+ * sketch; you can give it a specific <code>PGraphics</code> pane to draw into
+ * with the <code>.setRenderTarget()</code> method).
  * 
- * API:
- * rectPane.applyLinearGradient(gradient).setOpacity().applyCircularGradient(gradient1).setcolorspace(HSV).get().getRaw().applyRadialGradientMask().get()
- * 
- * gradient.mask(shape).mask(opacity) lineargradient() mask get()
- * 
- * https://www.filterforge.com/wiki/index.php/Index_of_Gradient_Types
+ * <p>
+ * TODO set color interpolation method shape, TODO interpolation mode in this
+ * class!
  * 
  * <p>
  * Algorithms for linear, radial & conic gradients are based on <a href=
@@ -47,36 +45,42 @@ import peasyGradients.utilities.FastNoiseLite.NoiseType;
  */
 public final class PeasyGradients {
 
+	static {
+		/**
+		 * Init FastPow's LUT. lower numbers are better due to cache hits; JAB+ITP_fast
+		 * requireds high value
+		 */
+		FastPow.init(11);
+	}
+
 	private static final double TWO_PI = (2 * Math.PI);
 	private static final float TWO_PIf = (float) (2 * Math.PI);
+	private static final float PIf = (float) Math.PI;
 	private static final double HALF_PI = (0.5f * Math.PI);
-	private static final double QRTR_PI = (0.25 * Math.PI);
 	private static final float INV_TWO_PI = 1f / PConstants.TWO_PI;
 
-	public final FastNoiseLite fastNoiseLite = new FastNoiseLite(0); // using default seed
+	private final FastNoiseLite fastNoiseLite = new FastNoiseLite(0); // using default seed
 
 	private final PApplet p;
 //	int colorMode = PConstants.RGB; // TODO colour mode in this class?
-	private PImage gradientPG; // reference to object to render into
+	private PImage gradientPG; // reference to object to render gradients into
 
 	private int[] pixelCache;
 	private int cacheSize;
-	private int[] pixelCacheConic;
-	private int cacheSizeConic;
 
 	private int renderHeight, renderWidth;
 	private int renderOffsetX, renderOffsetY;
 	private float scaleY, scaleX;
 
 	/**
-	 * Constructs a new PeasyGradients renderer from a running sketch.
+	 * Constructs a new PeasyGradients renderer from a running Processing sketch.
 	 * 
 	 * @param p the Processing sketch. You'll usually refer to it as {@code this}
 	 */
 	public PeasyGradients(PApplet p) {
 		this.p = p;
 
-		renderIntoSketch();
+		renderIntoSketch(); // render into sketch full size by default
 
 		fastNoiseLite.SetCellularReturnType(CellularReturnType.Distance2Div);
 		fastNoiseLite.SetCellularDistanceFunction(CellularDistanceFunction.EuclideanSq);
@@ -98,8 +102,10 @@ public final class PeasyGradients {
 	 * Tells this PeasyGradients renderer to render 2D gradients into the Processing
 	 * sketch, within a certain region specified by input arguments.
 	 * 
-	 * @param offSetX x-axis offset of the region to render gradients into (0 is
-	 * @param offSetY
+	 * @param offSetX x-axis offset of the region to render gradients into (where 0
+	 *                is top-left corner)
+	 * @param offSetY y-axis offset of the region to render gradients into (where 0
+	 *                is top-left corner)
 	 * @param width   width of region to render gradients into
 	 * @param height  height of region to render gradients into
 	 * @see #renderIntoSketch()
@@ -128,8 +134,8 @@ public final class PeasyGradients {
 		final int actualWidth = width - offSetX;
 		final int actualHeight = height - offSetY;
 
-		scaleX = g.width / (float) width; // used for correct rendering increment
-		scaleY = g.height / (float) height; // used for correct rendering increment
+		scaleX = g.width / (float) width; // used for correct rendering increment for some gradients
+		scaleY = g.height / (float) height; // used for correct rendering increment for some gradients
 
 		renderWidth = width;
 		renderHeight = height;
@@ -146,17 +152,14 @@ public final class PeasyGradients {
 
 		gradientPG = g;
 
-		cacheSize = (int) Math.ceil(Math.max(actualWidth, actualHeight) * 1.4143);
+		cacheSize = (int) (2 * Math.ceil(Math.max(actualWidth, actualHeight)));
 		pixelCache = new int[cacheSize + 1];
-
-		cacheSizeConic = (int) (2 * Math.ceil(Math.max(actualWidth, actualHeight)));
-		pixelCacheConic = new int[cacheSizeConic + 1];
 	}
 
 	/**
-	 * Change the seed used by the noise generator used by noise gradients.
+	 * Changes the noise seed used by noise gradients.
 	 * 
-	 * @param seed
+	 * @param seed any integer; PeasyGradients default is 0.
 	 */
 	public void setNoiseSeed(int seed) {
 		fastNoiseLite.SetSeed(seed);
@@ -172,9 +175,9 @@ public final class PeasyGradients {
 	public void posterise(int n) {
 		if (n != cacheSize) {
 			cacheSize = n;
-			cacheSizeConic = n;
+			cacheSize = n;
 			pixelCache = new int[n + 1];
-			pixelCacheConic = new int[n + 1];
+			pixelCache = new int[n + 1];
 		}
 	}
 
@@ -195,7 +198,8 @@ public final class PeasyGradients {
 	 * It’s called “linear” because the colors flow from left-to-right,
 	 * top-to-bottom, or at any angle you chose in a single direction.
 	 * 
-	 * @param gradient 1D Gradient to use as the basis for the linear gradient
+	 * @param gradient 1D {@link Gradient gradient} to use as the basis for the
+	 *                 linear gradient
 	 * @param angle    radians. East is 0 (meaning gradient will change color from
 	 *                 west to east, meaning each line of color is drawn parallel to
 	 *                 the angle); moves clockwise
@@ -224,7 +228,8 @@ public final class PeasyGradients {
 	 * It’s called “linear” because the colors flow from left-to-right,
 	 * top-to-bottom, or at any angle you chose in a single direction.
 	 * 
-	 * @param gradient
+	 * @param gradient    1D {@link Gradient gradient} to use as the basis for the
+	 *                    linear gradient
 	 * @param centerPoint
 	 * @param angle       in radians
 	 */
@@ -250,7 +255,8 @@ public final class PeasyGradients {
 	 * It’s called “linear” because the colors flow from left-to-right,
 	 * top-to-bottom, or at any angle you chose in a single direction.
 	 * 
-	 * @param gradient    color source
+	 * @param gradient    1D {@link Gradient gradient} to use as the basis for the
+	 *                    linear gradient
 	 * @param centerPoint gradient midpoint
 	 * @param angle       in radians
 	 * @param length      coefficient to lerp from centrepoint to edges (that
@@ -278,7 +284,8 @@ public final class PeasyGradients {
 	 * the position of the first and last colors (the angle of the gradient is the
 	 * angle between the two control points).
 	 * 
-	 * @param gradient
+	 * @param gradient      1D {@link Gradient gradient} to use as the basis for the
+	 *                      linear gradient
 	 * @param controlPoint1 the location for the start point, using X (horizontal)
 	 *                      and Y (vertical) values (can extend past the coordinates
 	 *                      of the sketch)
@@ -331,8 +338,9 @@ public final class PeasyGradients {
 	 * A radial gradient starts at a single point (the source point for color stops)
 	 * and radiates outwards.
 	 * 
-	 * @param gradient
-	 * @param centerPoint The midpoint of the gradient -- the position where it
+	 * @param gradient    1D {@link Gradient gradient} to use as the basis for the
+	 *                    radial gradient
+	 * @param centerPoint The PVector center point of the gradient — the position where it
 	 *                    radiates from.
 	 * @param zoom        default = 1
 	 */
@@ -369,7 +377,6 @@ public final class PeasyGradients {
 
 				int stepInt = (int) (dist * cacheSize);
 				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCache[stepInt];
-
 			}
 		}
 
@@ -399,8 +406,10 @@ public final class PeasyGradients {
 	 * conicGradientSmooth()} to render a conic gradient with a smooth transition
 	 * between the first and last colors.
 	 * 
-	 * @param gradient
-	 * @param centerPoint
+	 * @param gradient    1D {@link Gradient gradient} to use as the basis for the
+	 *                    conic gradient
+	 * @param centerPoint The PVector center point of the gradient — the position where it
+	 *                    radiates from.
 	 * @param angle       in radians, where 0 is east; going clockwise
 	 * @see #conicGradientSmooth(Gradient, PVector, float, float)
 	 */
@@ -408,8 +417,8 @@ public final class PeasyGradients {
 
 		gradient.prime();
 
-		for (int i = 0; i < pixelCacheConic.length; i++) { // calc LUT
-			pixelCacheConic[i] = gradient.getColor(i / (float) pixelCacheConic.length);
+		for (int i = 0; i < pixelCache.length; i++) { // calc LUT
+			pixelCache[i] = gradient.getColor(i / (float) pixelCache.length);
 		}
 
 		float rise, run;
@@ -427,8 +436,8 @@ public final class PeasyGradients {
 				t *= INV_TWO_PI; // normalise
 				t -= Math.floor(t); // modulo
 
-				int stepInt = (int) (t * cacheSizeConic);
-				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCacheConic[stepInt];
+				int stepInt = (int) (t * cacheSize);
+				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCache[stepInt];
 
 				run--;
 			}
@@ -445,8 +454,10 @@ public final class PeasyGradients {
 	 * there is a hard transition). For this reason, this method generally gives
 	 * nice looking (more gradient-like) results.
 	 * 
-	 * @param gradient
-	 * @param centerPoint
+	 * @param gradient    1D {@link Gradient gradient} to use as the basis for the
+	 *                    conic gradient
+	 * @param centerPoint The PVector center point of the gradient — the position where it
+	 *                    radiates from.
 	 * @param angle       in radians, where 0 is east; going clockwise
 	 * @see #conicGradient(Gradient, PVector, float, float)
 	 */
@@ -469,8 +480,10 @@ public final class PeasyGradients {
 	 * before rendering it as a spiral gradient to avoid creating a seam in the
 	 * gradient where the first and last colors bump right up to one another.
 	 * 
-	 * @param gradient    1D Gradient to use as the basis for the linear gradient
-	 * @param centerPoint PVector specifying midpoint coordinate
+	 * @param gradient    1D {@link Gradient gradient} to use as the basis for the
+	 *                    spiral gradient
+	 * @param centerPoint The PVector center point of the gradient — the position where it
+	 *                    radiates from.
 	 * @param angle       in radians, where 0 is east; going clockwise
 	 * @param curveCount  akin to zoom
 	 */
@@ -478,8 +491,8 @@ public final class PeasyGradients {
 
 		gradient.prime();
 
-		for (int i = 0; i < pixelCacheConic.length; i++) { // calc LUT
-			pixelCacheConic[i] = gradient.getColor(i / (float) pixelCacheConic.length);
+		for (int i = 0; i < pixelCache.length; i++) { // calc LUT
+			pixelCache[i] = gradient.getColor(i / (float) pixelCache.length);
 		}
 
 		float rise, run;
@@ -508,8 +521,8 @@ public final class PeasyGradients {
 				t *= INV_TWO_PI; // normalise
 				t -= Math.floor(t); // modulo
 
-				int stepInt = (int) (t * cacheSizeConic);
-				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCacheConic[stepInt];
+				int stepInt = (int) (t * cacheSize);
+				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCache[stepInt];
 
 				run--;
 			}
@@ -522,8 +535,10 @@ public final class PeasyGradients {
 	/**
 	 * Specifiy curviness
 	 * 
-	 * @param gradient
-	 * @param centerPoint
+	 * @param gradient    1D {@link Gradient gradient} to use as the basis for the
+	 *                    spiral gradient
+	 * @param centerPoint The PVector center point of the gradient — the position where it
+	 *                    radiates from.
 	 * @param angle       in radians, where 0 is east; going clockwise
 	 * @param curveCount
 	 * @param curviness   curviness exponent. affect how distance from center point
@@ -533,8 +548,8 @@ public final class PeasyGradients {
 
 		gradient.prime();
 
-		for (int i = 0; i < pixelCacheConic.length; i++) { // calc LUT
-			pixelCacheConic[i] = gradient.getColor(i / (float) pixelCacheConic.length);
+		for (int i = 0; i < pixelCache.length; i++) { // calc LUT
+			pixelCache[i] = gradient.getColor(i / (float) pixelCache.length);
 		}
 
 		float rise, run;
@@ -565,8 +580,8 @@ public final class PeasyGradients {
 				t *= INV_TWO_PI; // normalise
 				t -= Math.floor(t); // modulo
 
-				int stepInt = (int) (t * cacheSizeConic);
-				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCacheConic[stepInt];
+				int stepInt = (int) (t * cacheSize);
+				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCache[stepInt];
 
 				run--;
 			}
@@ -579,8 +594,10 @@ public final class PeasyGradients {
 	/**
 	 * Leading to a 'X' shape.
 	 * 
-	 * @param gradient
-	 * @param centerPoint
+	 * @param gradient    1D {@link Gradient gradient} to use as the basis for the
+	 *                    cross gradient
+	 * @param centerPoint The PVector center point of the gradient — the position where it
+	 *                    radiates from.
 	 * @param angle       in radians, where 0 orients the 'X' ; going clockwise
 	 * @param zoom
 	 */
@@ -588,8 +605,8 @@ public final class PeasyGradients {
 
 		gradient.prime();
 
-		for (int i = 0; i < pixelCacheConic.length; i++) { // calc LUT
-			pixelCacheConic[i] = gradient.getColor(i / (float) pixelCacheConic.length);
+		for (int i = 0; i < pixelCache.length; i++) { // calc LUT
+			pixelCache[i] = gradient.getColor(i / (float) pixelCache.length);
 		}
 
 		final float renderMidpointX = (centerPoint.x / gradientPG.width) * renderWidth;
@@ -620,7 +637,7 @@ public final class PeasyGradients {
 
 				final int stepInt = (int) (dist * cacheSize);
 
-				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCacheConic[stepInt];
+				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCache[stepInt];
 			}
 		}
 
@@ -630,8 +647,10 @@ public final class PeasyGradients {
 	/**
 	 * Renders a polygonal gradient
 	 * 
-	 * @param gradient
-	 * @param centerPoint
+	 * @param gradient    1D {@link Gradient gradient} to use as the basis for the
+	 *                    polygon gradient
+	 * @param centerPoint The PVector center point of the gradient — the position where it
+	 *                    radiates from.
 	 * @param angle       angle offset to render polygon at
 	 * @param zoom
 	 * @param sides       Number of polgyon sides. Should be at least 3 (a triangle)
@@ -640,8 +659,8 @@ public final class PeasyGradients {
 
 		gradient.prime();
 
-		for (int i = 0; i < pixelCacheConic.length; i++) { // calc LUT
-			pixelCacheConic[i] = gradient.getColor(i / (float) pixelCacheConic.length);
+		for (int i = 0; i < pixelCache.length; i++) { // calc LUT
+			pixelCache[i] = gradient.getColor(i / (float) pixelCache.length);
 		}
 
 		final float renderMidpointX = (centerPoint.x / gradientPG.width) * renderWidth;
@@ -708,9 +727,9 @@ public final class PeasyGradients {
 					dist = 1;
 				}
 
-				final int stepInt = (int) (dist * cacheSizeConic);
+				final int stepInt = (int) (dist * cacheSize);
 
-				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCacheConic[stepInt];
+				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCache[stepInt];
 
 			}
 		}
@@ -724,8 +743,10 @@ public final class PeasyGradients {
 	 * distance between the position and midpoint, forming a diamond-shaped
 	 * spectrum.
 	 * 
-	 * @param gradient
-	 * @param centerPoint
+	 * @param gradient    1D {@link Gradient gradient} to use as the basis for the
+	 *                    diamond gradient
+	 * @param centerPoint The PVector center point of the gradient — the position where it
+	 *                    radiates from.
 	 * @param angle
 	 * @param zoom
 	 */
@@ -782,8 +803,9 @@ public final class PeasyGradients {
 	 * methods allow parameters to customise the noise renderer (noise type and
 	 * fractalisation). etc.).
 	 * 
-	 * @param gradient
-	 * @param centerPoint used only when rotating
+	 * @param gradient    1D {@link Gradient gradient} to use as the basis for the
+	 *                    noise gradient
+	 * @param centerPoint For noise gradients, the centre point is used only when rotating (the point to rotate around).
 	 * @param angle
 	 * @param scale       noise frequency (effectively scale) default is 1
 	 * @see #noiseGradient(Gradient, PVector, float, float, NoiseType)
@@ -889,7 +911,8 @@ public final class PeasyGradients {
 	/**
 	 * Renders a noise gradient in the given noise type.
 	 * 
-	 * @param gradient
+	 * @param gradient    1D {@link Gradient gradient} to use as the basis for the
+	 *                    noise gradient
 	 * @param centerPoint
 	 * @param angle
 	 * @param scale
@@ -902,7 +925,8 @@ public final class PeasyGradients {
 
 	/**
 	 * 
-	 * @param gradient
+	 * @param gradient          1D {@link Gradient gradient} to use as the basis for
+	 *                          the fractal noise gradient
 	 * @param centerPoint
 	 * @param angle
 	 * @param scale
@@ -910,8 +934,8 @@ public final class PeasyGradients {
 	 *                          etc.
 	 * @param fractalType       The type of fractal: FBm, Ridged, PingPong,
 	 *                          DomainWarpProgressive, DomainWarpIndependent.
-	 * @param fractalOctaves    More octaves lead to finer and finer detail. At
-	 *                          least 1...4 is suitable
+	 * @param fractalOctaves    More octaves lead to finer and finer detail. Should
+	 *                          be at least 1. 4 is a suitable value.
 	 * @param fractalGain       refers to a constant value being added to another
 	 *                          one for each loop of an octave.
 	 * @param fractalLacunarity refers to the 'texture' of a fractal; in simple
@@ -1045,24 +1069,30 @@ public final class PeasyGradients {
 	 * Renders a spotlight-like gradient using a given origin point, angle and light
 	 * angle.
 	 * 
-	 * @param gradient
-	 * @param originPoint          the point where the spotlight originates from
-	 * @param angle                the angle of the spotlightangle = 0 means
-	 *                             spotlight (facing down)
-	 * @param beamAngleCoefficient Determines the angle of the light beam. Smaller
-	 *                             values mean a narrower beam, larger values mean a
-	 *                             wider beam. A coefficient of 1 = angle of 45°.
+	 * @param gradient    1D {@link Gradient gradient} to use as the basis for the
+	 *                    spotlight gradient
+	 * @param originPoint the PVector point where the spotlight originates from
+	 * @param angle       the angle of the spotlightangle = 0 means spotlight
+	 *                    (facing down)
+	 * @param beamAngle   Determines the angle (in radians) of the light beam.
+	 *                    Smaller values mean a narrower beam, larger values mean a
+	 *                    wider beam. Range is 0...PI (a.k.a. 0...180 in degrees). A
+	 *                    default value would be PI/2 (90degrees).
 	 */
-	public void spotlightGradient(Gradient gradient, PVector originPoint, float angle, float beamAngleCoefficient) { // TODO horizontal
-																														// falloff
+	public void spotlightGradient(Gradient gradient, PVector originPoint, float angle, float beamAngle) {
 
-		angle += 0.0001f; // fudge angle slightly to prevent solid line drawn above the gradient when
-							// angle == 0
+		// TODO horizontal falloff
+
+		beamAngle = Math.min(beamAngle, PIf);
+
+		/**
+		 * fudge angle slightly to prevent solid line drawn above the gradient when
+		 * angle == 0 and divide by 2 to increase input range to a more suitable 0...180
+		 * degrees (PI)
+		 */
+		beamAngle = (float) FastMath.tan((beamAngle + 0.0001) / 2);
 
 		gradient.prime(); // prime curr color stop
-
-		final float renderMidpointX = (originPoint.x / gradientPG.width) * renderWidth; // TODO
-		final float renderMidpointY = (originPoint.y / gradientPG.height) * renderHeight; // TODO
 
 		final float sin = (float) FastMath.sin(-angle);
 		final float cos = (float) FastMath.cos(-angle);
@@ -1071,11 +1101,7 @@ public final class PeasyGradients {
 			pixelCache[i] = gradient.getColor(i / (float) pixelCache.length);
 		}
 
-		/**
-		 * Multiply by 'lightAngle' so that spectrum fall off changes linearly
-		 * (visually) when lightangle is also changed linearly
-		 */
-		final float xDiffMax = (renderWidth / 2f) * beamAngleCoefficient;
+		final float xDiffMax = (renderWidth / 2f) * beamAngle; // * beamAngle for limit
 
 		float step = 0;
 
@@ -1092,7 +1118,7 @@ public final class PeasyGradients {
 				 * Calculate the max X difference between this pixel and centrepoint.x when
 				 * light fall off reaches the maximum (step = 1) for a given row (at an angle)
 				 */
-				float fallOffWidth = xDiffMax * ((newYpos - originPoint.y) / renderHeight * beamAngleCoefficient);
+				float fallOffWidth = xDiffMax * ((newYpos - originPoint.y) / renderHeight * beamAngle);
 				if (fallOffWidth < 0) { // may be negative if centrePoint.y out of screen
 					fallOffWidth = 0;
 				}
@@ -1115,10 +1141,25 @@ public final class PeasyGradients {
 	}
 
 	/**
+	 * where beam angle scales depending on distance between points
+	 * 
+	 * @param gradient    1D {@link Gradient gradient} to use as the basis for the
+	 *                    spotlight gradient
+	 * @param originPoint
+	 * @param endPoint
+	 */
+	public void spotlightGradient(Gradient gradient, PVector originPoint, PVector endPoint) {
+		final float angle = Functions.angleBetween(endPoint, originPoint) + PIf * 1.5f;
+		spotlightGradient(gradient, originPoint, angle,
+				PApplet.map(PVector.dist(originPoint, endPoint), 0, Math.max(renderWidth, renderHeight) * 1.25f, PIf / 8, PIf));
+	}
+
+	/**
 	 * Renders what I've described as a an hourglass gradient, owing to it's
 	 * similarity with an hourglass at certain angles.
 	 * 
-	 * @param gradient
+	 * @param gradient    1D {@link Gradient gradient} to use as the basis for the
+	 *                    hourglass gradient
 	 * @param centerPoint
 	 * @param angle
 	 * @param zoom        default = 1
@@ -1132,8 +1173,8 @@ public final class PeasyGradients {
 
 		final double denominator = 1 / ((Math.max(renderHeight, renderWidth)) * zoom);
 
-		for (int i = 0; i < pixelCacheConic.length; i++) { // calc LUT
-			pixelCacheConic[i] = gradient.getColor(i / (float) pixelCacheConic.length);
+		for (int i = 0; i < pixelCache.length; i++) { // calc LUT
+			pixelCache[i] = gradient.getColor(i / (float) pixelCache.length);
 		}
 
 		final float sin = (float) FastMath.sin(PApplet.TWO_PI - angle);
@@ -1171,9 +1212,9 @@ public final class PeasyGradients {
 					dist = 1;
 				}
 
-				final int stepInt = (int) (dist * cacheSizeConic);
+				final int stepInt = (int) (dist * cacheSize);
 
-				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCacheConic[stepInt];
+				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCache[stepInt];
 			}
 		}
 

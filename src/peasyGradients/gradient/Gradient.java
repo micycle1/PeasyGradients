@@ -15,17 +15,19 @@ import processing.core.PApplet;
  * (each specifying a color and a position) arranged on a 1D axis. Gradients
  * define the gradient curve function (such as sine()) -- the function governing
  * how the gradient's color transtions (the step used during interpolation) and
- * the color space this gradient will be rendered using.
+ * the color space this gradient will be rendered this gradient's color stops
+ * are represented by.
  * 
  * <p>
  * Use a {@link #peasyGradients.PeasyGradients} instance to render Gradients.
  * 
- * TODO export as JSON / load from JSON
  * 
  * @author micycle1
  *
  */
 public final class Gradient {
+	
+	 // TODO export as JSON / load from JSON
 
 	private ArrayList<ColorStop> colorStops = new ArrayList<ColorStop>();
 
@@ -41,7 +43,7 @@ public final class Gradient {
 
 	public ColorSpaces colorSpace = ColorSpaces.LUV; // TODO public for testing
 	ColorSpace colorSpaceInstance = colorSpace.getColorSpace(); // call toRGB on this instance
-	public Interpolation interpolationMode = Interpolation.SMOOTH_STEP;
+	public Interpolation interpolationMode = Interpolation.SMOOTH_STEP; // TODO public/
 
 	/**
 	 * Constructs a new gradient consisting of 2 equidistant complementary colors.
@@ -321,7 +323,7 @@ public final class Gradient {
 		colorSpaceInstance.interpolateLinear(currStop.colorOut, prevStop.colorOut, smoothStep, interpolatedcolorOUT);
 		int alpha = (int) Math.floor((currStop.alpha + (position * (prevStop.alpha - currStop.alpha))) + 0.5d);
 
-		// convert current colorspace value to ARGB int and return
+		// convert current colorspace value to sARGB int and return
 		return Functions.composeclr(colorSpaceInstance.toRGB(interpolatedcolorOUT), alpha);
 	}
 
@@ -434,7 +436,7 @@ public final class Gradient {
 	 * gradient is pleasant. Export ready to construct the gradient using Processing
 	 * color().
 	 * 
-	 * @return eg "Gradient(color(0, 0, 50), color(125, 55, 25));"
+	 * @return e.g. "Gradient(color(0, 0, 50), color(125, 55, 25));"
 	 */
 	public String toJavaConstructor() {
 		StringBuilder sb = new StringBuilder();
