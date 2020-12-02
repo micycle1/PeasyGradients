@@ -25,47 +25,7 @@ public final class Functions {
 	private static final float QRTR_PI = (float) (0.25f * Math.PI);
 	private static final float THREE_QRTR_PI = (float) (0.75f * Math.PI);
 
-	private static final int fullAlpha = 255 << 24; // fully opaque
-	private static final float INV_255 = 1f / 255f; // used to normalise RGB values
-
 	private static final Random random = new Random();
-
-	/**
-	 * Linearly interpolate between 2 colors (color-space independent) using the
-	 * given step.
-	 * 
-	 * @param a    double[3] (col 1)
-	 * @param b    double[3] (col 2)
-	 * @param step
-	 * @param out  double[]
-	 * @return
-	 */
-	public static double[] interpolateLinear(double[] a, double[] b, float step, double[] out) {
-		out[0] = a[0] + step * (b[0] - a[0]);
-		out[1] = a[1] + step * (b[1] - a[1]);
-		out[2] = a[2] + step * (b[2] - a[2]);
-		return out;
-	}
-
-	/**
-	 * Returns a color by interpolating between two given colors. An alternative to
-	 * Processing's native lerpcolor() method (which is linear).
-	 * 
-	 * @param col1 First color, represented as [R,G,B,A] array; each value between
-	 *             0...1.
-	 * @param col2 Second color, represented as [R,G,B,A] array; each value between
-	 *             0...1.
-	 * @param st   step: percentage between the two colors.
-	 * @param out  The new interpolated color, represented by a [R,G,B,A] array.
-	 * @return
-	 */
-	public static float[] interpolateLinear(float[] col1, float[] col2, float step, float[] out) {
-		out[0] = col1[0] + step * (col2[0] - col1[0]);
-		out[1] = col1[1] + step * (col2[1] - col1[1]);
-		out[2] = col1[2] + step * (col2[2] - col1[2]);
-		out[3] = col1[3] + step * (col2[3] - col1[3]);
-		return out;
-	}
 
 	/**
 	 * Project a given 2D pixel coordinate (x, y) onto a position (0...1) of a
@@ -121,149 +81,6 @@ public final class Functions {
 	}
 
 	/**
-	 * Compose a 32 bit sARGB int from float[] 0...1
-	 * 
-	 * @param in
-	 * @return
-	 */
-	public static int composeclr(float[] RGBA) {
-		return (int) (RGBA[3] * 255) << 24 | (int) (RGBA[0] * 255) << 16 | (int) (RGBA[1] * 255) << 8 | (int) (RGBA[2] * 255);
-	}
-	
-	/**
-	 * Compose a 32 bit sARGB int from float[] 0...255
-	 * 
-	 * @param in
-	 * @return
-	 */
-	public static int composeclr255(float[] RGBA) {
-		return (int) (RGBA[3]) << 24 | (int) (RGBA[0]) << 16 | (int) (RGBA[1]) << 8 | (int) (RGBA[2]);
-	}
-
-	/**
-	 * Compose an RGBA color using a float[] of values in range 0...1
-	 * 
-	 * @param red
-	 * @param green
-	 * @param blue
-	 * @param alpha
-	 * @return integer representation of RGBA
-	 */
-	public static int composeclr(float red, float green, float blue, float alpha) {
-		return (int) (alpha * 255) << 24 | (int) (red * 255) << 16 | (int) (green * 255) << 8 | (int) (red * 255);
-	}
-
-	public static int composeclr(float red, float green, float blue) {
-		return 255 << 24 | (int) red << 16 | (int) green << 8 | (int) blue;
-	}
-
-	/**
-	 * sRGB (0...1) in. Assumes full alpha.
-	 * 
-	 * @param in
-	 * @return
-	 */
-	public static int composeclr(double[] in) {
-		return fullAlpha | (int) (in[0] * 255 + 0.5) << 16 | (int) (in[1] * 255 + 0.5) << 8 | (int) (in[2] * 255 + 0.5);
-	}
-
-	/**
-	 * 
-	 * @param in    double[3] each is 0...1
-	 * @param alpha 0...255
-	 * @return
-	 */
-	public static int composeclr(double[] in, int alpha) {
-		return alpha << 24 | (int) (in[0] * 255 + 0.5) << 16 | (int) (in[1] * 255 + 0.5) << 8 | (int) (in[2] * 255 + 0.5);
-	}
-
-	public static int[] composeclrTo255(double[] in) {
-		return new int[] { (int) Math.round(in[0] * 255), (int) Math.round(in[1] * 255), (int) Math.round(in[2] * 255) };
-	}
-
-	/**
-	 * Decompose color integer (ARGB) into 4 separate components and scale between
-	 * 0...1
-	 * 
-	 * @param clr
-	 * @param out
-	 * @return [R,G,B,A] 0...1
-	 */
-	public static float[] decomposeclr(int clr) {
-		// 1.0 / 255.0 = 0.003921569
-		return new float[] { (clr >> 16 & 0xff) * INV_255, (clr >> 8 & 0xff) * INV_255, (clr & 0xff) * INV_255,
-				(clr >> 24 & 0xff) * INV_255 };
-	}
-
-	/**
-	 * Decompose color integer (RGBA) into 4 separate components (0...255)
-	 * 
-	 * @param clr
-	 * @param out
-	 * @return [R,G,B] 0...255
-	 */
-	public static float[] decomposeclrRGB(int clr) {
-		float[] out = new float[4];
-		out[0] = (clr >> 16 & 0xff);
-		out[1] = (clr >> 8 & 0xff);
-		out[2] = (clr & 0xff);
-		out[3] = (clr >> 24 & 0xff);
-		return out;
-	}
-
-	/**
-	 * out 255
-	 * 
-	 * @param clr
-	 * @return
-	 */
-	public static double[] decomposeclrRGBDouble(int clr) {
-		double[] out = new double[3];
-		out[0] = (clr >> 16 & 0xff);
-		out[1] = (clr >> 8 & 0xff);
-		out[2] = (clr & 0xff);
-		return out;
-	}
-
-	public static double[] decomposeclrRGBDouble(int clr, int alpha) {
-		double[] out = new double[4];
-		out[0] = (clr >> 16 & 0xff);
-		out[1] = (clr >> 8 & 0xff);
-		out[2] = (clr & 0xff);
-		out[3] = alpha;
-		return out;
-	}
-
-	/**
-	 * Unpack a 32-Bit ARGB int, normalising to 0..1
-	 * 
-	 * @param clr
-	 * @return sRGB representing the argb color
-	 */
-	public static float[] decomposeclrRGBA(int clr) {
-		float[] out = new float[4];
-		out[3] = (clr >> 24 & 0xff) * INV_255;
-		out[0] = (clr >> 16 & 0xff) * INV_255;
-		out[1] = (clr >> 8 & 0xff) * INV_255;
-		out[2] = (clr & 0xff) * INV_255;
-		return out;
-	}
-
-	/**
-	 * out 0...1
-	 * 
-	 * @param clr
-	 * @return
-	 */
-	public static double[] decomposeclrDouble(int clr) {
-		double[] out = new double[3];
-		out[0] = (clr >> 16 & 0xff) * INV_255;
-		out[1] = (clr >> 8 & 0xff) * INV_255;
-		out[2] = (clr & 0xff) * INV_255;
-		return out;
-	}
-
-	/**
 	 * Min of 3 floats
 	 */
 	public static float min(float a, float b, float c) {
@@ -315,8 +132,8 @@ public final class Functions {
 	}
 
 	/**
-	 * Returns a pseudorandom, uniformly distributed float value between 0.0 and
-	 * 1.0.
+	 * Returns a pseudorandom, uniformly distributed float value between 0.0
+	 * (inclusive) and 1.0 (exclusive).
 	 * 
 	 * @return
 	 */
@@ -343,8 +160,8 @@ public final class Functions {
 	 * @param array
 	 * @param decimalPlaces number of decimal places to retain
 	 * @param padding       default is 3 when decimal places = 0
-	 * @param open character to open the array. e.g. '['
-	 * @param close character to close the array. e.g. ']'
+	 * @param open          character to open the array. e.g. '['
+	 * @param close         character to close the array. e.g. ']'
 	 * @return something like "[1, 2, 3, 4]"
 	 */
 	public static String formatArray(double[] array, int decimalPlaces, int padding, char open, char close) {
@@ -369,9 +186,10 @@ public final class Functions {
 		}
 		return Arrays.toString(out);
 	}
-	
+
 	/**
 	 * Format array, opening and closing with '[....]'
+	 * 
 	 * @param array
 	 * @param decimalPlaces
 	 * @param padding
@@ -454,7 +272,7 @@ public final class Functions {
 	public static float veryFastInvSqrt(float x) {
 		return Float.intBitsToFloat(0x5F37624F - (Float.floatToIntBits(x) >> 1));
 	}
-	
+
 	/**
 	 * Fast round from float to int. This is faster than Math.round() though it may
 	 * return slightly different results. It does not try to handle NaN or
@@ -584,7 +402,7 @@ public final class Functions {
 		atan = PI / 2 - z / (z * z + 0.28f);
 		return y < 0f ? atan - PI : atan;
 	}
-	
+
 	/**
 	 * Linearly interpolates between two angles in radians. Takes into account that
 	 * angles wrap at two pi and always takes the direction with the smallest delta
@@ -593,7 +411,7 @@ public final class Functions {
 	 * @param fromRadians start angle in radians
 	 * @param toRadians   target angle in radians
 	 * @param progress    interpolation value in the range [0, 1]
-	 * @return the interpolated angle in the range [0, PI2]
+	 * @return the interpolated angle in the range [0, 2PI]
 	 */
 	public static float lerpAngle(float fromRadians, float toRadians, float progress) {
 		float delta = ((toRadians - fromRadians + TWO_PI + PI) % TWO_PI) - PI;
