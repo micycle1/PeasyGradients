@@ -6,6 +6,13 @@ import processing.core.PGraphics;
 import processing.core.PImage;
 import processing.core.PVector;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import java.lang.reflect.Constructor;
 import net.jafama.FastMath;
 
 import peasyGradients.gradient.Gradient;
@@ -45,32 +52,45 @@ import peasyGradients.utilities.FastNoiseLite.NoiseType;
  */
 public final class PeasyGradients {
 
-	static {
-		/**
-		 * Init FastPow's LUT. lower numbers are better due to cache hits; JAB+ITP_fast
-		 * requireds high value
-		 */
-		FastPow.init(11);
-	}
-
 	private static final double TWO_PI = (2 * Math.PI);
 	private static final float TWO_PIf = (float) (2 * Math.PI);
 	private static final float PIf = (float) Math.PI;
 	private static final double HALF_PI = (0.5f * Math.PI);
 	private static final float INV_TWO_PI = 1f / PConstants.TWO_PI;
 
-	private final FastNoiseLite fastNoiseLite = new FastNoiseLite(0); // using default seed
+	private static final ExecutorService THREAD_POOL;
 
-	private final PApplet p;
+	static {
+		/**
+		 * Initalise FastPow LUT. Lower numbers are better due to cache hits;
+		 * JAB+ITP_fast requires high value
+		 */
+		FastPow.init(11);
+
+		/**
+		 * Create a static thread pool (shared across all PeasyGradient instances), with
+		 * at most #systemCores threads.
+		 */
+		THREAD_POOL = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+	}
+
+	private final FastNoiseLite fastNoiseLite = new FastNoiseLite(0); // create noise generator using a fixed default seed (0)
+
+	private final PApplet p; // reference to host Processing sketch (PApplet)
 //	int colorMode = PConstants.RGB; // TODO colour mode in this class?
-	private PImage gradientPG; // reference to object to render gradients into
+	private PImage gradientPG; // reference to the PGraphics object to render gradients into
 
-	private int[] pixelCache;
-	private int cacheSize;
+	private int[] gradientCache; // a cache to store gradient colors (ARGB ints)
+	private int gradientCacheSize; // size of cache
 
-	private int renderHeight, renderWidth;
-	private int renderOffsetX, renderOffsetY;
+	private int renderHeight, renderWidth; // gradient region dimensions (usually the dimensions of gradientPG)
+	private int renderOffsetX, renderOffsetY; // gradient region offsets (usually 0, 0)
 	private float scaleY, scaleX;
+
+	private int renderPartitionsX = 3; // number of thread render partitions in the x (horizontal) direction TODO set
+										// value
+	private int renderPartitionsY = 3; // number of thread render partitions in the y (vertical) direction TODO set
+										// value
 
 	/**
 	 * Constructs a new PeasyGradients renderer from a running Processing sketch.
@@ -80,7 +100,7 @@ public final class PeasyGradients {
 	public PeasyGradients(PApplet p) {
 		this.p = p;
 
-		renderIntoSketch(); // render into sketch full size by default
+		renderIntoSketch(); // render into parent sketch (full size) by default
 
 		fastNoiseLite.SetCellularReturnType(CellularReturnType.Distance2Div);
 		fastNoiseLite.SetCellularDistanceFunction(CellularDistanceFunction.EuclideanSq);
@@ -152,8 +172,8 @@ public final class PeasyGradients {
 
 		gradientPG = g;
 
-		cacheSize = (int) (2 * Math.ceil(Math.max(actualWidth, actualHeight)));
-		pixelCache = new int[cacheSize + 1];
+		gradientCacheSize = (int) (2 * Math.ceil(Math.max(actualWidth, actualHeight)));
+		gradientCache = new int[gradientCacheSize + 1];
 	}
 
 	/**
@@ -173,11 +193,11 @@ public final class PeasyGradients {
 	 * @see #clearPosterisation()
 	 */
 	public void posterise(int n) {
-		if (n != cacheSize) {
-			cacheSize = n;
-			cacheSize = n;
-			pixelCache = new int[n + 1];
-			pixelCache = new int[n + 1];
+		if (n != gradientCacheSize) {
+			gradientCacheSize = n;
+			gradientCacheSize = n;
+			gradientCache = new int[n + 1];
+			gradientCache = new int[n + 1];
 		}
 	}
 
@@ -294,7 +314,11 @@ public final class PeasyGradients {
 	 */
 	public void linearGradient(Gradient gradient, PVector controlPoint1, PVector controlPoint2) {
 
-		gradient.prime(); // prime curr color stop
+		gradient.prime();
+
+		for (int i = 0; i < gradientCache.length; i++) { // calc LUT
+			gradientCache[i] = gradient.getColor(i / (float) gradientCache.length);
+		}
 
 		/**
 		 * Pre-compute vals for linearprojection
@@ -304,28 +328,7 @@ public final class PeasyGradients {
 		final float odSqInverse = 1 / (odX * odX + odY * odY); // Distance-squared of line.
 		float opXod = -controlPoint1.x * odX + -controlPoint1.y * odY;
 
-		int xOff = 0;
-		float step = 0;
-
-		for (int i = 0; i < pixelCache.length; i++) { // calc LUT
-			pixelCache[i] = gradient.getColor(i / (float) pixelCache.length);
-		}
-
-		/**
-		 * Usually, we'd call Functions.linearProject() to calculate step, but the
-		 * function is inlined here to optimise speed.
-		 */
-		for (int y = 0, x; y < renderHeight; ++y) {
-			opXod += odY * scaleY;
-			xOff = 0;
-			for (x = 0; x < renderWidth; ++x) {
-				step = (opXod + xOff) * odSqInverse; // get position of point on 1D gradient and normalise
-				step = (step < 0) ? 0 : (step > 1 ? 1 : step); // clamp
-				int stepInt = (int) (step * cacheSize);
-				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCache[stepInt];
-				xOff += odX * scaleX;
-			}
-		}
+		makeThreadPool(renderPartitionsX, renderPartitionsY, LinearThread.class, odX, odY, odSqInverse, opXod);
 
 		gradientPG.updatePixels();
 
@@ -340,14 +343,14 @@ public final class PeasyGradients {
 	 * 
 	 * @param gradient    1D {@link Gradient gradient} to use as the basis for the
 	 *                    radial gradient
-	 * @param centerPoint The PVector center point of the gradient — the position where it
-	 *                    radiates from.
+	 * @param centerPoint The PVector center point of the gradient — the position
+	 *                    where it radiates from.
 	 * @param zoom        default = 1
 	 */
 	public void radialGradient(Gradient gradient, PVector centerPoint, float zoom) {
 
 		final float hypotSq = (renderWidth * renderWidth) + (renderHeight * renderHeight);
-		float rise, run, distSq, dist;
+
 		zoom = 4 / zoom; // calc here, not in loop
 		zoom /= hypotSq; // calc here, not in loop
 
@@ -356,29 +359,11 @@ public final class PeasyGradients {
 
 		gradient.prime();
 
-		for (int i = 0; i < pixelCache.length; i++) { // calc LUT
-			pixelCache[i] = gradient.getColor(i / (float) pixelCache.length);
+		for (int i = 0; i < gradientCache.length; i++) { // calc LUT
+			gradientCache[i] = gradient.getColor(i / (float) gradientCache.length);
 		}
 
-		for (int y = 0, x; y < renderHeight; ++y) {
-			rise = renderMidpointY - y;
-			rise *= rise;
-
-			for (x = 0; x < renderWidth; ++x) {
-				run = renderMidpointX - x;
-				run *= run;
-
-				distSq = run + rise;
-				dist = zoom * distSq;
-
-				if (dist > 1) { // clamp to a high of 1
-					dist = 1;
-				}
-
-				int stepInt = (int) (dist * cacheSize);
-				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCache[stepInt];
-			}
-		}
+		makeThreadPool(renderPartitionsX, renderPartitionsY, RadialThread.class, renderMidpointX, renderMidpointY, zoom);
 
 		gradientPG.updatePixels();
 
@@ -408,8 +393,8 @@ public final class PeasyGradients {
 	 * 
 	 * @param gradient    1D {@link Gradient gradient} to use as the basis for the
 	 *                    conic gradient
-	 * @param centerPoint The PVector center point of the gradient — the position where it
-	 *                    radiates from.
+	 * @param centerPoint The PVector center point of the gradient — the position
+	 *                    where it radiates from.
 	 * @param angle       in radians, where 0 is east; going clockwise
 	 * @see #conicGradientSmooth(Gradient, PVector, float, float)
 	 */
@@ -417,54 +402,17 @@ public final class PeasyGradients {
 
 		gradient.prime();
 
-		for (int i = 0; i < pixelCache.length; i++) { // calc LUT
-			pixelCache[i] = gradient.getColor(i / (float) pixelCache.length);
+		for (int i = 0; i < gradientCache.length; i++) { // calc LUT
+			gradientCache[i] = gradient.getColor(i / (float) gradientCache.length);
 		}
-
-		float rise, run;
-		float t = 0;
 
 		final float renderMidpointX = (centerPoint.x / gradientPG.width) * renderWidth;
 		final float renderMidpointY = (centerPoint.y / gradientPG.height) * renderHeight;
 
-		for (int y = 0, x; y < renderHeight; ++y) {
-			rise = renderMidpointY - y;
-			run = renderMidpointX;
-			for (x = 0; x < renderWidth; ++x) {
-
-				t = Functions.fastAtan2b(rise, run) + PConstants.PI - angle; // + PI to align bump with angle
-				t *= INV_TWO_PI; // normalise
-				t -= Math.floor(t); // modulo
-
-				int stepInt = (int) (t * cacheSize);
-				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCache[stepInt];
-
-				run--;
-			}
-		}
+		makeThreadPool(renderPartitionsX, renderPartitionsY, ConicThread.class, renderMidpointX, renderMidpointY, angle);
 
 		gradientPG.updatePixels();
 
-	}
-
-	/**
-	 * Renders a {@link #conicGradient(Gradient, PVector, float) conic gradient}
-	 * with a smooth transition between the first and last colors (unlike
-	 * {@link #conicGradient(Gradient, PVector, float, float) this} method where
-	 * there is a hard transition). For this reason, this method generally gives
-	 * nice looking (more gradient-like) results.
-	 * 
-	 * @param gradient    1D {@link Gradient gradient} to use as the basis for the
-	 *                    conic gradient
-	 * @param centerPoint The PVector center point of the gradient — the position where it
-	 *                    radiates from.
-	 * @param angle       in radians, where 0 is east; going clockwise
-	 * @see #conicGradient(Gradient, PVector, float, float)
-	 */
-	public void conicGradientSmooth(Gradient gradient, PVector centerPoint, float angle) {
-		gradient.push(gradient.colorAt(0)); // add copy of first color to end
-		conicGradient(gradient, centerPoint, angle);
-		gradient.removeLast(); // remove color copy
 	}
 
 	/**
@@ -482,79 +430,36 @@ public final class PeasyGradients {
 	 * 
 	 * @param gradient    1D {@link Gradient gradient} to use as the basis for the
 	 *                    spiral gradient
-	 * @param centerPoint The PVector center point of the gradient — the position where it
-	 *                    radiates from.
+	 * @param centerPoint The PVector center point of the gradient — the position
+	 *                    where it radiates from.
 	 * @param angle       in radians, where 0 is east; going clockwise
 	 * @param curveCount  akin to zoom
 	 */
 	public void spiralGradient(Gradient gradient, PVector centerPoint, float angle, float curveCount) {
-
-		gradient.prime();
-
-		for (int i = 0; i < pixelCache.length; i++) { // calc LUT
-			pixelCache[i] = gradient.getColor(i / (float) pixelCache.length);
-		}
-
-		float rise, run;
-		double t = 0;
-		double spiralOffset = 0;
-		angle %= TWO_PIf;
-
-		final double curveDenominator = 1d / (renderWidth * renderWidth + renderHeight * renderHeight);
-		curveCount *= TWO_PI;
-
-		final float renderMidpointX = (centerPoint.x / gradientPG.width) * renderWidth;
-		final float renderMidpointY = (centerPoint.y / gradientPG.height) * renderHeight;
-
-		for (int y = 0, x; y < renderHeight; ++y) {
-
-			rise = renderMidpointY - y;
-			final double riseSquared = rise * rise;
-			run = renderMidpointX;
-
-			for (x = 0; x < renderWidth; ++x) {
-
-				t = Functions.fastAtan2b(rise, run) - angle; // -PI...PI
-				spiralOffset = curveCount * Math.sqrt((riseSquared + run * run) * curveDenominator);
-				t += spiralOffset;
-
-				t *= INV_TWO_PI; // normalise
-				t -= Math.floor(t); // modulo
-
-				int stepInt = (int) (t * cacheSize);
-				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCache[stepInt];
-
-				run--;
-			}
-		}
-
-		gradientPG.updatePixels();
-
+		spiralGradient(gradient, centerPoint, angle, curveCount, 1); // 1 becomes 0.5 (a.k.a sqrt (a special case))
 	}
 
 	/**
-	 * Specifiy curviness
+	 * Renders a spiral gradient with a specific "curviness".
 	 * 
 	 * @param gradient    1D {@link Gradient gradient} to use as the basis for the
 	 *                    spiral gradient
-	 * @param centerPoint The PVector center point of the gradient — the position where it
-	 *                    radiates from.
+	 * @param centerPoint The PVector center point of the gradient — the position
+	 *                    where it radiates from.
 	 * @param angle       in radians, where 0 is east; going clockwise
 	 * @param curveCount
 	 * @param curviness   curviness exponent. affect how distance from center point
-	 *                    affects curve
+	 *                    affects curve. default = 1
 	 */
-	public void spiralGradient(Gradient gradient, PVector centerPoint, final float angle, float curveCount, float curviness) {
+	public void spiralGradient(Gradient gradient, PVector centerPoint, float angle, float curveCount, float curviness) {
 
 		gradient.prime();
 
-		for (int i = 0; i < pixelCache.length; i++) { // calc LUT
-			pixelCache[i] = gradient.getColor(i / (float) pixelCache.length);
+		for (int i = 0; i < gradientCache.length; i++) { // calc LUT
+			gradientCache[i] = gradient.getColor(i / (float) gradientCache.length);
 		}
 
-		float rise, run;
-		double t = 0;
-		double spiralOffset = 0;
+		angle %= TWO_PIf;
 
 		final double curveDenominator = 1d / (renderWidth * renderWidth + renderHeight * renderHeight);
 		curveCount *= TWO_PI;
@@ -565,27 +470,8 @@ public final class PeasyGradients {
 		final float renderMidpointX = (centerPoint.x / gradientPG.width) * renderWidth;
 		final float renderMidpointY = (centerPoint.y / gradientPG.height) * renderHeight;
 
-		for (int y = 0, x; y < renderHeight; ++y) {
-
-			rise = renderMidpointY - y;
-			final double riseSquared = rise * rise;
-			run = renderMidpointX;
-
-			for (x = 0; x < renderWidth; ++x) {
-
-				t = Functions.fastAtan2b(rise, run) - angle; // -PI...PI
-				spiralOffset = curveCount * FastPow.fastPow((riseSquared + run * run) * curveDenominator, curviness);
-				t += spiralOffset;
-
-				t *= INV_TWO_PI; // normalise
-				t -= Math.floor(t); // modulo
-
-				int stepInt = (int) (t * cacheSize);
-				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCache[stepInt];
-
-				run--;
-			}
-		}
+		makeThreadPool(renderPartitionsX, renderPartitionsY, SpiralThread.class, renderMidpointX, renderMidpointY, curveDenominator,
+				curviness, angle, curveCount);
 
 		gradientPG.updatePixels();
 
@@ -596,17 +482,19 @@ public final class PeasyGradients {
 	 * 
 	 * @param gradient    1D {@link Gradient gradient} to use as the basis for the
 	 *                    cross gradient
-	 * @param centerPoint The PVector center point of the gradient — the position where it
-	 *                    radiates from.
+	 * @param centerPoint The PVector center point of the gradient — the position
+	 *                    where it radiates from.
 	 * @param angle       in radians, where 0 orients the 'X' ; going clockwise
 	 * @param zoom
 	 */
 	public void crossGradient(Gradient gradient, PVector centerPoint, float angle, float zoom) {
 
+		// TODO fix positioning?
+
 		gradient.prime();
 
-		for (int i = 0; i < pixelCache.length; i++) { // calc LUT
-			pixelCache[i] = gradient.getColor(i / (float) pixelCache.length);
+		for (int i = 0; i < gradientCache.length; i++) { // calc LUT
+			gradientCache[i] = gradient.getColor(i / (float) gradientCache.length);
 		}
 
 		final float renderMidpointX = (centerPoint.x / gradientPG.width) * renderWidth;
@@ -622,9 +510,9 @@ public final class PeasyGradients {
 		float newXpos;
 		float newYpos;
 
-		for (int y = 0, x; y < renderHeight; ++y) {
+		for (int y = 0, x; y < renderHeight; y++) {
 			final float yTranslate = (y - renderMidpointY);
-			for (x = 0; x < renderWidth; ++x) {
+			for (x = 0; x < renderWidth; x++) {
 
 				newXpos = (x - renderMidpointX) * cos - yTranslate * sin + renderMidpointX; // rotate x about midpoint
 				newYpos = yTranslate * cos + (x - renderMidpointX) * sin + renderMidpointY; // rotate y about midpoint
@@ -635,9 +523,9 @@ public final class PeasyGradients {
 					dist = 1;
 				}
 
-				final int stepInt = (int) (dist * cacheSize);
+				final int stepInt = (int) (dist * gradientCacheSize);
 
-				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCache[stepInt];
+				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
 			}
 		}
 
@@ -649,8 +537,8 @@ public final class PeasyGradients {
 	 * 
 	 * @param gradient    1D {@link Gradient gradient} to use as the basis for the
 	 *                    polygon gradient
-	 * @param centerPoint The PVector center point of the gradient — the position where it
-	 *                    radiates from.
+	 * @param centerPoint The PVector center point of the gradient — the position
+	 *                    where it radiates from.
 	 * @param angle       angle offset to render polygon at
 	 * @param zoom
 	 * @param sides       Number of polgyon sides. Should be at least 3 (a triangle)
@@ -659,8 +547,8 @@ public final class PeasyGradients {
 
 		gradient.prime();
 
-		for (int i = 0; i < pixelCache.length; i++) { // calc LUT
-			pixelCache[i] = gradient.getColor(i / (float) pixelCache.length);
+		for (int i = 0; i < gradientCache.length; i++) { // calc LUT
+			gradientCache[i] = gradient.getColor(i / (float) gradientCache.length);
 		}
 
 		final float renderMidpointX = (centerPoint.x / gradientPG.width) * renderWidth;
@@ -704,12 +592,12 @@ public final class PeasyGradients {
 			ratioLookup[i] = (MIN_LENGTH_RATIO * FastMath.cosQuick(theta) + FastMath.sinQuick(theta)) * denominator;
 		}
 
-		for (int y = 0, x; y < renderHeight; ++y) {
+		for (int y = 0, x; y < renderHeight; y++) {
 
 			yDist = (renderMidpointY - y) * (renderMidpointY - y);
 			xDist = midpointXSquared + 1;
 			int inc = 1; // (N+x*i)^2, difference between successive Ns.
-			for (x = 0; x < renderWidth; ++x) {
+			for (x = 0; x < renderWidth; x++) {
 
 				xDist -= twoMidpointX;
 				xDist += inc;
@@ -727,9 +615,9 @@ public final class PeasyGradients {
 					dist = 1;
 				}
 
-				final int stepInt = (int) (dist * cacheSize);
+				final int stepInt = (int) (dist * gradientCacheSize);
 
-				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCache[stepInt];
+				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
 
 			}
 		}
@@ -745,8 +633,8 @@ public final class PeasyGradients {
 	 * 
 	 * @param gradient    1D {@link Gradient gradient} to use as the basis for the
 	 *                    diamond gradient
-	 * @param centerPoint The PVector center point of the gradient — the position where it
-	 *                    radiates from.
+	 * @param centerPoint The PVector center point of the gradient — the position
+	 *                    where it radiates from.
 	 * @param angle
 	 * @param zoom
 	 */
@@ -754,8 +642,8 @@ public final class PeasyGradients {
 
 		gradient.prime();
 
-		for (int i = 0; i < pixelCache.length; i++) { // calc LUT
-			pixelCache[i] = gradient.getColor(i / (float) pixelCache.length);
+		for (int i = 0; i < gradientCache.length; i++) { // calc LUT
+			gradientCache[i] = gradient.getColor(i / (float) gradientCache.length);
 		}
 
 		final float renderMidpointX = (centerPoint.x / gradientPG.width) * renderWidth;
@@ -771,9 +659,9 @@ public final class PeasyGradients {
 		float newXpos;
 		float newYpos;
 
-		for (int y = 0, x; y < renderHeight; ++y) {
+		for (int y = 0, x; y < renderHeight; y++) {
 			final float yTranslate = (y - renderMidpointY);
-			for (x = 0; x < renderWidth; ++x) {
+			for (x = 0; x < renderWidth; x++) {
 
 				newXpos = (x - renderMidpointX) * cos - yTranslate * sin + renderMidpointX; // rotate x about midpoint
 				newYpos = yTranslate * cos + (x - renderMidpointX) * sin + renderMidpointY; // rotate y about midpoint
@@ -784,9 +672,9 @@ public final class PeasyGradients {
 					dist = 1;
 				}
 
-				final int stepInt = (int) (dist * cacheSize);
+				final int stepInt = (int) (dist * gradientCacheSize);
 
-				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCache[stepInt];
+				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
 			}
 		}
 
@@ -805,7 +693,8 @@ public final class PeasyGradients {
 	 * 
 	 * @param gradient    1D {@link Gradient gradient} to use as the basis for the
 	 *                    noise gradient
-	 * @param centerPoint For noise gradients, the centre point is used only when rotating (the point to rotate around).
+	 * @param centerPoint For noise gradients, the centre point is used only when
+	 *                    rotating (the point to rotate around).
 	 * @param angle
 	 * @param scale       noise frequency (effectively scale) default is 1
 	 * @see #noiseGradient(Gradient, PVector, float, float, NoiseType)
@@ -819,11 +708,9 @@ public final class PeasyGradients {
 
 		gradient.prime();
 
-		for (int i = 0; i < pixelCache.length; i++) { // calc LUT
-			pixelCache[i] = gradient.getColor(i / (float) pixelCache.length);
+		for (int i = 0; i < gradientCache.length; i++) { // calc LUT
+			gradientCache[i] = gradient.getColor(i / (float) gradientCache.length);
 		}
-
-		gradientPG.updatePixels();
 
 		final float sin = (float) FastMath.sin(-angle);
 		final float cos = (float) FastMath.cos(-angle);
@@ -848,20 +735,20 @@ public final class PeasyGradients {
 				float step = fastNoiseLite.getSimplexNoiseFast(newXpos, newYpos); // call custom method
 				noiseVals[x][y] = step;
 
-				final int stepInt = (int) (step * cacheSize);
+				final int stepInt = (int) (step * gradientCacheSize);
 
-				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCache[stepInt];
+				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
 			}
 		}
 
 		/**
 		 * Interpolate horizontally (x-axis)
 		 */
-		for (int y = 0, x; y < renderHeight; ++y) {
+		for (int y = 0, x; y < renderHeight; y++) {
 			for (x = 1; x < renderWidth - 1; x += 2) {
 				noiseVals[x][y] = (noiseVals[x - 1][y] + noiseVals[x + 1][y]) / 2;
-				final int stepInt = (int) (noiseVals[x][y] * cacheSize);
-				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCache[stepInt];
+				final int stepInt = (int) (noiseVals[x][y] * gradientCacheSize);
+				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
 			}
 		}
 
@@ -871,8 +758,8 @@ public final class PeasyGradients {
 		for (int y = 1, x; y < renderHeight - 1; y += 2) {
 			for (x = 0; x < renderWidth; x += 1) {
 				noiseVals[x][y] = (noiseVals[x][y - 1] + noiseVals[x][y + 1]) / 2;
-				final int stepInt = (int) (noiseVals[x][y] * cacheSize);
-				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCache[stepInt];
+				final int stepInt = (int) (noiseVals[x][y] * gradientCacheSize);
+				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
 			}
 		}
 
@@ -886,9 +773,9 @@ public final class PeasyGradients {
 
 			float step = fastNoiseLite.getSimplexNoiseFast(newXpos, newYpos); // call custom method
 
-			final int stepInt = (int) (step * cacheSize);
+			final int stepInt = (int) (step * gradientCacheSize);
 
-			gradientPG.pixels[gradientPG.width * (renderHeight - 1 + renderOffsetY) + (x + renderOffsetX)] = pixelCache[stepInt];
+			gradientPG.pixels[gradientPG.width * (renderHeight - 1 + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
 		}
 
 		/**
@@ -902,10 +789,13 @@ public final class PeasyGradients {
 
 			float step = fastNoiseLite.getSimplexNoiseFast(newXpos, newYpos); // call custom method
 
-			final int stepInt = (int) (step * cacheSize);
+			final int stepInt = (int) (step * gradientCacheSize);
 
-			gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (renderWidth - 1 + renderOffsetX)] = pixelCache[stepInt];
+			gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (renderWidth - 1 + renderOffsetX)] = gradientCache[stepInt];
 		}
+
+		gradientPG.updatePixels();
+
 	}
 
 	/**
@@ -956,11 +846,9 @@ public final class PeasyGradients {
 
 		gradient.prime();
 
-		for (int i = 0; i < pixelCache.length; i++) { // calc LUT
-			pixelCache[i] = gradient.getColor(i / (float) pixelCache.length);
+		for (int i = 0; i < gradientCache.length; i++) { // calc LUT
+			gradientCache[i] = gradient.getColor(i / (float) gradientCache.length);
 		}
-
-		gradientPG.updatePixels();
 
 		final float sin = (float) FastMath.sin(-angle);
 		final float cos = (float) FastMath.cos(-angle);
@@ -995,20 +883,20 @@ public final class PeasyGradients {
 				step = ((step - min) * (maxMinDenom));
 				noiseVals[x][y] = step;
 
-				final int stepInt = (int) (step * cacheSize);
+				final int stepInt = (int) (step * gradientCacheSize);
 
-				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCache[stepInt];
+				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
 			}
 		}
 
 		/**
 		 * Interpolate horizontally (x-axis)
 		 */
-		for (int y = 0, x; y < renderHeight; ++y) {
+		for (int y = 0, x; y < renderHeight; y++) {
 			for (x = 1; x < renderWidth - 1; x += 2) {
 				noiseVals[x][y] = (noiseVals[x - 1][y] + noiseVals[x + 1][y]) / 2;
-				final int stepInt = (int) (noiseVals[x][y] * cacheSize);
-				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCache[stepInt];
+				final int stepInt = (int) (noiseVals[x][y] * gradientCacheSize);
+				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
 			}
 		}
 
@@ -1018,8 +906,8 @@ public final class PeasyGradients {
 		for (int y = 1, x; y < renderHeight - 1; y += 2) {
 			for (x = 0; x < renderWidth; x += 1) {
 				noiseVals[x][y] = (noiseVals[x][y - 1] + noiseVals[x][y + 1]) / 2;
-				final int stepInt = (int) (noiseVals[x][y] * cacheSize);
-				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCache[stepInt];
+				final int stepInt = (int) (noiseVals[x][y] * gradientCacheSize);
+				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
 			}
 		}
 
@@ -1037,9 +925,9 @@ public final class PeasyGradients {
 			max = Math.max(max, step);
 			float maxMinDenom = 1 / (max - min);
 			step = ((step - min) * (maxMinDenom));
-			final int stepInt = (int) (step * cacheSize);
+			final int stepInt = (int) (step * gradientCacheSize);
 
-			gradientPG.pixels[gradientPG.width * (renderHeight - 1 + renderOffsetY) + (x + renderOffsetX)] = pixelCache[stepInt];
+			gradientPG.pixels[gradientPG.width * (renderHeight - 1 + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
 		}
 
 		/**
@@ -1058,10 +946,12 @@ public final class PeasyGradients {
 			float maxMinDenom = 1 / (max - min);
 			step = ((step - min) * (maxMinDenom));
 
-			final int stepInt = (int) (step * cacheSize);
+			final int stepInt = (int) (step * gradientCacheSize);
 
-			gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (renderWidth - 1 + renderOffsetX)] = pixelCache[stepInt];
+			gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (renderWidth - 1 + renderOffsetX)] = gradientCache[stepInt];
 		}
+
+		gradientPG.updatePixels();
 
 	}
 
@@ -1079,9 +969,15 @@ public final class PeasyGradients {
 	 *                    wider beam. Range is 0...PI (a.k.a. 0...180 in degrees). A
 	 *                    default value would be PI/2 (90degrees).
 	 */
-	public void spotlightGradient(Gradient gradient, PVector originPoint, float angle, float beamAngle) {
+	public void spotlightGradient(Gradient gradient, final PVector originPoint, float angle, float beamAngle) {
 
 		// TODO horizontal falloff
+
+		gradient.prime(); // prime curr color stop
+
+		for (int i = 0; i < gradientCache.length; i++) { // calc LUT
+			gradientCache[i] = gradient.getColor(i / (float) gradientCache.length);
+		}
 
 		beamAngle = Math.min(beamAngle, PIf);
 
@@ -1092,49 +988,12 @@ public final class PeasyGradients {
 		 */
 		beamAngle = (float) FastMath.tan((beamAngle + 0.0001) / 2);
 
-		gradient.prime(); // prime curr color stop
-
 		final float sin = (float) FastMath.sin(-angle);
 		final float cos = (float) FastMath.cos(-angle);
 
-		for (int i = 0; i < pixelCache.length; i++) { // calc LUT
-			pixelCache[i] = gradient.getColor(i / (float) pixelCache.length);
-		}
-
 		final float xDiffMax = (renderWidth / 2f) * beamAngle; // * beamAngle for limit
 
-		float step = 0;
-
-		for (int y = 0, x; y < renderHeight; ++y) { // loop for quality = 0 (every pixel)
-
-			final float yTranslate = (y - originPoint.y);
-
-			for (x = 0; x < renderWidth; ++x) {
-
-				float newXpos = (x - originPoint.x) * cos - yTranslate * sin + originPoint.x; // rotate x about midpoint
-				float newYpos = yTranslate * cos + (x - originPoint.x) * sin + originPoint.y; // rotate y about midpoint
-
-				/**
-				 * Calculate the max X difference between this pixel and centrepoint.x when
-				 * light fall off reaches the maximum (step = 1) for a given row (at an angle)
-				 */
-				float fallOffWidth = xDiffMax * ((newYpos - originPoint.y) / renderHeight * beamAngle);
-				if (fallOffWidth < 0) { // may be negative if centrePoint.y out of screen
-					fallOffWidth = 0;
-				}
-
-				float xDiff = Math.abs(newXpos - originPoint.x); // actual difference in x between this pixel and centerpoint.x
-
-				step = xDiff / fallOffWidth; // calculate step
-				if (step > 1) { // clamp to a high of 1
-					step = 1;
-				}
-
-				int stepInt = (int) (step * cacheSize);
-
-				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCache[stepInt];
-			}
-		}
+		makeThreadPool(renderPartitionsX, renderPartitionsY, SpotlightThread.class, originPoint, sin, cos, beamAngle, xDiffMax);
 
 		gradientPG.updatePixels();
 
@@ -1168,57 +1027,462 @@ public final class PeasyGradients {
 
 		gradient.prime();
 
+		for (int i = 0; i < gradientCache.length; i++) { // calc LUT
+			gradientCache[i] = gradient.getColor(i / (float) gradientCache.length);
+		}
+
 		final float renderMidpointX = (centerPoint.x / gradientPG.width) * renderWidth;
 		final float renderMidpointY = (centerPoint.y / gradientPG.height) * renderHeight;
 
 		final double denominator = 1 / ((Math.max(renderHeight, renderWidth)) * zoom);
 
-		for (int i = 0; i < pixelCache.length; i++) { // calc LUT
-			pixelCache[i] = gradient.getColor(i / (float) pixelCache.length);
-		}
-
 		final float sin = (float) FastMath.sin(PApplet.TWO_PI - angle);
 		final float cos = (float) FastMath.cos(angle);
 
-		float newXpos;
-		float newYpos;
-
-		float yDist;
-		float xDist;
-
-		for (int y = 0, x; y < renderHeight; ++y) {
-			yDist = (renderMidpointY - y) * (renderMidpointY - y);
-			final float yTranslate = (y - renderMidpointY);
-
-			for (x = 0; x < renderWidth; ++x) {
-				xDist = (renderMidpointX - x) * (renderMidpointX - x);
-
-				newXpos = (x - renderMidpointX) * cos - yTranslate * sin + renderMidpointX; // rotate x about midpoint
-				newYpos = yTranslate * cos + (x - renderMidpointX) * sin + renderMidpointY; // rotate y about midpoint
-
-				/**
-				 * In the 2 lines below, we are effectively calculating dist = eDist/(cos(angle)
-				 * + sin(angle)), where eDist is euclidean distance between (x,y) & midpoint,
-				 * and angle is the (atan2) angle between (x,y) & midpoint. These trig functions
-				 * and multiple sqrts have been cancelled out to derive the faster equivalent
-				 * equations below.
-				 */
-
-				float z = (renderMidpointY - newYpos) / (renderMidpointX - newXpos); // atan2(y,x) === atan(y/x), so calc y/x here
-
-				double dist = Math.sqrt((yDist + xDist) * (z * z + 1)) * denominator; // cos(atan(x)) === sqrt(z * z + 1)
-
-				if (dist > 1) { // clamp to a high of 1
-					dist = 1;
-				}
-
-				final int stepInt = (int) (dist * cacheSize);
-
-				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = pixelCache[stepInt];
-			}
-		}
+		makeThreadPool(renderPartitionsX, renderPartitionsY, HourglassThread.class, renderMidpointX, renderMidpointY, sin, cos,
+				denominator);
 
 		gradientPG.updatePixels();
 
 	}
+
+	/**
+	 * Creates a pool of threads to split the rendering work for the given gradient
+	 * type (each thread works on a portion of the pixels array). This method will
+	 * start the threads, returning when threads have completed.
+	 * 
+	 * @param partitionsX
+	 * @param partitionsY
+	 * @param gradientType class for the given gradient type thread
+	 * @param args         args to pass to gradient thread constructor
+	 */
+	private void makeThreadPool(final int partitionsX, final int partitionsY, final Class<? extends RenderThread> gradientType,
+			final Object... args) {
+
+		final int partitionWidth = (int) Math.floor((float) renderWidth / partitionsX); // pixel width of each parition
+		final int partitionHeight = (int) Math.floor((float) renderHeight / partitionsY); // pixel height of each parition
+
+		Object[] fullArgs = new Object[5 + args.length]; // empty obj array (to use as input args for new thread instance)
+		fullArgs[0] = this; // sub-classes require parent instance as (hidden) first param
+		System.arraycopy(args, 0, fullArgs, 5, args.length); // copy the input-args into fullargs
+
+		List<Callable<Boolean>> taskList = new ArrayList<>();
+
+		try {
+
+			@SuppressWarnings("unchecked")
+			Constructor<? extends RenderThread> constructor = (Constructor<? extends RenderThread>) gradientType
+					.getDeclaredConstructors()[0]; // only 1 constructor per thread class
+
+			/**
+			 * Render all paritions (except for bottom-most row and right-most column)
+			 */
+			fullArgs[3] = partitionWidth; // set thread partition width
+			fullArgs[4] = partitionHeight; // set thread partition height
+			for (int a = 0; a < partitionsX - 1; a++) {
+				for (int b = 0; b < partitionsY - 1; b++) {
+
+					fullArgs[1] = a * partitionWidth; // set thread offsetX
+					fullArgs[2] = b * partitionHeight; // set thread offsetY
+
+					RenderThread thread = constructor.newInstance(fullArgs);
+					taskList.add(thread);
+				}
+			}
+
+			/*
+			 * Render bottom row partitions
+			 */
+			fullArgs[2] = (partitionsY - 1) * partitionHeight; // bottom y row offset
+			fullArgs[4] = renderHeight - (partitionHeight * (partitionsY - 1)); // set bottom row partition height (to account for when
+			// height/partitionsY isn't whole number
+			for (int a = 0; a < partitionsX - 1; a++) {
+
+				fullArgs[1] = a * partitionWidth; // set thread offsetX
+
+				RenderThread thread = constructor.newInstance(fullArgs);
+				taskList.add(thread);
+			}
+
+			/**
+			 * Render right-most column partitions
+			 */
+			fullArgs[1] = (partitionsX - 1) * partitionWidth; // right-most x column offset
+			fullArgs[3] = renderWidth - (partitionWidth * (partitionsX - 1));
+			fullArgs[4] = partitionHeight; // reset to original value (changed for bottom row render above)
+			for (int b = 0; b < partitionsY - 1; b++) {
+
+				fullArgs[2] = b * partitionHeight; // set thread offsetY
+
+				RenderThread thread = constructor.newInstance(fullArgs);
+				taskList.add(thread);
+			}
+
+			/**
+			 * Render individual bottom-right parition
+			 */
+			fullArgs[1] = (partitionsX - 1) * partitionWidth; // set thread offsetX
+			fullArgs[2] = (partitionsY - 1) * partitionHeight; // set thread offsetY
+			fullArgs[4] = renderHeight - (partitionHeight * (partitionsY - 1));
+			RenderThread thread = constructor.newInstance(fullArgs);
+			taskList.add(thread);
+
+			THREAD_POOL.invokeAll(taskList); // run threads now
+
+		} catch (Exception e) { // if exception, probably because the given args don't match the thread class'
+								// args
+			e.printStackTrace();
+		}
+
+	}
+
+	/**
+	 * Threads operate on a portion of the pixels grid.
+	 * 
+	 * RenderThread child classes will implement call(); here the parallel gradient
+	 * rendering work is done.
+	 * 
+	 * @author micycle1
+	 *
+	 */
+	private abstract class RenderThread implements Callable<Boolean> {
+
+		final int offsetX, offsetY; // so that each thread calculates and renders gradient spectrum into a unique
+									// parition of the pixel grid
+		final int pixelsX, pixelsY; // specifies how many pixels, whose indexes starts at the relevant offsets, for
+									// this thread to calculate
+
+		/**
+		 * All gradient rendering threads, regardless of their specific gradient type,
+		 * need offsets and pixel length to determine the parition of the pixels grid it
+		 * should operate on.
+		 */
+		public RenderThread(int offsetX, int offsetY, int pixelsX, int pixelsY) {
+			this.offsetX = offsetX;
+			this.offsetY = offsetY;
+			this.pixelsX = pixelsX;
+			this.pixelsY = pixelsY;
+		}
+	}
+
+	private final class LinearThread extends RenderThread {
+
+		private final float odX, odY;
+		private final float odSqInverse;
+		private float opXod;
+
+		LinearThread(int offsetX, int offsetY, int pixelsX, int pixelsY, float odX, float odY, float odSqInverse, float opXod) {
+			super(offsetX, offsetY, pixelsX, pixelsY);
+			this.odX = odX;
+			this.odY = odY;
+			this.odSqInverse = odSqInverse;
+			this.opXod = opXod;
+		}
+
+		@Override
+		public Boolean call() {
+
+			/**
+			 * Usually, we'd call Functions.linearProject() to calculate step, but the
+			 * function is inlined here to optimise speed.
+			 */
+
+			for (int y = offsetY, x; y < offsetY + pixelsY; y++) {
+				opXod += odY * scaleY;
+				float xOff = odX * scaleX * pixelsX * (offsetX / pixelsX); // set partition x offset to correct amount
+
+				for (x = offsetX; x < offsetX + pixelsX; x++) {
+					float step = (opXod + xOff - offsetX) * odSqInverse; // get position of point on 1D gradient and normalise
+					step = (step < 0) ? 0 : (step > 1 ? 1 : step); // clamp
+					int stepInt = (int) (step * gradientCacheSize);
+					gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
+					xOff += odX * scaleX;
+				}
+			}
+
+			return true;
+		}
+
+	}
+
+	private final class RadialThread extends RenderThread {
+
+		private final float renderMidpointX, renderMidpointY;
+		private final float zoom;
+
+		RadialThread(int offsetX, int offsetY, int pixelsX, int pixelsY, float renderMidpointX, float renderMidpointY, float zoom) {
+			super(offsetX, offsetY, pixelsX, pixelsY);
+			this.renderMidpointX = renderMidpointX;
+			this.renderMidpointY = renderMidpointY;
+			this.zoom = zoom;
+		}
+
+		@Override
+		public Boolean call() {
+
+			for (int y = offsetY, x; y < offsetY + pixelsY; y++) {
+				float rise = renderMidpointY - y;
+				rise *= rise;
+
+				for (x = offsetX; x < offsetX + pixelsX; x++) {
+					float run = renderMidpointX - x;
+					run *= run;
+
+					float distSq = run + rise;
+					float dist = zoom * distSq;
+
+					if (dist > 1) { // clamp to a high of 1
+						dist = 1;
+					}
+
+					int stepInt = (int) (dist * gradientCacheSize);
+					gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
+				}
+			}
+
+			return true;
+		}
+
+	}
+
+	private final class ConicThread extends RenderThread {
+
+		private final float renderMidpointX, renderMidpointY;
+		private final float angle;
+
+		ConicThread(int offsetX, int offsetY, int pixelsX, int pixelsY, float renderMidpointX, float renderMidpointY, float angle) {
+			super(offsetX, offsetY, pixelsX, pixelsY);
+			this.renderMidpointX = renderMidpointX;
+			this.renderMidpointY = renderMidpointY;
+			this.angle = angle;
+		}
+
+		@Override
+		public Boolean call() {
+
+			double t;
+
+			float rise, run;
+
+			for (int y = offsetY, x; y < offsetY + pixelsY; y++) {
+				rise = renderMidpointY - y;
+				run = renderMidpointX - offsetX; // subtract offsetX so it renders correctly when paritioned over threads
+				for (x = offsetX; x < offsetX + pixelsX; x++) {
+
+					t = Functions.fastAtan2b(rise, run) + PConstants.PI - angle; // + PI to align bump with angle
+					t *= INV_TWO_PI; // normalise
+					t -= Math.floor(t); // modulo
+
+					int stepInt = (int) (t * gradientCacheSize);
+					gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
+
+					run--;
+				}
+			}
+
+			return true;
+		}
+
+	}
+
+	/**
+	 * Thread for variable-curviness spiral gradients.
+	 * 
+	 * @author micycle1
+	 *
+	 */
+	private final class SpiralThread extends RenderThread {
+
+		private final float renderMidpointX, renderMidpointY;
+		private final float angle;
+		private final float curveCount;
+		private final float curviness;
+		private final double curveDenominator;
+
+		SpiralThread(int offsetX, int offsetY, int pixelsX, int pixelsY, float renderMidpointX, float renderMidpointY,
+				double curveDenominator, float curviness, float angle, float curveCount) {
+			super(offsetX, offsetY, pixelsX, pixelsY);
+			this.renderMidpointX = renderMidpointX;
+			this.renderMidpointY = renderMidpointY;
+			this.curveCount = curveCount;
+			this.curveDenominator = curveDenominator;
+			this.angle = angle;
+			this.curviness = curviness;
+		}
+
+		@Override
+		public Boolean call() throws Exception {
+
+			double t;
+			double spiralOffset = 0;
+
+			/**
+			 * Choose sqrt version (default, faster) or version with custom curviness
+			 * exponent. Choose here once, rather than each iteration in loop
+			 */
+			if (curviness == 0.5f) {
+				for (int y = offsetY, x; y < offsetY + pixelsY; y++) {
+
+					float rise = renderMidpointY - y;
+					final float riseSquared = rise * rise;
+
+					for (x = offsetX; x < offsetX + pixelsX; x++) {
+						float run = renderMidpointX - x;
+						t = Functions.fastAtan2b(rise, run) - angle; // -PI...PI
+						spiralOffset = curveCount * Math.sqrt((riseSquared + run * run) * curveDenominator);
+						t += spiralOffset;
+
+						t *= INV_TWO_PI; // normalise
+						t -= Math.floor(t); // modulo
+
+						int stepInt = (int) (t * gradientCacheSize);
+						gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
+
+						run--;
+					}
+				}
+			} else {
+				for (int y = offsetY, x; y < offsetY + pixelsY; y++) {
+
+					float rise = renderMidpointY - y;
+					final float riseSquared = rise * rise;
+
+					for (x = offsetX; x < offsetX + pixelsX; x++) {
+						float run = renderMidpointX - x;
+						t = Functions.fastAtan2b(rise, run) - angle; // -PI...PI
+						spiralOffset = curveCount * FastPow.fastPow((riseSquared + run * run) * curveDenominator, curviness);
+						t += spiralOffset;
+
+						t *= INV_TWO_PI; // normalise
+						t -= Math.floor(t); // modulo
+
+						int stepInt = (int) (t * gradientCacheSize);
+						gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
+
+						run--;
+					}
+				}
+			}
+
+			return true;
+
+		}
+	}
+
+	private final class SpotlightThread extends RenderThread {
+
+		private final PVector originPoint;
+		private final float beamAngle;
+		private final float xDiffMax;
+		private final float sin, cos;
+
+		SpotlightThread(int offsetX, int offsetY, int pixelsX, int pixelsY, PVector originPoint, float sin, float cos, float beamAngle,
+				float xDiffMax) {
+			super(offsetX, offsetY, pixelsX, pixelsY);
+			this.originPoint = originPoint;
+			this.sin = sin;
+			this.cos = cos;
+			this.beamAngle = beamAngle;
+			this.xDiffMax = xDiffMax;
+		}
+
+		@Override
+		public Boolean call() {
+
+			for (int y = offsetY, x; y < offsetY + pixelsY; y++) {
+				final float yTranslate = (y - originPoint.y);
+				for (x = offsetX; x < offsetX + pixelsX; x++) {
+					float newXpos = (x - originPoint.x) * cos - yTranslate * sin + originPoint.x; // rotate x about midpoint
+					float newYpos = yTranslate * cos + (x - originPoint.x) * sin + originPoint.y; // rotate y about midpoint
+
+					/**
+					 * Calculate the max X difference between this pixel and centrepoint.x when
+					 * light fall off reaches the maximum (step = 1) for a given row (at an angle)
+					 */
+					float fallOffWidth = xDiffMax * ((newYpos - originPoint.y) / renderHeight * beamAngle);
+					if (fallOffWidth < 0) { // may be negative if centrePoint.y out of screen
+						fallOffWidth = 0;
+					}
+
+					float xDiff = Math.abs(newXpos - originPoint.x); // actual difference in x between this pixel and centerpoint.x
+
+					float step = xDiff / fallOffWidth; // calculate step
+					if (step > 1) { // clamp to a high of 1
+						step = 1;
+					}
+
+					int stepInt = (int) (step * gradientCacheSize);
+
+					gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
+				}
+			}
+
+			return true;
+		}
+
+	}
+
+	private final class HourglassThread extends RenderThread {
+
+		private final float renderMidpointX, renderMidpointY;
+		private final float sin, cos;
+		private final double denominator;
+
+		HourglassThread(int offsetX, int offsetY, int pixelsX, int pixelsY, float renderMidpointX, float renderMidpointY, float sin,
+				float cos, float zoom, float angle, double denominator) {
+			super(offsetX, offsetY, pixelsX, pixelsY);
+			this.renderMidpointX = renderMidpointX;
+			this.renderMidpointY = renderMidpointY;
+			this.sin = sin;
+			this.cos = cos;
+			this.denominator = denominator;
+		}
+
+		@Override
+		public Boolean call() {
+
+			float newXpos;
+			float newYpos;
+
+			float yDist;
+			float xDist;
+
+			for (int y = offsetY, x; y < offsetY + pixelsY; y++) {
+				yDist = (renderMidpointY - y) * (renderMidpointY - y);
+				final float yTranslate = (y - renderMidpointY);
+
+				for (x = offsetX; x < offsetX + pixelsX; x++) {
+
+					xDist = (renderMidpointX - x) * (renderMidpointX - x);
+
+					newXpos = (x - renderMidpointX) * cos - yTranslate * sin + renderMidpointX; // rotate x about midpoint
+					newYpos = yTranslate * cos + (x - renderMidpointX) * sin + renderMidpointY; // rotate y about midpoint
+
+					/**
+					 * In the 2 lines below, we are effectively calculating dist = eDist/(cos(angle)
+					 * + sin(angle)), where eDist is euclidean distance between (x,y) & midpoint,
+					 * and angle is the (atan2) angle between (x,y) & midpoint. These trig functions
+					 * and multiple sqrts have been cancelled out to derive the faster equivalent
+					 * equations below.
+					 */
+
+					float z = (renderMidpointY - newYpos) / (renderMidpointX - newXpos); // atan2(y,x) === atan(y/x), so calc y/x here
+
+					double dist = Math.sqrt((yDist + xDist) * (z * z + 1)) * denominator; // cos(atan(x)) === sqrt(z * z + 1)
+
+					if (dist > 1) { // clamp to a high of 1
+						dist = 1;
+					}
+
+					final int stepInt = (int) (dist * gradientCacheSize);
+
+					gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
+				}
+			}
+
+			return true;
+		}
+
+	}
+
 }

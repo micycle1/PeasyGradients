@@ -54,7 +54,7 @@ See the *Gradients* section below for a showcase of each (2D) gradient type.
 
 * To use PeasyGradients in a Java IDE, simply download the most recent .jar from [releases](https://github.com/micycle1/PeasyGradients/releases/) and include it in your project's classpath.
 
-* To use it in the Processing IDE (for it to appear in the contribution manager), download the .jar as above and then see [this](https://github.com/processing/processing/wiki/How-to-Install-a-Contributed-Library).
+* To use it in the Processing IDE (for it to appear in the contribution manager), download the .jar as above and then see [this](https://github.com/processing/processing/wiki/How-to-Install-a-Contributed-Library). Alternatively, you can drag-and-drop the .jar onto your sketch.
 
 ## Gradients
 
@@ -260,7 +260,7 @@ void draw() {
 <img src="resources/animation_examples/masking_example.gif" alt="PeasyGradients"/></a><br></p>
 
 ## Library Optimisation
-PeasyGradients targets the **CPU** (as opposed to the GPU) as to not be dependent on `OPENGL` libraries. To this end, there have been many internal optimisations to make the library suitable for dynamic animation and interaction rather than just static rendering. Rendering (most) gradients at 60fps at 1080p is more than achievable on modern processors.
+PeasyGradients targets the **CPU** (as opposed to the GPU) as to not be dependent on `OPENGL` libraries. To this end, there have been many internal optimisations to make the library suitable for dynamic animation and interaction rather than just static rendering. Care was taken to optimise color interpolation and gradient rasterization, and finally multithreading was added to naively parallelise the workload. Therefore, rendering (most) gradients at 60fps at high resolutions (1080p+) is more than achievable on modern processors.
 
 ## Known Issues
 
