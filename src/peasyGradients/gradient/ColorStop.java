@@ -4,12 +4,13 @@ import java.util.Arrays;
 import java.util.HashMap;
 
 import peasyGradients.colorSpaces.*;
+import peasyGradients.utilities.ColorUtils;
 import peasyGradients.utilities.Functions;
 import processing.core.PApplet;
 
 /**
- * A container for color (in every color space) and the percentage position
- * that it occurs within gradient.
+ * A container for color (in every color space) and the percentage position that
+ * it occurs within a gradient. Gradients comprise of multiple color stops.
  * 
  * @author micycle1
  *
@@ -52,7 +53,7 @@ public final class ColorStop implements Comparable<ColorStop> {
 		this.clr = color;
 		this.alpha = (color >> 24) & 0xff;
 
-		final double[] clrRGBDouble = Functions.decomposeclrDouble(color);
+		final double[] clrRGBDouble = ColorUtils.decomposeclrDouble(color);
 
 		for (int i = 0; i < ColorSpaces.size; i++) {
 			colorsMap.put(ColorSpaces.get(i), ColorSpaces.get(i).getColorSpace().fromRGB(clrRGBDouble));
@@ -60,7 +61,7 @@ public final class ColorStop implements Comparable<ColorStop> {
 
 		colorOut = colorsMap.get(colorSpace);
 	}
-	
+
 	void setPosition(float position) {
 		if (position < 0) {
 			position += 1; // equivalent to floormod function
@@ -94,11 +95,11 @@ public final class ColorStop implements Comparable<ColorStop> {
 	protected void mutate(float amt) {
 		// TODO fix with amt < 1
 		// TODO use noise function for better / more natural variance
-		float[] decomposed = Functions.decomposeclrRGB(clr);
+		float[] decomposed = ColorUtils.decomposeclrRGB(clr);
 		for (int i = 0; i < decomposed.length - 1; i++) {
 			decomposed[i] = PApplet.constrain(decomposed[i] + (Functions.randomFloat() < 0.5 ? -1 : 1) * amt, 0, 255);
 		}
-		setcolor(Functions.composeclr255(decomposed));
+		setcolor(ColorUtils.composeclr255(decomposed));
 	}
 
 	/**
@@ -111,7 +112,7 @@ public final class ColorStop implements Comparable<ColorStop> {
 
 	@Override
 	public String toString() {
-		return Arrays.toString(Functions.composeclrTo255(Functions.decomposeclrDouble(clr)));
+		return Arrays.toString(ColorUtils.composeclrTo255(ColorUtils.decomposeclrDouble(clr)));
 	}
 
 }

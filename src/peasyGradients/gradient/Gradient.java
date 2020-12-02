@@ -5,6 +5,7 @@ import java.util.Iterator;
 
 import net.jafama.FastMath;
 import peasyGradients.colorSpaces.*;
+import peasyGradients.utilities.ColorUtils;
 import peasyGradients.utilities.FastPow;
 import peasyGradients.utilities.Functions;
 import peasyGradients.utilities.Interpolation;
@@ -258,7 +259,7 @@ public final class Gradient {
 	 *                 outside the range of 0...1 will wrap back into the gradient
 	 * @return ARGB integer for Processing pixel array.
 	 */
-	public int getColor(float position) {
+	public int getColor(float position) { // TODO a version which writes to PeasyGradients int[] array (i.e. does all at once) 
 
 		position += offset;
 		if (position < 0) { // (if animation offset negative)
@@ -324,7 +325,7 @@ public final class Gradient {
 		int alpha = (int) Math.floor((currStop.alpha + (position * (prevStop.alpha - currStop.alpha))) + 0.5d);
 
 		// convert current colorspace value to sARGB int and return
-		return Functions.composeclr(colorSpaceInstance.toRGB(interpolatedcolorOUT), alpha);
+		return ColorUtils.composeclr(colorSpaceInstance.toRGB(interpolatedcolorOUT), alpha);
 	}
 
 	/**
@@ -383,7 +384,7 @@ public final class Gradient {
 		float percent;
 		for (int i = 0; i < numcolors; ++i) {
 			percent = i == 0 ? 0 : i == numcolors - 1 ? 1 : (float) Math.random();
-			temp[i] = new ColorStop(Functions.composeclr((float) Math.random(), (float) Math.random(), (float) Math.random(), 1), percent);
+			temp[i] = new ColorStop(ColorUtils.composeclr((float) Math.random(), (float) Math.random(), (float) Math.random(), 1), percent);
 		}
 		return new Gradient(temp);
 	}
@@ -398,7 +399,7 @@ public final class Gradient {
 	public static Gradient randomGradient(int numcolors) {
 		int[] temp = new int[numcolors];
 		for (int i = 0; i < numcolors; ++i) {
-			temp[i] = Functions.composeclr((float) Math.random(), (float) Math.random(), (float) Math.random(), 1);
+			temp[i] = ColorUtils.composeclr((float) Math.random(), (float) Math.random(), (float) Math.random(), 1);
 		}
 		return new Gradient(temp);
 	}
@@ -425,7 +426,7 @@ public final class Gradient {
 		sb.append(String.format("    " + "%-10s%-25s%-12s%-20s\n", "Position", "RGBA", "clrInteger", "clrCurrentColSpace"));
 		for (ColorStop colorStop : colorStops) {
 			sb.append(String.format("    " + "%-10s%-25s%-12s%-20s\n", colorStop.position,
-					Functions.formatArray(Functions.decomposeclrRGBDouble(colorStop.clr, colorStop.alpha), 0, 2), colorStop.clr,
+					Functions.formatArray(ColorUtils.decomposeclrRGBDouble(colorStop.clr, colorStop.alpha), 0, 2), colorStop.clr,
 					Functions.formatArray(colorStop.getcolor(colorSpace), 2, 3)));
 		}
 		return sb.toString();
@@ -444,12 +445,12 @@ public final class Gradient {
 
 		Iterator<ColorStop> iterator = colorStops.iterator();
 		ColorStop c = iterator.next();
-		sb.append("color" + Functions.formatArray(Functions.decomposeclrRGBDouble(c.clr, c.alpha), 0, 0, '(', ')'));
+		sb.append("color" + Functions.formatArray(ColorUtils.decomposeclrRGBDouble(c.clr, c.alpha), 0, 0, '(', ')'));
 
 		while (iterator.hasNext()) {
 			c = iterator.next();
 			sb.append(", ");
-			sb.append("color" + Functions.formatArray(Functions.decomposeclrRGBDouble(c.clr, c.alpha), 0, 0, '(', ')'));
+			sb.append("color" + Functions.formatArray(ColorUtils.decomposeclrRGBDouble(c.clr, c.alpha), 0, 0, '(', ')'));
 		}
 
 		sb.append(");");

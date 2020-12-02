@@ -1,6 +1,7 @@
 package peasyGradients.gradient;
 
 import peasyGradients.colorSpaces.ColorSpaces;
+import peasyGradients.utilities.ColorUtils;
 import peasyGradients.utilities.Functions;
 
 import processing.core.PApplet;
@@ -102,7 +103,7 @@ public final class Palette {
 
 			double[] HSB = new double[] { h, PApplet.constrain(s + Functions.random(-sVarMax, sVarMax), sMin, 1),
 					PApplet.constrain(b + Functions.random(-bVarMax, bVarMax), bMin, 1) };
-			out[i] = Functions.composeclr(ColorSpaces.HSB.getColorSpace().toRGB(HSB));
+			out[i] = ColorUtils.composeclr(ColorSpaces.HSB.getColorSpace().toRGB(HSB));
 			h += increment;
 			h %= 1;
 		}
