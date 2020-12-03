@@ -1,8 +1,6 @@
 <h1 align="center">
   <a href="https://github.com/micycle1/PeasyGradients">
-  <img src="resources/logo/banner-2.png" alt="PeasyGradients"/></a><br>
-<!-- PeasyGradients -->
-<!-- <br></br> -->
+  <img src="resources/logo/Banner-2.png" alt="PeasyGradients"/></a>
 </h1>
 
 *PeasyGradients* is a library for [Processing](https://processing.org/) that makes drawing color gradients easy-peasy. This library was inspired by Jeremy Behreandt's [*Color Gradients in Processing*](https://medium.com/@behreajj/color-gradients-in-processing-v-2-0-e5c0b87cdfd2) but has greatly developed the concepts and functionality presented there.
