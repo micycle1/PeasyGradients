@@ -1,11 +1,9 @@
 <h1 align="center">
   <a href="https://github.com/micycle1/PeasyGradients">
-  <img src="resources/logo/logo-small.png" alt="PeasyGradients"/></a><br>
-PeasyGradients
-<br></br>
+  <img src="resources/logo/banner-2.png" alt="PeasyGradients"/></a><br>
+<!-- PeasyGradients -->
+<!-- <br></br> -->
 </h1>
-<p align="center">🚧<em>~~A Work in Progress~~</em>🚧</p>
-
 
 *PeasyGradients* is a library for [Processing](https://processing.org/) that makes drawing color gradients easy-peasy. This library was inspired by Jeremy Behreandt's [*Color Gradients in Processing*](https://medium.com/@behreajj/color-gradients-in-processing-v-2-0-e5c0b87cdfd2) but has greatly developed the concepts and functionality presented there.
 
@@ -58,9 +56,11 @@ See the *Gradients* section below for a showcase of each (2D) gradient type.
 
 ## Gradients
 
-PeasyGradients provides methods to render 10 types of 2D gradients.
+PeasyGradients provides methods to render 11 types of 2D gradients.
 
 Zoom and rotation can be adjusted for most gradient types; certain gradient types offer additional parameters — for example, the polygon gradient requires a parameter specifying the number of polygon sides.
+
+For many of the gradient types, there are multiple methods available to call, offering varying degrees of customisation of the gradient's spectrum shape.
 
 Each gradient type is shown below. The screenshots are taken using the `LUV` color space with `SMOOTH_STEP` interpolation, and rotation set to 0 where applicable.
 
