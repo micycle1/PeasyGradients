@@ -6,13 +6,13 @@ package peasyGradients.colorSpaces;
  * XYZ_FAST values are not divided by certain constants.
  * 
  * @author micycle1
- * @deprecated
+ * @deprecated not needed since the LUT optimisation.
  *
  */
 final class XYZ_FAST {
 
 	/**
-	 * Not fast, since only called once during colorstop instantiation.
+	 * This method is not faster, since only called once during colorstop instantiation.
 	 * @param sRGB [R,G,B] where values are 0...1.0
 	 * @return XYZ representation (where values have same relative difference as
 	 *         real XYZ values)

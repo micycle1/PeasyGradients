@@ -15,7 +15,7 @@ import peasyGradients.utilities.Functions;
  */
 final class XYZ implements ColorSpace {
 
-	private static final double constA = 1 / 2.4d;
+	private static final double constA = 1 / 2.4d; // 1/ sRGB gamma
 
 	XYZ() {
 	}
@@ -149,6 +149,7 @@ final class XYZ implements ColorSpace {
 		double y = rgb[1];
 		double z = rgb[2];
 
+		// convert sRGB (gamma-adjusted) to linear RGB (linear space for XYZ)
 		if (x > 0.04045) {
 			x = Math.pow((x + 0.055) / 1.055, 2.4);
 		} else {
@@ -191,6 +192,7 @@ final class XYZ implements ColorSpace {
 		g = x * -0.9689 + y * 1.8758 + z * 0.0415;
 		b = x * 0.0557 + y * -0.2040 + z * 1.0570;
 
+		// convert linear RGB back to (gamma-adjusted) sRGB
 		if (r > 0.0031308) {
 			r = 1.055 * FastMath.pow(r, constA) - 0.055;
 		} else {

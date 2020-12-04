@@ -1,7 +1,7 @@
 package peasyGradients.colorSpaces;
 
 /**
- * colorspaces should implement this class.
+ * Colorspaces should implement this class.
  * 
  * @author micycle1
  *

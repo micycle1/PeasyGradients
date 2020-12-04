@@ -132,7 +132,7 @@ final class JAB implements ColorSpace {
 		LMSp[2] = iab0 - 0.096019242026319 * jab[1] - 0.811891896056039 * jab[2];
 
 		double[] LMS = new double[3];
-		// nested fastpow calls require larger LUT to retain accuracy
+		// nested fastpow calls require larger LUT to retain accuracy; TODO change to FastMath?
 		LMS[0] = FastPow.fastPow((c1 - FastPow.fastPow(LMSp[0], pInverse)) / ((c3 * FastPow.fastPow(LMSp[0], pInverse)) - c2), nInverse);
 		LMS[1] = FastPow.fastPow((c1 - FastPow.fastPow(LMSp[1], pInverse)) / ((c3 * FastPow.fastPow(LMSp[1], pInverse)) - c2), nInverse);
 		LMS[2] = FastPow.fastPow((c1 - FastPow.fastPow(LMSp[2], pInverse)) / ((c3 * FastPow.fastPow(LMSp[2], pInverse)) - c2), nInverse);

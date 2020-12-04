@@ -1,8 +1,8 @@
 package peasyGradients.utilities;
 
 /**
- * Interpolation functions affect the interpolation factor (0.0...1.0) between any 2 color
- * stops and therefore the appearance (ramp) of a gradient.
+ * Interpolation functions affect the interpolation factor (0.0...1.0) between
+ * any 2 color stops and therefore the appearance (ramp) of a gradient.
  * 
  * <P>
  * For example, in linear mode, a point mid-way between two control points will
@@ -89,7 +89,13 @@ public enum Interpolation {
 	 * stretching of the function. Its maximum, which is 1, happens at exactly x =
 	 * 1/k.
 	 */
-	EXPIMPULSE;
+	EXPIMPULSE,
+	/**
+	 * Takes in a number between 0 and 1, and returns a number somewhere between 0
+	 * and 1, leading to a bit of a 'beating heart' type of effect. Sourced from
+	 * https://observablehq.com/@mattdesl/heartbeat-function
+	 */
+	HEARTBEAT;
 
 	private final static Interpolation[] vals = values();
 

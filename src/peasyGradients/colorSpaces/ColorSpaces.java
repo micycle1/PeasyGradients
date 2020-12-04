@@ -1,8 +1,8 @@
 package peasyGradients.colorSpaces;
 
 /**
- * colorspaces are used to specify the color space in which a gradient's
- * colors are interpolated.
+ * Colorspaces are used to specify the color space in which a gradient's
+ * colors are represented and affects the results of color interpolation.
  * 
  * @author micycle1
  *
@@ -10,7 +10,7 @@ package peasyGradients.colorSpaces;
 public enum ColorSpaces {
 
 	RGB(new RGB()), XYZ(new XYZ()), LAB(new LAB()), DIN99(new DIN99()), ITP(new ITP()), HLAB(new HUNTER_LAB()), LUV(new LUV()),
-	JAB(new JAB()), RYB(new RYB()), HSB(new HSB());
+	JAB(new JAB()), XYB(new XYB()), RYB(new RYB()), HSB(new HSB());
 
 	public static final int size = values().length;
 

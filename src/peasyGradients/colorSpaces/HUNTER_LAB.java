@@ -23,20 +23,7 @@ final class HUNTER_LAB implements ColorSpace {
 
 	private static final double ka = (175.0 / 198.04) * (illuminantY + illuminantX);
 	private static final double kb = (70.0 / 218.11) * (illuminantY + illuminantZ);
-	
-	/**
-	 * Look-up table for EOTF function (as domain is 0...1)
-	 */
-	private static final double[] LUT;
-	private static final int LUT_SIZE = 2000; // 2500 seems more than sufficient
-	
-	static {
-		LUT = new double[LUT_SIZE];
-		for (int i = 0; i < LUT.length; i++) {
-			LUT[i] = Math.sqrt((1d / LUT_SIZE) * i);
-		}
-	}
-	
+
 	HUNTER_LAB() {
 	}
 
@@ -71,18 +58,18 @@ final class HUNTER_LAB implements ColorSpace {
 
 	private static double[] hlab2xyz(double[] lab) {
 		lab[0] = lab[0] * lab[0] * 0.01;
-		return new double[] {
-				((lab[1] / ka * Math.sqrt(lab[0] / illuminantY)) + (lab[0] / illuminantY)) * illuminantX, lab[0],
+		return new double[] { ((lab[1] / ka * Math.sqrt(lab[0] / illuminantY)) + (lab[0] / illuminantY)) * illuminantX, lab[0],
 				-(lab[2] / kb * Math.sqrt(lab[0] / illuminantY) - (lab[0] / illuminantY)) * illuminantZ };
 	}
-	
+
 	/**
-	 * If illuminantY == 100, we can remove some divisions and the sqrt easily. 
+	 * If illuminantY == 100, we can remove some divisions and the sqrt easily.
+	 * 
 	 * @param lab
 	 * @return
 	 */
 	private static double[] hlab2xyzQuick(double[] lab) {
-		double cache = lab[0]*0.01;
+		double cache = lab[0] * 0.01;
 		lab[0] = lab[0] * lab[0] * 0.0001;
 
 		return new double[] { ((lab[1] / ka * cache) + (lab[0])) * illuminantX, 100 * lab[0],
