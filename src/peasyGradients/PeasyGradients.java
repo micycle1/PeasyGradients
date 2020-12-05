@@ -43,6 +43,10 @@ import peasyGradients.utilities.FastNoiseLite.NoiseType;
  * class!
  * 
  * <p>
+ * https://helpx.adobe.com/illustrator/using/gradients.html#create_apply_freeform_gradient
+ * for examples
+ * 
+ * <p>
  * Algorithms for linear, radial & conic gradients are based on <a href=
  * "https://medium.com/@behreajj/color-gradients-in-processing-v-2-0-e5c0b87cdfd2">this</a>
  * work by Jeremy Behreandt; all others are mostly my own derivation.
@@ -57,6 +61,7 @@ public final class PeasyGradients {
 	private static final float PIf = (float) Math.PI;
 	private static final double HALF_PI = (0.5f * Math.PI);
 	private static final float INV_TWO_PI = 1f / PConstants.TWO_PI;
+	private static final float THREE_QRTR_PI = (float) (0.75f * Math.PI);
 
 	private static final ExecutorService THREAD_POOL;
 
@@ -89,7 +94,7 @@ public final class PeasyGradients {
 
 	private int renderPartitionsX = 3; // number of thread render partitions in the x (horizontal) direction TODO set
 										// value
-	private int renderPartitionsY = 4; // number of thread render partitions in the y (vertical) direction TODO set
+	private int renderPartitionsY = 3; // number of thread render partitions in the y (vertical) direction TODO set
 										// value
 
 	/**
@@ -636,87 +641,12 @@ public final class PeasyGradients {
 			gradientCache[i] = gradient.getColor(i / (float) gradientCache.length);
 		}
 
-		final float sin = (float) FastMath.sin(-angle);
-		final float cos = (float) FastMath.cos(-angle);
+		final float sin = (float) FastMath.sin(angle + THREE_QRTR_PI); // +THREE_QRTR_PI to align centrepoint with noise position
+		final float cos = (float) FastMath.cos(angle + THREE_QRTR_PI); // +THREE_QRTR_PI to align centrepoint with noise position
 
 		final float[][] noiseVals = new float[gradientPG.width][gradientPG.height];
 
-		/**
-		 * Even the simpler noise types are quite expensive to compute for every pixel,
-		 * so we calculate a noise value for every 4th pixel (every 2nd pixel on both
-		 * axes), and then interpolate these values for other pixels later. Visually
-		 * this isn't apparent since the noise value for adjacent pixels is mostly
-		 * gradual anyway.
-		 */
-		for (int y = 0, x; y < renderHeight; y += 2) {
-			final float yTranslate = (y - centerPoint.y);
-
-			for (x = 0; x < renderWidth; x += 2) {
-
-				float newXpos = (x - centerPoint.x) * cos - yTranslate * sin + centerPoint.x; // rotate x about midpoint
-				float newYpos = yTranslate * cos + (x - centerPoint.x) * sin + centerPoint.y; // rotate y about midpoint
-
-				float step = fastNoiseLite.getSimplexNoiseFast(newXpos, newYpos); // call custom method
-				noiseVals[x][y] = step;
-
-				final int stepInt = (int) (step * gradientCacheSize);
-
-				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
-			}
-		}
-
-		/**
-		 * Interpolate horizontally (x-axis)
-		 */
-		for (int y = 0, x; y < renderHeight; y++) {
-			for (x = 1; x < renderWidth - 1; x += 2) {
-				noiseVals[x][y] = (noiseVals[x - 1][y] + noiseVals[x + 1][y]) / 2;
-				final int stepInt = (int) (noiseVals[x][y] * gradientCacheSize);
-				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
-			}
-		}
-
-		/**
-		 * Interpolate vertically (y-axis)
-		 */
-		for (int y = 1, x; y < renderHeight - 1; y += 2) {
-			for (x = 0; x < renderWidth; x += 1) {
-				noiseVals[x][y] = (noiseVals[x][y - 1] + noiseVals[x][y + 1]) / 2;
-				final int stepInt = (int) (noiseVals[x][y] * gradientCacheSize);
-				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
-			}
-		}
-
-		/**
-		 * Pass over very bottom row
-		 */
-		float yTranslate = (renderHeight - 1 - centerPoint.y);
-		for (int x = 0; x < renderWidth; x++) {
-			float newXpos = (x - centerPoint.x) * cos - yTranslate * sin + centerPoint.x; // rotate x about midpoint
-			float newYpos = yTranslate * cos + (x - centerPoint.x) * sin + centerPoint.y; // rotate y about midpoint
-
-			float step = fastNoiseLite.getSimplexNoiseFast(newXpos, newYpos); // call custom method
-
-			final int stepInt = (int) (step * gradientCacheSize);
-
-			gradientPG.pixels[gradientPG.width * (renderHeight - 1 + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
-		}
-
-		/**
-		 * Pass over right-most column
-		 */
-
-		for (int y = 0; y < renderHeight; y++) {
-			yTranslate = (y - centerPoint.y);
-			float newXpos = ((renderWidth - 1) - centerPoint.x) * cos - yTranslate * sin + centerPoint.x; // rotate x about midpoint
-			float newYpos = yTranslate * cos + ((renderWidth - 1) - centerPoint.x) * sin + centerPoint.y; // rotate y about midpoint
-
-			float step = fastNoiseLite.getSimplexNoiseFast(newXpos, newYpos); // call custom method
-
-			final int stepInt = (int) (step * gradientCacheSize);
-
-			gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (renderWidth - 1 + renderOffsetX)] = gradientCache[stepInt];
-		}
+		makeThreadPool(renderPartitionsX, renderPartitionsY, NoiseThread.class, centerPoint, sin, cos, noiseVals);
 
 		gradientPG.updatePixels();
 
@@ -770,110 +700,29 @@ public final class PeasyGradients {
 
 		gradient.prime();
 
+		/**
+		 * The range of noise values from fastnoise are generally [-1...1] (some have
+		 * slightly less range). We use this min and max to map the noise [-1...1] to a
+		 * step in the gradient [0...1].
+		 */
+		float min = -1, max = 1;
+
+		// special case: the range of non-fractal celluar noise is [-1...0]
+		if (fractalType == FractalType.None && noiseType == NoiseType.Cellular) {
+			max = 0;
+		}
+		float maxMinDenom = 1 / (max - min); // determines how to scale the noise value to get in necessary range [0...1]
+
 		for (int i = 0; i < gradientCache.length; i++) { // calc LUT
 			gradientCache[i] = gradient.getColor(i / (float) gradientCache.length);
 		}
 
-		final float sin = (float) FastMath.sin(-angle);
-		final float cos = (float) FastMath.cos(-angle);
+		final float sin = (float) FastMath.sin(angle + THREE_QRTR_PI); // +THREE_QRTR_PI to align centrepoint with noise position
+		final float cos = (float) FastMath.cos(angle + THREE_QRTR_PI); // +THREE_QRTR_PI to align centrepoint with noise position
 
 		final float[][] noiseVals = new float[gradientPG.width][gradientPG.height];
 
-		float min = 0, max = 0;
-
-		/**
-		 * Even the simpler noise types are quite expensive to compute for every pixel,
-		 * so we calculate a noise value for every 4th pixel (every 2nd pixel on both
-		 * axes), and then interpolate these values for other pixels later. Visually
-		 * this isn't apparent since the noise value for adjacent pixels is mostly
-		 * gradual anyway.
-		 */
-		for (int y = 0, x; y < renderHeight; y += 2) {
-			final float yTranslate = (y - centerPoint.y);
-
-			for (x = 0; x < renderWidth; x += 2) {
-
-				float newXpos = (x - centerPoint.x) * cos - yTranslate * sin + centerPoint.x; // rotate x about midpoint
-				float newYpos = yTranslate * cos + (x - centerPoint.x) * sin + centerPoint.y; // rotate y about midpoint
-
-				float step = fastNoiseLite.GetNoise(newXpos, newYpos);
-				/**
-				 * dynamically map the step to 0...1 based on the noise range (which varies
-				 * depending on noise type, etc.)
-				 */
-				min = Math.min(min, step);
-				max = Math.max(max, step);
-				float maxMinDenom = 1 / (max - min);
-				step = ((step - min) * (maxMinDenom));
-				noiseVals[x][y] = step;
-
-				final int stepInt = (int) (step * gradientCacheSize);
-
-				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
-			}
-		}
-
-		/**
-		 * Interpolate horizontally (x-axis)
-		 */
-		for (int y = 0, x; y < renderHeight; y++) {
-			for (x = 1; x < renderWidth - 1; x += 2) {
-				noiseVals[x][y] = (noiseVals[x - 1][y] + noiseVals[x + 1][y]) / 2;
-				final int stepInt = (int) (noiseVals[x][y] * gradientCacheSize);
-				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
-			}
-		}
-
-		/**
-		 * Interpolate vertically (y-axis)
-		 */
-		for (int y = 1, x; y < renderHeight - 1; y += 2) {
-			for (x = 0; x < renderWidth; x += 1) {
-				noiseVals[x][y] = (noiseVals[x][y - 1] + noiseVals[x][y + 1]) / 2;
-				final int stepInt = (int) (noiseVals[x][y] * gradientCacheSize);
-				gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
-			}
-		}
-
-		/**
-		 * Pass over very bottom row
-		 */
-		float yTranslate = (renderHeight - 1 - centerPoint.y);
-		for (int x = 0; x < renderWidth; x++) {
-			float newXpos = (x - centerPoint.x) * cos - yTranslate * sin + centerPoint.x; // rotate x about midpoint
-			float newYpos = yTranslate * cos + (x - centerPoint.x) * sin + centerPoint.y; // rotate y about midpoint
-
-			float step = fastNoiseLite.GetNoise(newXpos, newYpos);
-
-			min = Math.min(min, step);
-			max = Math.max(max, step);
-			float maxMinDenom = 1 / (max - min);
-			step = ((step - min) * (maxMinDenom));
-			final int stepInt = (int) (step * gradientCacheSize);
-
-			gradientPG.pixels[gradientPG.width * (renderHeight - 1 + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
-		}
-
-		/**
-		 * Pass over right-most column
-		 */
-
-		for (int y = 0; y < renderHeight; y++) {
-			yTranslate = (y - centerPoint.y);
-			float newXpos = ((renderWidth - 1) - centerPoint.x) * cos - yTranslate * sin + centerPoint.x; // rotate x about midpoint
-			float newYpos = yTranslate * cos + ((renderWidth - 1) - centerPoint.x) * sin + centerPoint.y; // rotate y about midpoint
-
-			float step = fastNoiseLite.GetNoise(newXpos, newYpos);
-
-			min = Math.min(min, step);
-			max = Math.max(max, step);
-			float maxMinDenom = 1 / (max - min);
-			step = ((step - min) * (maxMinDenom));
-
-			final int stepInt = (int) (step * gradientCacheSize);
-
-			gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (renderWidth - 1 + renderOffsetX)] = gradientCache[stepInt];
-		}
+		makeThreadPool(renderPartitionsX, renderPartitionsY, FractalNoiseThread.class, centerPoint, sin, cos, min, maxMinDenom, noiseVals);
 
 		gradientPG.updatePixels();
 
@@ -958,14 +807,15 @@ public final class PeasyGradients {
 	 * @param centerPoint
 	 * @param angle
 	 * @param zoom
-	 * @param pinch determines how "pinched" the join/neck between the two bulbs is. default is 0
-	 * @param roundness how rounded (or circular) the bulbs are. default = 1
+	 * @param pinch       determines how "pinched" the join/neck between the two
+	 *                    bulbs is. default is 0
+	 * @param roundness   how rounded (or circular) the bulbs are. default = 1
 	 * @see #hourglassGradient(Gradient, PVector, float, float)
 	 */
 	public void hourglassGradient(Gradient gradient, PVector centerPoint, float angle, float zoom, float pinch, float roundness) {
 
 		gradient.prime();
-		
+
 		pinch *= pinch; // square here (since value is used in sqrt() function)
 
 		angle += HALF_PI; // hourglass shape at angle=0
@@ -1130,10 +980,11 @@ public final class PeasyGradients {
 			 * function is inlined here to optimise speed.
 			 */
 
+			opXod += offsetY * odY * scaleY; // offset for thread
 			for (int y = offsetY, x; y < offsetY + pixelsY; y++) {
 
 				opXod += odY * scaleY;
-				float xOff = odX * scaleX * pixelsX * (offsetX / pixelsX); // set partition x offset to correct amount
+				float xOff = odX * scaleX * pixelsX * (offsetX / (float) pixelsX); // set partition x offset to correct amount
 
 				for (x = offsetX; x < offsetX + pixelsX; x++) {
 					float step = (opXod + xOff - offsetX) * odSqInverse; // get position of point on 1D gradient and normalise
@@ -1456,6 +1307,216 @@ public final class PeasyGradients {
 
 	}
 
+	private final class NoiseThread extends RenderThread {
+
+		private final PVector centerPoint;
+		private final float sin, cos;
+		float[][] noiseVals; // reference to main method var
+
+		NoiseThread(int offsetX, int offsetY, int pixelsX, int pixelsY, PVector centerPoint, float sin, float cos, float[][] noisevals) {
+			super(offsetX, offsetY, pixelsX, pixelsY);
+			this.centerPoint = centerPoint;
+			this.sin = sin;
+			this.cos = cos;
+			this.noiseVals = noisevals;
+		}
+
+		@Override
+		public Boolean call() {
+
+			/**
+			 * Even the simpler noise types are quite expensive to compute for every pixel,
+			 * so we calculate a noise value for every 4th pixel (every 2nd pixel on both
+			 * axes), and then interpolate these values for other pixels later. Visually
+			 * this isn't apparent since noise is a gradual function anyway.
+			 */
+			for (int y = offsetY, x; y < offsetY + pixelsY; y += 2) {
+				final float yTranslate = (y - centerPoint.y);
+				for (x = offsetX; x < offsetX + pixelsX; x += 2) {
+
+					float newXpos = (x - centerPoint.x) * cos - yTranslate * sin + centerPoint.x; // rotate x about midpoint
+					float newYpos = yTranslate * cos + (x - centerPoint.x) * sin + centerPoint.y; // rotate y about midpoint
+
+					float step = fastNoiseLite.getSimplexNoiseFast(newXpos, newYpos); // call custom method
+					noiseVals[x][y] = step;
+
+					final int stepInt = (int) (step * gradientCacheSize);
+
+					gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
+				}
+			}
+
+			/**
+			 * Interpolate horizontally (x-axis)
+			 */
+			for (int y = offsetY, x; y < offsetY + pixelsY; y++) {
+				for (x = offsetX + 1; x < offsetX + pixelsX - 1; x += 2) {
+					noiseVals[x][y] = (noiseVals[x - 1][y] + noiseVals[x + 1][y]) / 2;
+					final int stepInt = (int) (noiseVals[x][y] * gradientCacheSize);
+					gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
+				}
+			}
+
+			/**
+			 * Interpolate vertically (y-axis)
+			 */
+			for (int y = offsetY + 1, x; y < offsetY + pixelsY - 1; y += 2) {
+				for (x = offsetX; x < offsetX + pixelsX; x += 1) {
+					noiseVals[x][y] = (noiseVals[x][y - 1] + noiseVals[x][y + 1]) / 2;
+					final int stepInt = (int) (noiseVals[x][y] * gradientCacheSize);
+					gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
+				}
+			}
+
+			/**
+			 * Pass over very bottom row (of each parition)
+			 */
+			float yTranslate = (offsetY + pixelsY - 1 - centerPoint.y);
+			for (int x = offsetX; x < offsetX + pixelsX; x++) {
+				float newXpos = (x - centerPoint.x) * cos - yTranslate * sin + centerPoint.x; // rotate x about midpoint
+				float newYpos = yTranslate * cos + (x - centerPoint.x) * sin + centerPoint.y; // rotate y about midpoint
+
+				float step = fastNoiseLite.getSimplexNoiseFast(newXpos, newYpos); // call custom method
+
+				final int stepInt = (int) (step * gradientCacheSize);
+
+				gradientPG.pixels[gradientPG.width * (offsetY + pixelsY - 1 + renderOffsetY)
+						+ (x + renderOffsetX)] = gradientCache[stepInt];
+			}
+
+			/**
+			 * Pass over right-most column (of each parition)
+			 */
+
+			for (int y = 0; y < renderHeight; y++) {
+				yTranslate = (y - centerPoint.y);
+				float newXpos = ((offsetX + pixelsX - 1) - centerPoint.x) * cos - yTranslate * sin + centerPoint.x; // rotate x about
+																													// midpoint
+				float newYpos = yTranslate * cos + ((offsetX + pixelsX - 1) - centerPoint.x) * sin + centerPoint.y; // rotate y about
+																													// midpoint
+
+				float step = fastNoiseLite.getSimplexNoiseFast(newXpos, newYpos); // call custom method
+
+				final int stepInt = (int) (step * gradientCacheSize);
+
+				gradientPG.pixels[gradientPG.width * (y + renderOffsetY)
+						+ (offsetX + pixelsX - 1 + renderOffsetX)] = gradientCache[stepInt];
+			}
+
+			return true;
+		}
+
+	}
+
+	private final class FractalNoiseThread extends RenderThread {
+
+		private final PVector centerPoint;
+		private final float sin, cos;
+		private final float min, maxMinDenom;
+		float[][] noiseVals; // reference to main method var
+
+		FractalNoiseThread(int offsetX, int offsetY, int pixelsX, int pixelsY, PVector centerPoint, float sin, float cos, float min,
+				float maxMinDenom, float[][] noiseVals) {
+			super(offsetX, offsetY, pixelsX, pixelsY);
+			this.centerPoint = centerPoint;
+			this.sin = sin;
+			this.cos = cos;
+			this.min = min;
+			this.maxMinDenom = maxMinDenom;
+			this.noiseVals = noiseVals;
+		}
+
+		@Override
+		public Boolean call() {
+
+			/**
+			 * Even the simpler noise types are quite expensive to compute for every pixel,
+			 * so we calculate a noise value for every 4th pixel (every 2nd pixel on both
+			 * axes), and then interpolate these values for other pixels later. Visually
+			 * this isn't apparent since noise is a gradual function anyway.
+			 */
+			for (int y = offsetY, x; y < offsetY + pixelsY; y += 2) {
+				final float yTranslate = (y - centerPoint.y);
+				for (x = offsetX; x < offsetX + pixelsX; x += 2) {
+
+					float newXpos = (x - centerPoint.x) * cos - yTranslate * sin + centerPoint.x; // rotate x about midpoint
+					float newYpos = yTranslate * cos + (x - centerPoint.x) * sin + centerPoint.y; // rotate y about midpoint
+
+					float step = fastNoiseLite.GetNoise(newXpos, newYpos);
+					step = ((step - min) * (maxMinDenom)); // scale to 0...1
+					noiseVals[x][y] = step;
+
+					final int stepInt = (int) (step * gradientCacheSize);
+
+					gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
+				}
+			}
+
+			/**
+			 * Interpolate horizontally (x-axis)
+			 */
+			for (int y = offsetY, x; y < offsetY + pixelsY; y++) {
+				for (x = offsetX + 1; x < offsetX + pixelsX - 1; x += 2) {
+					noiseVals[x][y] = (noiseVals[x - 1][y] + noiseVals[x + 1][y]) / 2;
+					final int stepInt = (int) (noiseVals[x][y] * gradientCacheSize);
+					gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
+				}
+			}
+
+			/**
+			 * Interpolate vertically (y-axis)
+			 */
+			for (int y = offsetY + 1, x; y < offsetY + pixelsY - 1; y += 2) {
+				for (x = offsetX; x < offsetX + pixelsX; x += 1) {
+					noiseVals[x][y] = (noiseVals[x][y - 1] + noiseVals[x][y + 1]) / 2;
+					final int stepInt = (int) (noiseVals[x][y] * gradientCacheSize);
+					gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
+				}
+			}
+
+			/**
+			 * Pass over very bottom row (of each parition)
+			 */
+			float yTranslate = (offsetY + pixelsY - 1 - centerPoint.y);
+			for (int x = offsetX; x < offsetX + pixelsX; x++) {
+				float newXpos = (x - centerPoint.x) * cos - yTranslate * sin + centerPoint.x; // rotate x about midpoint
+				float newYpos = yTranslate * cos + (x - centerPoint.x) * sin + centerPoint.y; // rotate y about midpoint
+
+				float step = fastNoiseLite.GetNoise(newXpos, newYpos);
+
+				step = ((step - min) * (maxMinDenom));
+				final int stepInt = (int) (step * gradientCacheSize);
+
+				gradientPG.pixels[gradientPG.width * (offsetY + pixelsY - 1 + renderOffsetY)
+						+ (x + renderOffsetX)] = gradientCache[stepInt];
+			}
+
+			/**
+			 * Pass over right-most column (of each parition)
+			 */
+
+			for (int y = 0; y < renderHeight; y++) {
+				yTranslate = (y - centerPoint.y);
+				float newXpos = ((offsetX + pixelsX - 1) - centerPoint.x) * cos - yTranslate * sin + centerPoint.x; // rotate x about
+																													// midpoint
+				float newYpos = yTranslate * cos + ((offsetX + pixelsX - 1) - centerPoint.x) * sin + centerPoint.y; // rotate y about
+																													// midpoint
+
+				float step = fastNoiseLite.GetNoise(newXpos, newYpos);
+
+				step = ((step - min) * (maxMinDenom));
+
+				final int stepInt = (int) (step * gradientCacheSize);
+
+				gradientPG.pixels[gradientPG.width * (y + renderOffsetY)
+						+ (offsetX + pixelsX - 1 + renderOffsetX)] = gradientCache[stepInt];
+			}
+
+			return true;
+		}
+
+	}
+
 	private final class SpotlightThread extends RenderThread {
 
 		private final PVector originPoint;
@@ -1479,6 +1540,7 @@ public final class PeasyGradients {
 			for (int y = offsetY, x; y < offsetY + pixelsY; y++) {
 				final float yTranslate = (y - originPoint.y);
 				for (x = offsetX; x < offsetX + pixelsX; x++) {
+
 					float newXpos = (x - originPoint.x) * cos - yTranslate * sin + originPoint.x; // rotate x about midpoint
 					float newYpos = yTranslate * cos + (x - originPoint.x) * sin + originPoint.y; // rotate y about midpoint
 
@@ -1558,7 +1620,8 @@ public final class PeasyGradients {
 
 					float z = (renderMidpointY - newYpos) / (renderMidpointX - newXpos); // atan2(y,x) === atan(y/x), so calc y/x here
 
-					double dist = Math.sqrt((yDist + xDist + pinch) * (z * z + roundness)) * denominator; // cos(atan(x)) === sqrt(z * z + 1)
+					double dist = Math.sqrt((yDist + xDist + pinch) * (z * z + roundness)) * denominator; // cos(atan(x)) === sqrt(z * z +
+																											// 1)
 
 					if (dist > 1) { // clamp to a high of 1
 						dist = 1;
