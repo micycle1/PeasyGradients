@@ -20,7 +20,7 @@ import peasyGradients.utilities.FastPow;
  * circular, and closer to the same sizes. Hue linearity: changing saturation or
  * lightness has less shift in hue.
  * 
- * Removed *\10000 because doesn't affect interpolation  
+ * Removed *\10000 because doesn't affect interpolation
  * 
  * @author micycle1
  *
@@ -33,12 +33,12 @@ final class JAB implements ColorSpace {
 	private static final double c2 = 2413 / Math.pow(2, 7);
 	private static final double c3 = 2392 / Math.pow(2, 7);
 	private static final double n = 2610 / Math.pow(2, 14);
-	private static final double nInverse = 1 / n;
+	private static final double nInverse = 1 / n; // ~6.277
 	private static final double p = 1.7 * (2523 / Math.pow(2, 5));
-	private static final double pInverse = 1 / p;
+	private static final double pInverse = 1 / p; // ~0.00746
 	private static final double d = -0.56;
 	private static final double d0 = 1.6295499532821567 * Math.pow(10, -11);
-	
+
 	JAB() {
 	}
 
@@ -50,6 +50,9 @@ final class JAB implements ColorSpace {
 		return XYZ.xyz2rgb(jab2xyz(jab));
 	}
 
+	/**
+	 * @deprecated
+	 */
 	public static double[] jab2rgbQuick(double[] jab) {
 		return XYZ.xyz2rgbQuick(jab2xyzQuick(jab));
 	}
@@ -69,8 +72,7 @@ final class JAB implements ColorSpace {
 
 		double[] LMSp = new double[3];
 		for (int i = 0; i < 3; i++) {
-			LMSp[i] = Math.pow(
-					(c1 + (c2 * FastMath.pow(LMS[i], n))) / (1 + (c3 * FastMath.pow(LMS[i], n))), p);
+			LMSp[i] = FastMath.pow((c1 + (c2 * FastMath.pow(LMS[i], n))) / (1 + (c3 * FastMath.pow(LMS[i], n))), p);
 		}
 
 		double[] Iab = new double[3];
@@ -96,12 +98,9 @@ final class JAB implements ColorSpace {
 		LMSp[2] = iab0 - 0.096019242026319 * jab[1] - 0.811891896056039 * jab[2];
 
 		double[] LMS = new double[3];
-		LMS[0] = FastMath
-				.pow((c1 - FastMath.pow(LMSp[0], pInverse)) / ((c3 * FastMath.pow(LMSp[0], pInverse)) - c2), nInverse);
-		LMS[1] = FastMath
-				.pow((c1 - FastMath.pow(LMSp[1], pInverse)) / ((c3 * FastMath.pow(LMSp[1], pInverse)) - c2), nInverse);
-		LMS[2] = FastMath
-				.pow((c1 - FastMath.pow(LMSp[2], pInverse)) / ((c3 * FastMath.pow(LMSp[2], pInverse)) - c2), nInverse);
+		LMS[0] = FastMath.powQuick((c1 - FastMath.pow(LMSp[0], pInverse)) / ((c3 * FastMath.pow(LMSp[0], pInverse)) - c2), nInverse);
+		LMS[1] = FastMath.powQuick((c1 - FastMath.pow(LMSp[1], pInverse)) / ((c3 * FastMath.pow(LMSp[1], pInverse)) - c2), nInverse);
+		LMS[2] = FastMath.powQuick((c1 - FastMath.pow(LMSp[2], pInverse)) / ((c3 * FastMath.pow(LMSp[2], pInverse)) - c2), nInverse);
 
 		double[] XYZp = new double[3];
 		XYZp[0] = 1.924226435787607 * LMS[0] - 1.004792312595365 * LMS[1] + 0.037651404030618 * LMS[2];
@@ -118,8 +117,10 @@ final class JAB implements ColorSpace {
 	/**
 	 * TODO
 	 * https://stackoverflow.com/questions/6475373/optimizations-for-pow-with-const-non-integer-exponent
+	 * 
 	 * @param jab
 	 * @return
+	 * @deprecated
 	 */
 	private static double[] jab2xyzQuick(double[] jab) {
 		double[] xyz = new double[3];
@@ -132,7 +133,7 @@ final class JAB implements ColorSpace {
 		LMSp[2] = iab0 - 0.096019242026319 * jab[1] - 0.811891896056039 * jab[2];
 
 		double[] LMS = new double[3];
-		// nested fastpow calls require larger LUT to retain accuracy; TODO change to FastMath?
+		
 		LMS[0] = FastPow.fastPow((c1 - FastPow.fastPow(LMSp[0], pInverse)) / ((c3 * FastPow.fastPow(LMSp[0], pInverse)) - c2), nInverse);
 		LMS[1] = FastPow.fastPow((c1 - FastPow.fastPow(LMSp[1], pInverse)) / ((c3 * FastPow.fastPow(LMSp[1], pInverse)) - c2), nInverse);
 		LMS[2] = FastPow.fastPow((c1 - FastPow.fastPow(LMSp[2], pInverse)) / ((c3 * FastPow.fastPow(LMSp[2], pInverse)) - c2), nInverse);

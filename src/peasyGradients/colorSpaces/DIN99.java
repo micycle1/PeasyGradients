@@ -1,5 +1,7 @@
 package peasyGradients.colorSpaces;
 
+import net.jafama.FastMath;
+
 /**
  * DIN99 is a further development of the CIELAB color space system developed by
  * the Working Committee FNF / FNL 2 colorimetry.
@@ -59,13 +61,13 @@ final class DIN99 implements ColorSpace {
 		final double a = DIN[1];
 		final double b = DIN[2];
 
-		final double hef = Math.atan2(b, a);
+		final double hef = FastMath.atan2(b, a);
 		final double C = Math.sqrt(a * a + b * b);
-		final double G = (Math.exp(0.045 * C * kCH * kE) - 1.) / 0.045;
-		final double e = G * Math.cos(hef);
-		final double f = G * Math.sin(hef) / 0.7; // opt: "/ 0 .7"
+		final double G = (FastMath.exp(0.045 * C * kCH * kE) - 1.) / 0.045;
+		final double e = G * FastMath.cos(hef);
+		final double f = G * FastMath.sin(hef) / 0.7; // opt: "/ 0 .7"
 
-		final double Ln = (Math.exp((L * kE) / FAC_1) - 1.) / 0.0158;
+		final double Ln = (FastMath.exp((L * kE) / FAC_1) - 1.) / 0.0158;
 		final double an = e * COS_16DEG - f * SIN_16DEG;
 		final double bn = e * SIN_16DEG + f * COS_16DEG;
 		return new double[] { Ln, an, bn };

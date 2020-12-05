@@ -85,7 +85,7 @@ final class LAB implements ColorSpace {
 	}
 
 	private static double[] lab2xyz(double[] lab) {
-		double cache = lab[1];
+		final double cache = lab[1];
 
 		lab[0] = cache * 0.002 + (lab[1] = (lab[0] + 16) * 0.00862068965);
 		lab[2] = lab[1] - lab[2] * 0.005;

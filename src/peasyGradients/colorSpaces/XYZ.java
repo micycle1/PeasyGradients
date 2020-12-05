@@ -151,17 +151,17 @@ final class XYZ implements ColorSpace {
 
 		// convert sRGB (gamma-adjusted) to linear RGB (linear space for XYZ)
 		if (x > 0.04045) {
-			x = Math.pow((x + 0.055) / 1.055, 2.4);
+			x = FastMath.pow((x + 0.055) / 1.055, 2.4);
 		} else {
 			x /= 12.92;
 		}
 		if (y > 0.04045) {
-			y = Math.pow((y + 0.055) / 1.055, 2.4);
+			y = FastMath.pow((y + 0.055) / 1.055, 2.4);
 		} else {
 			y /= 12.92;
 		}
 		if (z > 0.04045) {
-			z = Math.pow((z + 0.055) / 1.055, 2.4);
+			z = FastMath.pow((z + 0.055) / 1.055, 2.4);
 		} else {
 			z /= 12.92;
 		}
@@ -177,16 +177,17 @@ final class XYZ implements ColorSpace {
 	}
 	
 	/**
-	 * Static for use by other classes
+	 * Static for use by other colorspace classes
 	 * @param xyz
 	 * @return
 	 */
 	static double[] xyz2rgb(double[] xyz) {
-		double r, g, b;
 
 		double x = xyz[0] / 100;
 		double y = xyz[1] / 100;
 		double z = xyz[2] / 100;
+		
+		double r, g, b;
 
 		r = x * 3.2406 + y * -1.5372 + z * -0.4986;
 		g = x * -0.9689 + y * 1.8758 + z * 0.0415;
@@ -194,17 +195,17 @@ final class XYZ implements ColorSpace {
 
 		// convert linear RGB back to (gamma-adjusted) sRGB
 		if (r > 0.0031308) {
-			r = 1.055 * FastMath.pow(r, constA) - 0.055;
+			r = 1.055 * FastMath.powQuick(r, constA) - 0.055; // powQuick(n, 1/2.4) max error is 1E-5 over range of n = [0...1] 
 		} else {
 			r *= 12.92;
 		}
 		if (g > 0.0031308) {
-			g = 1.055 * FastMath.pow(g, constA) - 0.055;
+			g = 1.055 * FastMath.powQuick(g, constA) - 0.055;
 		} else {
 			g *= 12.92;
 		}
 		if (b > 0.0031308) {
-			b = 1.055 * FastMath.pow(b, constA) - 0.055;
+			b = 1.055 * FastMath.powQuick(b, constA) - 0.055;
 		} else {
 			b *= 12.92;
 		}

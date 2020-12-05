@@ -113,19 +113,17 @@ public final class XYB implements ColorSpace {
 		final double mixed_g = mulAdd(gamma_g2, gamma_g, kNegOpsinAbsorbanceBiasRGB[1]);
 		final double mixed_b = mulAdd(gamma_b2, gamma_b, kNegOpsinAbsorbanceBiasRGB[2]);
 
-		final double[] inverse_matrix = kDefaultInverseOpsinAbsorbanceMatrix;
-
 		// Unmix (multiply by 3x3 inverse_matrix)
 		double linear_r, linear_g, linear_b;
-		linear_r = inverse_matrix[0] * mixed_r;
-		linear_g = inverse_matrix[3] * mixed_r;
-		linear_b = inverse_matrix[6] * mixed_r;
-		linear_r = mulAdd(inverse_matrix[1], mixed_g, linear_r);
-		linear_g = mulAdd(inverse_matrix[4], mixed_g, linear_g);
-		linear_b = mulAdd(inverse_matrix[7], mixed_g, linear_b);
-		linear_r = mulAdd(inverse_matrix[2], mixed_b, linear_r);
-		linear_g = mulAdd(inverse_matrix[5], mixed_b, linear_g);
-		linear_b = mulAdd(inverse_matrix[8], mixed_b, linear_b);
+		linear_r = kDefaultInverseOpsinAbsorbanceMatrix[0] * mixed_r;
+		linear_g = kDefaultInverseOpsinAbsorbanceMatrix[3] * mixed_r;
+		linear_b = kDefaultInverseOpsinAbsorbanceMatrix[6] * mixed_r;
+		linear_r = mulAdd(kDefaultInverseOpsinAbsorbanceMatrix[1], mixed_g, linear_r);
+		linear_g = mulAdd(kDefaultInverseOpsinAbsorbanceMatrix[4], mixed_g, linear_g);
+		linear_b = mulAdd(kDefaultInverseOpsinAbsorbanceMatrix[7], mixed_g, linear_b);
+		linear_r = mulAdd(kDefaultInverseOpsinAbsorbanceMatrix[2], mixed_b, linear_r);
+		linear_g = mulAdd(kDefaultInverseOpsinAbsorbanceMatrix[5], mixed_b, linear_g);
+		linear_b = mulAdd(kDefaultInverseOpsinAbsorbanceMatrix[8], mixed_b, linear_b);
 
 		return new double[] { linearToGamma(linear_r), linearToGamma(linear_g), linearToGamma(linear_b) };
 	}

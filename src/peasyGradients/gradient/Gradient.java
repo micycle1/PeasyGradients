@@ -27,8 +27,8 @@ import processing.core.PApplet;
  *
  */
 public final class Gradient {
-	
-	 // TODO export as JSON / load from JSON
+
+	// TODO export as JSON / load from JSON
 
 	private ArrayList<ColorStop> colorStops = new ArrayList<ColorStop>();
 
@@ -44,7 +44,7 @@ public final class Gradient {
 
 	public ColorSpaces colorSpace = ColorSpaces.LUV; // TODO public for testing
 	ColorSpace colorSpaceInstance = colorSpace.getColorSpace(); // call toRGB on this instance
-	public Interpolation interpolationMode = Interpolation.SMOOTH_STEP; // TODO public/
+	public Interpolation interpolationMode = Interpolation.SMOOTH_STEP; // TODO public for testing
 
 	/**
 	 * Constructs a new gradient consisting of 2 equidistant complementary colors.
@@ -87,6 +87,111 @@ public final class Gradient {
 		this.colorStops = colorStops;
 		java.util.Collections.sort(this.colorStops);
 		this.colorStops.forEach(c -> c.setcolorSpace(colorSpace));
+	}
+
+	/**
+	 * Evalutes the ARGB color value of the gradient at the given step through the
+	 * 1D axis (0.0...1.0).
+	 * 
+	 * <p>
+	 * This is the main method of Gradient class. Internally, the the position input
+	 * undergoes is transformed by the current interpolation function.
+	 * 
+	 * @param position a linear position expressed as a decimal between numbers
+	 *                 outside the range of 0...1 will wrap back into the gradient
+	 * @return ARGB integer for Processing pixel array.
+	 */
+	public int getColor(float position) {
+
+		// TODO a version which writes to PeasyGradients int[] array (i.e. does all at
+		// once)
+
+		position += offset;
+		if (position < 0) { // (if animation offset negative)
+			position += 1; // equivalent to floormod function
+		}
+		if (position > 1) { // 1 % 1 == 0, which we want to avoid
+			position %= 1;
+		}
+
+//		position = (float) functStep(position); // apply interpolation function globally
+
+		/**
+		 * Calculate whether the current step has gone beyond the existing color stop
+		 * boundary (either above or below). If the first color stop is at a position >
+		 * 0 or last color stop at a position < 1, then when step > currStop.percent or
+		 * step < currStop.percent is true, we don't want to inc/decrement currStop.
+		 */
+		if (position > currStop.position) { // if at end, stay, otherwise next
+			if (lastCurrStopIndex == (colorStops.size() - 1)) {
+				prevStop = colorStops.get(lastCurrStopIndex);
+				denom = 1;
+			} else {
+				do {
+					lastCurrStopIndex++; // increment
+					currStop = colorStops.get(lastCurrStopIndex);
+					// sometimes step might jump more than 1 color, hence while()
+				} while (position > currStop.position && lastCurrStopIndex < (colorStops.size() - 1));
+				prevStop = colorStops.get(lastCurrStopIndex - 1);
+
+				denom = 1 / (prevStop.position - currStop.position); // compute denominator inverse
+			}
+
+		} else if (position <= prevStop.position) {
+			if (lastCurrStopIndex == 0) { // if at zero stay, otherwise prev
+				denom = 1;
+				currStop = colorStops.get(0);
+			} else {
+				do {
+					lastCurrStopIndex--; // decrement
+					prevStop = colorStops.get(Math.max(lastCurrStopIndex - 1, 0));
+				} while (position < prevStop.position); // sometimes step might jump back more than 1 color
+
+				currStop = colorStops.get(lastCurrStopIndex);
+
+				denom = 1 / (prevStop.position - currStop.position); // compute denominator inverse
+			}
+		}
+
+		/*
+		 * When the getColor() method is called with a monotonically increasing
+		 * position/step (which happens when we pre-compute interpolated color results
+		 * into a LUT within PeasyGradients methods) this simpler approach below works
+		 * to find adjacent colorstops. HOWEVER, this approach doesn't work when
+		 * animating the gradient, since the position value is no longer montonic, HENCE
+		 * it's commented out and we need the longer approach above.
+		 */
+//		if (step > currStop.percent && lastCurrStopIndex != (colorStops.size() - 1) ) {
+//			prevStop = colorStops.get(lastCurrStopIndex);
+//			lastCurrStopIndex++; // increment
+//			currStop = colorStops.get(lastCurrStopIndex);
+//			denom = 1 / (prevStop.percent - currStop.percent); // compute denominator inverse
+//		}
+
+		/**
+		 * NOTE this approach applies the easing function between adjacent color stops,
+		 * and not globally. TODO apply easing function to the raw position, not the
+		 * color-stop-dependent position?
+		 */
+		double smoothStep = functStep((position - currStop.position) * denom); // apply interpolation function between colorstops
+//		double smoothStep = (position - currStop.position) * denom; // applicable when applying interpolation function globally
+
+		/**
+		 * Calculate the interpolated color in the given colorspace by using the two
+		 * colorstops adjacent to the position, and the (eased) step between the two
+		 * colorstops as the weighting.
+		 */
+		colorSpaceInstance.interpolateLinear(currStop.colorOut, prevStop.colorOut, smoothStep, interpolatedcolorOUT);
+		/**
+		 * Treat alpha separately (to simplify colorspace classes)
+		 */
+		int alpha = (int) Math.floor((currStop.alpha + (position * (prevStop.alpha - currStop.alpha))) + 0.5d); // TODO sometimes 254?
+
+		/**
+		 * Finally convert the given colorspace value to sARGB int to eventually write
+		 * to Processing's pixels[] array
+		 */
+		return ColorUtils.composeclr(colorSpaceInstance.toRGB(interpolatedcolorOUT), alpha);
 	}
 
 	/**
@@ -248,87 +353,6 @@ public final class Gradient {
 	}
 
 	/**
-	 * Evalutes the ARGB color value of the gradient at the given step through the
-	 * 1D axis (0.0...1.0).
-	 * 
-	 * <p>
-	 * This is the main method of Gradient class. Internally, the the position input
-	 * undergoes is transformed by the current interpolation function.
-	 * 
-	 * @param position a linear position expressed as a decimal between numbers
-	 *                 outside the range of 0...1 will wrap back into the gradient
-	 * @return ARGB integer for Processing pixel array.
-	 */
-	public int getColor(float position) { // TODO a version which writes to PeasyGradients int[] array (i.e. does all at once) 
-
-		position += offset;
-		if (position < 0) { // (if animation offset negative)
-			position += 1; // equivalent to floormod function
-		}
-		if (position > 1) { // 1 % 1 == 0, which we want to avoid
-			position %= 1;
-		}
-
-		/**
-		 * Calculate whether the current step has gone beyond the existing color stop
-		 * boundary (either above or below). If the first color stop is at a position >
-		 * 0 or last color stop at a position < 1, then when step > currStop.percent or
-		 * step < currStop.percent is true, we don't want to inc/decrement currStop.
-		 */
-		if (position > currStop.position) { // if at end, stay, otherwise next
-			if (lastCurrStopIndex == (colorStops.size() - 1)) {
-				prevStop = colorStops.get(lastCurrStopIndex);
-				denom = 1;
-			} else {
-				do {
-					lastCurrStopIndex++; // increment
-					currStop = colorStops.get(lastCurrStopIndex);
-					// sometimes step might jump more than 1 color, hence while()
-				} while (position > currStop.position && lastCurrStopIndex < (colorStops.size() - 1));
-				prevStop = colorStops.get(lastCurrStopIndex - 1);
-
-				denom = 1 / (prevStop.position - currStop.position); // compute denominator inverse
-			}
-
-		} else if (position <= prevStop.position) {
-			if (lastCurrStopIndex == 0) { // if at zero stay, otherwise prev
-				denom = 1;
-				currStop = colorStops.get(0);
-			} else {
-				do {
-					lastCurrStopIndex--; // decrement
-					prevStop = colorStops.get(Math.max(lastCurrStopIndex - 1, 0));
-				} while (position < prevStop.position); // sometimes step might jump back more than 1 color
-
-				currStop = colorStops.get(lastCurrStopIndex);
-
-				denom = 1 / (prevStop.position - currStop.position); // compute denominator inverse
-			}
-		}
-
-		/**
-		 * A simpler approach. Since we pre-compute results into a LUT, this function
-		 * works with monotonically increasing step. HOWEVER, doesn't work if animating,
-		 * hence commented out.
-		 */
-//		if (step > currStop.percent && lastCurrStopIndex != (colorStops.size() - 1) ) {
-//			prevStop = colorStops.get(lastCurrStopIndex);
-//			lastCurrStopIndex++; // increment
-//			currStop = colorStops.get(lastCurrStopIndex);
-//			denom = 1 / (prevStop.percent - currStop.percent); // compute denominator inverse
-//		}
-
-		double smoothStep = functStep((position - currStop.position) * denom); // apply interpolation function
-
-		// interpolate within given colorspace
-		colorSpaceInstance.interpolateLinear(currStop.colorOut, prevStop.colorOut, smoothStep, interpolatedcolorOUT);
-		int alpha = (int) Math.floor((currStop.alpha + (position * (prevStop.alpha - currStop.alpha))) + 0.5d);
-
-		// convert current colorspace value to sARGB int and return
-		return ColorUtils.composeclr(colorSpaceInstance.toRGB(interpolatedcolorOUT), alpha);
-	}
-
-	/**
 	 * TODO color space is defined for user at peasyGradients level, not gradient
 	 * (1D)?
 	 * 
@@ -465,7 +489,7 @@ public final class Gradient {
 	 * @param step 0...1
 	 * @return the eased/transformed step (0...1)
 	 */
-	private double functStep(float step) {
+	private double functStep(final float step) {
 		switch (interpolationMode) {
 			case LINEAR :
 				return step;
@@ -514,6 +538,9 @@ public final class Gradient {
 				}
 			case EXPIMPULSE :
 				return (2 * step * FastMath.expQuick(1.0 - (2 * step)));
+			case HEARTBEAT :
+				final double v = FastMath.atan(FastMath.sinQuick(step * Math.PI * 1) * 6); // frequency = 1; intensity = 6
+				return (v + Math.PI / 2) / Math.PI;
 			default :
 				return step;
 		}
