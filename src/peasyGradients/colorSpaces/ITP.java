@@ -3,7 +3,8 @@ package peasyGradients.colorSpaces;
 import net.jafama.FastMath;
 
 /**
- * aka ICtCp
+ * Dolby ITP, aka ICtCp (not be confused with the IPT color space by Ebner and
+ * Fairchild, 1998).
  * https://www.dolby.com/us/en/technologies/dolby-vision/ictcp-white-paper.pdf
  * https://www.dolby.com/us/en/technologies/dolby-vision/measuring-perceptual-color-volume-v7.1.pdf
  * 
@@ -19,20 +20,20 @@ final class ITP implements ColorSpace {
 	private static final double c1 = 3424d / 4096;
 	private static final double c2 = 2413d / 4096 * 32;
 	private static final double c3 = 2392d / 4096 * 32;
-	
+
 	/**
 	 * Look-up table for EOTF function (as domain is 0...1)
 	 */
 	private static final double[] LUT;
 	private static final int LUT_SIZE = 2000; // 2500 seems more than sufficient
-	
+
 	static {
 		LUT = new double[LUT_SIZE];
 		for (int i = 0; i < LUT.length; i++) {
 			LUT[i] = EOTF((1d / LUT_SIZE) * i);
 		}
 	}
-	
+
 	ITP() {
 	}
 
@@ -103,27 +104,28 @@ final class ITP implements ColorSpace {
 	 */
 	private static double inverseEOTF(double F) {
 		double Y = Math.pow(F, m1); // reference implementation is F / 10000
-		
+
 		return Math.pow(((c1 + c2 * Y) / (1 + c3 * Y)), m2);
 	}
 
 	private static double EOTF(double N) {
 		double V_p = FastMath.pow(N, m2B);
-		
+
 		double n = V_p - c1;
 		n = n < 0 ? 0 : n;
-		
+
 		return FastMath.pow(n / (c2 - c3 * V_p), m1B); // L; reference implementation is ___ * 10000
 	}
-	
+
 	/**
 	 * Quicker EOTF that uses a pre-computed LUT to return values.
+	 * 
 	 * @param N (is between 0...1)
 	 * @return
 	 * @deprecated LUT called inline in {@link #itp2rgbQuick(double[])} instead
 	 */
 	private static double EOTFQuick(double N) {
-		return LUT[(int) (N*LUT_SIZE)];
+		return LUT[(int) (N * LUT_SIZE)];
 	}
 
 }

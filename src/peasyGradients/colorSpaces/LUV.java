@@ -1,7 +1,11 @@
 package peasyGradients.colorSpaces;
 
+import net.jafama.FastMath;
+
 /**
- * CIE-L*uv
+ * CIELUV has many of the same properties as CIELAB (e.g., stimulus and source
+ * chromaticities as input and lightness, chroma, and hue predictors as output),
+ * but incorporates a different form of chromatic adaptation transform.
  * 
  * @author micycle1
  *
@@ -14,7 +18,7 @@ final class LUV implements ColorSpace {
 
 	private static final double kappa = 903.2962962;
 	private static final double epsilon = 0.0088564516;
-	
+
 	LUV() {
 	}
 
@@ -71,8 +75,8 @@ final class LUV implements ColorSpace {
 			Y = (Y - 0.13793) * 0.12842;
 		}
 
-		double X = 0 - (9 * Y * varU) / ((varU - 4) * varV - varU * varV);
-		double Z = (9 * Y - (15 * varV * Y) - (varV * X)) / (3 * varV);
+		final double X = 0 - (9 * Y * varU) / ((varU - 4) * varV - varU * varV);
+		final double Z = (9 * Y - (15 * varV * Y) - (varV * X)) / (3 * varV);
 
 		return new double[] { X, Y, Z };
 	}
@@ -99,7 +103,7 @@ final class LUV implements ColorSpace {
 		if (Y <= epsilon) {
 			return (Y / refY) * kappa;
 		} else {
-			return 116 * Math.pow(Y / refY, 1.0 / 3.0) - 16;
+			return 116 * FastMath.pow(Y / refY, 1.0 / 3.0) - 16;
 		}
 	}
 

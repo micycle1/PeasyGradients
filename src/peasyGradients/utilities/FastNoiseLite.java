@@ -25,8 +25,7 @@ package peasyGradients.utilities;
 //SOFTWARE.
 
 /**
- * <a href= "https://github.com/Auburn/FastNoise">FastNoise Lite</a>, somewhat
- * reduced for PeasyGradients.
+ * A reduced version of <a href= "https://github.com/Auburn/FastNoise">FastNoise Lite</a> for PeasyGradients.
  */
 public class FastNoiseLite {
 

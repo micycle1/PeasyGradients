@@ -7,17 +7,20 @@ import peasyGradients.utilities.Functions;
 import processing.core.PApplet;
 
 /**
- * Generate random color palettes to use in gradients. Generates palettes in HSB
- * color space and outputs to sRGB integers.
- * 
- * // TODO implement
- * https://medialab.github.io/iwanthue/js/libs/chroma.palette-gen.js or
- * https://medialab.github.io/iwanthue/
+ * Generates random color palettes to use in gradients. Palettes are generated
+ * in the HSB color space and output as sRGB integers.
  * 
  * @author micycle1
  *
  */
 public final class Palette {
+
+	/**
+	 * TODO implement
+	 * https://medialab.github.io/iwanthue/js/libs/chroma.palette-gen.js or
+	 * https://medialab.github.io/iwanthue/ TODO preset spectrums:
+	 * https://observablehq.com/@makio135/give-me-colors
+	 */
 
 	private static final float sMin = 0.75f; // min saturation
 	private static final float bMin = 0.75f; // min brightness
@@ -58,19 +61,19 @@ public final class Palette {
 	}
 
 	/**
-	 * Generate a color palette of n random colors. colors are distributed using
-	 * the golden ratio.
+	 * Generate a color palette of n random colors. colors are distributed using the
+	 * golden ratio.
 	 * 
-	 * @param ncolors
-	 * @return
+	 * @param ncolors number of random colors to generate
+	 * @return array of colors, represented by (Processing-compatible) ARGB integers
 	 */
 	public static int[] randomcolors(int ncolors) {
 		return generic(ncolors, GRC);
 	}
 
 	/**
-	 * Generate a color palette of n random colors. colors are generated
-	 * completely randomly.
+	 * Generate a color palette of n random colors. colors are generated completely
+	 * randomly.
 	 * 
 	 * @param ncolors
 	 * @return

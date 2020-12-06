@@ -2,25 +2,29 @@ package peasyGradients.gradient;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import net.jafama.FastMath;
+
 import peasyGradients.colorSpaces.*;
 import peasyGradients.utilities.ColorUtils;
 import peasyGradients.utilities.FastPow;
 import peasyGradients.utilities.Functions;
 import peasyGradients.utilities.Interpolation;
-import processing.core.PApplet;
 
 /**
  * A Gradient comprises of {@link peasyGradients.gradient.ColorStop color stops}
- * (each specifying a color and a position) arranged on a 1D axis. Gradients
- * define the gradient curve function (such as sine()) -- the function governing
- * how the gradient's color transtions (the step used during interpolation) and
- * the color space this gradient will be rendered this gradient's color stops
- * are represented by.
+ * (each specifying a color and a position) arranged on a 1D axis.
  * 
  * <p>
- * Use a {@link #peasyGradients.PeasyGradients} instance to render Gradients.
+ * Gradients each define the gradient <b>interpolation</b> function (such as
+ * sine()) -- the function governing how the gradient's color transtions (the
+ * step used during interpolation) and the <b>color space</b> this gradient will
+ * be rendered this gradient's color stops are represented by.
+ * 
+ * <p>
+ * Use a {@link #peasyGradients.PeasyGradients} instance to render Gradients as
+ * 2D spectrums.
  * 
  * 
  * @author micycle1
@@ -40,21 +44,19 @@ public final class Gradient {
 	private ColorStop currStop, prevStop;
 	private float denom;
 
-//	double[] colorOut; // TODO color (in Gradient's current colorspace)
-
 	public ColorSpaces colorSpace = ColorSpaces.LUV; // TODO public for testing
-	ColorSpace colorSpaceInstance = colorSpace.getColorSpace(); // call toRGB on this instance
+	private ColorSpace colorSpaceInstance = colorSpace.getColorSpace();
 	public Interpolation interpolationMode = Interpolation.SMOOTH_STEP; // TODO public for testing
 
 	/**
-	 * Constructs a new gradient consisting of 2 equidistant complementary colors.
+	 * Creates a new gradient consisting of 2 equidistant complementary colors.
 	 */
 	public Gradient() {
 		this(Palette.complementary()); // random 2 colors
 	}
 
 	/**
-	 * Creates a gradient with equidistant color stops.
+	 * Creates a gradient with equidistant color stops, using the colors provided.
 	 * 
 	 * @param colors ARGB color integers (the kind returned by Processing's color()
 	 *               method)
@@ -68,23 +70,28 @@ public final class Gradient {
 		this.colorStops.forEach(c -> c.setcolorSpace(colorSpace));
 	}
 
-	/*
-	 * TODO
+	/**
+	 * Creates a gradient using the colorstops provided.
+	 * 
+	 * @param colorStops varargs of colorstops
 	 */
 	public Gradient(ColorStop... colorStops) {
 		int sz = colorStops.length;
 		for (int i = 0; i < sz; i++) {
-			this.colorStops.add(colorStops[i]);
+			add(colorStops[i]);
 		}
+
 		java.util.Collections.sort(this.colorStops);
 		this.colorStops.forEach(c -> c.setcolorSpace(colorSpace));
 	}
 
-	/*
-	 * TODO
+	/**
+	 * Creates a gradient using the colorstops provided.
+	 * 
+	 * @param colorStops a list of colorstops
 	 */
-	public Gradient(ArrayList<ColorStop> colorStops) {
-		this.colorStops = colorStops;
+	public Gradient(List<ColorStop> colorStops) {
+		this.colorStops = new ArrayList<ColorStop>(colorStops);
 		java.util.Collections.sort(this.colorStops);
 		this.colorStops.forEach(c -> c.setcolorSpace(colorSpace));
 	}
@@ -209,7 +216,7 @@ public final class Gradient {
 	}
 
 	/**
-	 * TODO Sets the 1D position of a color stop (given by its index) to a certain
+	 * Sets the 1D position of a color stop (given by its index) to a certain
 	 * position on the 1D gradient axis. Positions < 0 or > 1 will wrap around the
 	 * gradient.
 	 * 
@@ -218,6 +225,12 @@ public final class Gradient {
 	 */
 	public void setStopPosition(int index, float position) {
 		if (index > -1 && index < colorStops.size()) {
+			if (position < 0) { // (if animation offset negative)
+				position = Math.abs(position); // make positive
+			}
+			if (position > 1) { // 1 % 1 == 0, which we want to avoid
+				position %= 1;
+			}
 			colorStops.get(index).setPosition(position);
 			java.util.Collections.sort(colorStops);
 		} else {
@@ -272,7 +285,7 @@ public final class Gradient {
 	 * other.
 	 */
 	public void primeAnimation() {
-		push(colorAt(0));
+		pushColor(colorAt(0));
 	}
 
 	/**
@@ -282,24 +295,32 @@ public final class Gradient {
 	 * @param color
 	 * @see #removeLast()
 	 */
-	public void push(int color) {
+	public void pushColor(int color) {
 		for (ColorStop colorStop : colorStops) {
 			colorStop.position *= ((colorStops.size() - 1) / (float) colorStops.size()); // scale down existing stop positions
 		}
-		add(1, color);
+		add(color, 1);
 	}
 
 	/**
-	 * Removes the last color stop from the gradient and scale the rest to fill the
-	 * gradient. TODO test
+	 * Removes the last color stop from the gradient and scales the position of the
+	 * remaining stops such that the position of the previous second-to-last color
+	 * stop is equal to the position of the removed stop.
 	 * 
-	 * @see #push(int)
+	 * @see #pushColor(int)
 	 */
 	public void removeLast() {
-		colorStops.remove(colorStops.size() - 1);
-		// scale up remaining stop positions
-		for (ColorStop colorStop : colorStops) {
-			colorStop.position *= ((colorStops.size()) / (float) (colorStops.size() - 1f)); // scale down existing stop positions
+		if (colorStops.size() > 2) { // don't go below a 2 color gradient
+			ColorStop last = colorStops.get(colorStops.size() - 1);
+			colorStops.remove(colorStops.size() - 1);
+
+			final float scaleFactor = last.position / colorStops.get(colorStops.size() - 1).position;
+
+			for (ColorStop colorStop : colorStops) {
+				colorStop.position *= scaleFactor; // scale up remaining stop positions
+			}
+		} else {
+			System.err.println("This gradient has only 2 colors. No more colors can be removed from this gradient.");
 		}
 	}
 
@@ -314,7 +335,7 @@ public final class Gradient {
 	}
 
 	/**
-	 * Returns this gradient's last color.
+	 * Returns the color of the this gradient's last color stop.
 	 * 
 	 * @return 32bit ARGB color int
 	 */
@@ -325,10 +346,10 @@ public final class Gradient {
 	/**
 	 * Adds a specific color to the gradient at a given percentage.
 	 * 
-	 * @param percent 0...1
 	 * @param clr
+	 * @param percent 0...1
 	 */
-	public void add(final float percent, final int clr) {
+	public void add(final int clr, final float percent) {
 		add(new ColorStop(clr, percent));
 	}
 
@@ -339,26 +360,27 @@ public final class Gradient {
 	 */
 	public void add(final ColorStop colorStop) {
 		colorStops.add(colorStop);
-		java.util.Collections.sort(colorStops); // sort color stops by value
+		java.util.Collections.sort(colorStops); // sort color stops by position
+		colorStop.setcolorSpace(colorSpace);
 	}
 
 	/**
-	 * Primes for rendering (TODO protected?)
+	 * Primes this gradient for rendering.
 	 */
 	public void prime() {
 		lastCurrStopIndex = 0;
 		currStop = colorStops.get(lastCurrStopIndex);
 		prevStop = colorStops.get(0);
-		colorStops.forEach(c -> c.setcolorSpace(colorSpace));
 	}
 
 	/**
-	 * TODO color space is defined for user at peasyGradients level, not gradient
-	 * (1D)?
+	 * Sets the color space this gradient uses to represent colors. This affects the
+	 * appearance of the gradient when it is rendered as a 2D spectrum.
 	 * 
 	 * @param colorSpace
 	 */
 	public void setColorSpace(ColorSpaces colorSpace) {
+		// TODO color space is defined for user at peasyGradients level, not gradient?
 		this.colorSpace = colorSpace;
 		colorSpaceInstance = colorSpace.getColorSpace();
 		colorStops.forEach(c -> c.setcolorSpace(colorSpace));
@@ -376,6 +398,13 @@ public final class Gradient {
 		colorStops.forEach(c -> c.setcolorSpace(colorSpace));
 	}
 
+	/**
+	 * Sets the interpolation mode this gradient uses to generate colors between
+	 * adjacent color stops. This affects the appearance of the gradient when it is
+	 * rendered as a 2D spectrum.
+	 * 
+	 * @param interpolationMode
+	 */
 	public void setInterpolationMode(Interpolation interpolationMode) {
 		this.interpolationMode = interpolationMode;
 	}
@@ -397,35 +426,34 @@ public final class Gradient {
 	}
 
 	/**
-	 * Return randomised gradient (random colors and stop positions). TODO use
-	 * pallete?
+	 * Returns a randomised gradient (comprised using random colors and random
+	 * positions).
 	 * 
-	 * @param numcolors
-	 * @return
+	 * @param numColors the number of colors the gradient is comprised of
+	 * @return a randomised gradient
+	 * @see #randomGradient(int)
 	 */
-	public static Gradient randomGradientWithStops(int numcolors) {
-		ColorStop[] temp = new ColorStop[numcolors];
+	public static Gradient randomGradientWithStops(int numColors) {
+		ColorStop[] temp = new ColorStop[numColors];
+		int[] colors = Palette.randomcolors(numColors);
 		float percent;
-		for (int i = 0; i < numcolors; ++i) {
-			percent = i == 0 ? 0 : i == numcolors - 1 ? 1 : (float) Math.random();
-			temp[i] = new ColorStop(ColorUtils.composeclr((float) Math.random(), (float) Math.random(), (float) Math.random(), 1), percent);
+		for (int i = 0; i < numColors; ++i) {
+			percent = i == 0 ? 0 : i == numColors - 1 ? 1 : (float) Math.random();
+			temp[i] = new ColorStop(colors[i], percent);
 		}
 		return new Gradient(temp);
 	}
 
 	/**
-	 * Return randomised gradient (random colors; equidistant stops). TODO use
-	 * palette instead?
+	 * Return randomised gradient (comprised using random colors but at equidistant
+	 * positions).
 	 * 
-	 * @param numcolors
-	 * @return
+	 * @param numColors the number of colors the gradient is comprised of
+	 * @return a randomised gradient
+	 * @see #randomGradientWithStops(int)
 	 */
-	public static Gradient randomGradient(int numcolors) {
-		int[] temp = new int[numcolors];
-		for (int i = 0; i < numcolors; ++i) {
-			temp[i] = ColorUtils.composeclr((float) Math.random(), (float) Math.random(), (float) Math.random(), 1);
-		}
-		return new Gradient(temp);
+	public static Gradient randomGradient(int numColors) {
+		return new Gradient(Palette.randomcolors(numColors));
 	}
 
 	/**
@@ -461,7 +489,8 @@ public final class Gradient {
 	 * gradient is pleasant. Export ready to construct the gradient using Processing
 	 * color().
 	 * 
-	 * @return e.g. "Gradient(color(0, 0, 50), color(125, 55, 25));"
+	 * @return a constructor for this gradient, e.g. "Gradient(color(0, 0, 50),
+	 *         color(125, 55, 25));"
 	 */
 	public String toJavaConstructor() {
 		StringBuilder sb = new StringBuilder();

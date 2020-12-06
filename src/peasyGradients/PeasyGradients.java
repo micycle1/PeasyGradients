@@ -65,6 +65,8 @@ public final class PeasyGradients {
 
 	private static final ExecutorService THREAD_POOL;
 
+	private static final int cpuThreads = Runtime.getRuntime().availableProcessors();
+
 	static {
 		/**
 		 * Initalise FastPow LUT. Lower numbers are better due to cache hits;
@@ -76,7 +78,7 @@ public final class PeasyGradients {
 		 * Create a static thread pool (shared across all PeasyGradient instances), with
 		 * at most #systemCores threads.
 		 */
-		THREAD_POOL = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+		THREAD_POOL = Executors.newFixedThreadPool(cpuThreads);
 	}
 
 	private final FastNoiseLite fastNoiseLite = new FastNoiseLite(0); // create noise generator using a fixed default seed (0)
@@ -92,10 +94,8 @@ public final class PeasyGradients {
 	private int renderOffsetX, renderOffsetY; // gradient region offsets (usually 0, 0)
 	private float scaleY, scaleX;
 
-	private int renderPartitionsX = 3; // number of thread render partitions in the x (horizontal) direction TODO set
-										// value
-	private int renderPartitionsY = 3; // number of thread render partitions in the y (vertical) direction TODO set
-										// value
+	private int renderPartitionsX = Math.max(cpuThreads / 4, 1); // number of thread render partitions in the x (horizontal) direction
+	private int renderPartitionsY = Math.max(cpuThreads / 4, 1); // number of thread render partitions in the y (vertical) direction
 
 	/**
 	 * Constructs a new PeasyGradients renderer from a running Processing sketch.
