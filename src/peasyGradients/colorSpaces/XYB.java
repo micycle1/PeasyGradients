@@ -9,20 +9,21 @@ import net.jafama.FastMath;
  * facilitating perceptually uniform quantization.
  * 
  * <p>
- * XYB is used in JPEG XL: see
+ * XYB is used in JPEG XL (see
  * <a href="https://arxiv.org/ftp/arxiv/papers/1908/1908.03565.pdf">this</a>
- * paper or <a href="https://arxiv.org/pdf/1803.09165.pdf">this</a> one and was
- * introduced in Google's butteraugli tool by Jyrki Alakuijala (as far as I can tell).
+ * paper or <a href="https://arxiv.org/pdf/1803.09165.pdf">this</a> one) and was
+ * introduced in Google's butteraugli tool by Jyrki Alakuijala (as far as I can
+ * tell).
  * 
  * <p>
  * This Java implementation was adapted from Matt DesLauriers' Javascript
  * implementation found <a href=
- * "https://arxiv.org/pdf/1803.09165.pdf>https://observablehq.com/@mattdesl/perceptually-smooth-multi-color-linear-gradients">here</a>.
+ * "https://observablehq.com/@mattdesl/perceptually-smooth-multi-color-linear-gradients">here</a>.
  * 
  * @author micycle1
  *
  */
-public final class XYB implements ColorSpace {
+final class XYB implements ColorSpace {
 
 	// Parameters for gamma conversion (linear RGB <-> sRGB)
 	private static final double gamma = 2.4;
@@ -159,9 +160,12 @@ public final class XYB implements ColorSpace {
 	}
 
 	private static final double[] OpsinAbsorbance(double r, double g, double b) {
-		final double mixed0 = mulAdd(premul_absorb[0], r, mulAdd(premul_absorb[1], g, mulAdd(premul_absorb[2], b, kOpsinAbsorbanceBias[0])));
-		final double mixed1 = mulAdd(premul_absorb[3], r, mulAdd(premul_absorb[4], g, mulAdd(premul_absorb[5], b, kOpsinAbsorbanceBias[1])));
-		final double mixed2 = mulAdd(premul_absorb[6], r, mulAdd(premul_absorb[7], g, mulAdd(premul_absorb[8], b, kOpsinAbsorbanceBias[2])));
+		final double mixed0 = mulAdd(premul_absorb[0], r,
+				mulAdd(premul_absorb[1], g, mulAdd(premul_absorb[2], b, kOpsinAbsorbanceBias[0])));
+		final double mixed1 = mulAdd(premul_absorb[3], r,
+				mulAdd(premul_absorb[4], g, mulAdd(premul_absorb[5], b, kOpsinAbsorbanceBias[1])));
+		final double mixed2 = mulAdd(premul_absorb[6], r,
+				mulAdd(premul_absorb[7], g, mulAdd(premul_absorb[8], b, kOpsinAbsorbanceBias[2])));
 		return new double[] { mixed0, mixed1, mixed2 };
 	}
 
@@ -181,6 +185,9 @@ public final class XYB implements ColorSpace {
 		}
 	}
 
+	/**
+	 * Used during XYB -> RGB
+	 */
 	private static double linearToGamma(final double n) {
 		if (n > 0.0031308) {
 			return 1.055 * FastMath.pow(n, inverseGamma) - 0.055;

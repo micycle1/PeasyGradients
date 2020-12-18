@@ -13,11 +13,11 @@ import peasyGradients.utilities.Functions;
  * @author micycle1
  *
  */
-final class XYZ implements ColorSpace {
+public final class XYZ implements ColorSpace {
 
 	private static final double constA = 1 / 2.4d; // 1/ sRGB gamma
 
-	XYZ() {
+	public XYZ() {
 	}
 
 	/**
@@ -70,6 +70,7 @@ final class XYZ implements ColorSpace {
 	 * 
 	 * @param xyz [X,Y,Z]
 	 * @return [R,G,B] where values are 0...1.0
+	 * @deprecated
 	 */
 	public static double[] xyz2rgbQuick(final double[] xyz) {
 
@@ -106,6 +107,7 @@ final class XYZ implements ColorSpace {
 	 * 
 	 * @param xyz [X,Y,Z]
 	 * @return [R,G,B] where values are 0...1.0
+	 * @deprecated
 	 */
 	public static double[] xyz2rgbVeryQuick(final double[] xyz) {
 
@@ -140,10 +142,11 @@ final class XYZ implements ColorSpace {
 
 	/**
 	 * Static for use by other classes
+	 * 
 	 * @param rgb [R,G,B] where values are 0...1.0
 	 * @return
 	 */
-	static double[] rgb2xyz(double[] rgb) {
+	public static double[] rgb2xyz(double[] rgb) {
 
 		double x = rgb[0];
 		double y = rgb[1];
@@ -166,6 +169,10 @@ final class XYZ implements ColorSpace {
 			z /= 12.92;
 		}
 
+		/**
+		 * Normalise values to fall between 0 and 100 (roughly speaking – values greater
+		 * than 100 are valid in certain cases)
+		 */
 		x *= 100;
 		y *= 100;
 		z *= 100;
@@ -175,18 +182,22 @@ final class XYZ implements ColorSpace {
 				x * 0.019330818715591 + y * 0.11919477979462 + z * 0.95053215224966 };
 
 	}
-	
+
 	/**
 	 * Static for use by other colorspace classes
+	 * 
 	 * @param xyz
 	 * @return
 	 */
 	static double[] xyz2rgb(double[] xyz) {
 
+		/**
+		 * Unnormalise values from XYZ100 to XYZ1
+		 */
 		double x = xyz[0] / 100;
 		double y = xyz[1] / 100;
 		double z = xyz[2] / 100;
-		
+
 		double r, g, b;
 
 		r = x * 3.2406 + y * -1.5372 + z * -0.4986;
@@ -195,7 +206,7 @@ final class XYZ implements ColorSpace {
 
 		// convert linear RGB back to (gamma-adjusted) sRGB
 		if (r > 0.0031308) {
-			r = 1.055 * FastMath.powQuick(r, constA) - 0.055; // powQuick(n, 1/2.4) max error is 1E-5 over range of n = [0...1] 
+			r = 1.055 * FastMath.powQuick(r, constA) - 0.055; // powQuick(n, 1/2.4) max error is 1E-5 over range of n = [0...1]
 		} else {
 			r *= 12.92;
 		}
@@ -209,6 +220,8 @@ final class XYZ implements ColorSpace {
 		} else {
 			b *= 12.92;
 		}
+		
+		// TODO constrain here?
 
 		return new double[] { r, g, b };
 	}

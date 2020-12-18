@@ -4,23 +4,26 @@ import net.jafama.FastMath;
 import peasyGradients.utilities.FastPow;
 
 /**
- * https://observablehq.com/@jrus/jzazbz
- * https://stackoverflow.com/questions/49464451/jzazbz-java-implementation-precision
- * https://www.osapublishing.org/DirectPDFAccess/0E0CA420-C7CB-756F-F502C2277BCB8255_368272/oe-25-13-15131.pdf
- * https://github.com/quag/JzAzBz/blob/master/glsl/jchz.glsl
- * http://im.snibgo.com/jzazbz.htm
- * 
- * <p>
  * JAB (JzAzBz) is a a color space designed for perceptul uniformity in high
  * dynamic range (HDR) and wide color gamut (WCG) applications. Conceptually it
  * is similar to CIE L*a*b*, but has claimed improvements:
  * 
+ * <p>
  * Perceptual color difference is predicted by Euclidean distance. Perceptually
  * uniform: MacAdam ellipses of just-noticable-difference (JND) are more
  * circular, and closer to the same sizes. Hue linearity: changing saturation or
  * lightness has less shift in hue.
  * 
+ * <p>
  * Removed *\10000 because doesn't affect interpolation
+ * 
+ * <p>
+ * https://observablehq.com/@jrus/jzazbz
+ * https://stackoverflow.com/questions/49464451/jzazbz-java-implementation-precision
+ * https://www.osapublishing.org/DirectPDFAccess/0E0CA420-C7CB-756F-F502C2277BCB8255_368272/oe-25-13-15131.pdf
+ * https://github.com/quag/JzAzBz/blob/master/glsl/jchz.glsl
+ * http://im.snibgo.com/jzazbz.htm
+ * https://www.osapublishing.org/oe/fulltext.cfm?uri=oe-25-13-15131&id=368272
  * 
  * @author micycle1
  *
@@ -133,7 +136,7 @@ final class JAB implements ColorSpace {
 		LMSp[2] = iab0 - 0.096019242026319 * jab[1] - 0.811891896056039 * jab[2];
 
 		double[] LMS = new double[3];
-		
+
 		LMS[0] = FastPow.fastPow((c1 - FastPow.fastPow(LMSp[0], pInverse)) / ((c3 * FastPow.fastPow(LMSp[0], pInverse)) - c2), nInverse);
 		LMS[1] = FastPow.fastPow((c1 - FastPow.fastPow(LMSp[1], pInverse)) / ((c3 * FastPow.fastPow(LMSp[1], pInverse)) - c2), nInverse);
 		LMS[2] = FastPow.fastPow((c1 - FastPow.fastPow(LMSp[2], pInverse)) / ((c3 * FastPow.fastPow(LMSp[2], pInverse)) - c2), nInverse);

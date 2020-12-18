@@ -39,7 +39,11 @@ final class LAB implements ColorSpace {
 	/**
 	 * 
 	 * @param rgb [R,G,B] where values are 0...1.0
-	 * @return [L,A,B]
+	 * @return [L,A,B] with L in [0, 100],
+	 * 
+	 *         A in [-86.185, 98.254],
+	 * 
+	 *         B in [-107.863, 94.482]
 	 */
 	static double[] rgb2lab(double[] rgb) {
 		double[] xyz = XYZ.rgb2xyz(rgb); // RGB --> XYZ

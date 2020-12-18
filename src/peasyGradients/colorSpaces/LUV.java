@@ -3,6 +3,13 @@ package peasyGradients.colorSpaces;
 import net.jafama.FastMath;
 
 /**
+ * The CIE LUV system describes a color based on three qualities: L* is CIE
+ * lightness, similar to luminance, the amount of light, but adjusted for human
+ * perception. 0 <= L* <= 100. u* is the amount of red chrominance, with
+ * negative values indicating green. v* is the amount of yellow chrominance,
+ * with negative values indicating blue.
+ * 
+ * <p>
  * CIELUV has many of the same properties as CIELAB (e.g., stimulus and source
  * chromaticities as input and lightness, chroma, and hue predictors as output),
  * but incorporates a different form of chromatic adaptation transform.
@@ -35,7 +42,7 @@ final class LUV implements ColorSpace {
 		return XYZ.xyz2rgb(luv2xyz(luv));
 	}
 
-	public static double[] luv2rgbQuick(double luv[]) {
+	private static double[] luv2rgbQuick(double luv[]) {
 		return XYZ.xyz2rgbQuick(luv2xyzQuick(luv));
 	}
 
@@ -81,6 +88,9 @@ final class LUV implements ColorSpace {
 		return new double[] { X, Y, Z };
 	}
 
+	/**
+	 * @deprecated
+	 */
 	private static double[] luv2xyzQuick(double[] tuple) {
 
 		double varU = tuple[1] / (13 * tuple[0]) + refU;

@@ -1,7 +1,13 @@
 package peasyGradients.colorSpaces;
 
 /**
- * Same as HSV
+ * The HSB color system describes a color based on the three qualities of hue,
+ * saturation, and value. A given color will be represented by three numbers,
+ * (H,S,B). H, the value of hue, is an angle between 0 and 360 degrees, with 0
+ * representing red. S is the saturation, and is between 0 and 1. Finally, B
+ * measures brightness, which goes from 0 for black, increasing to a maximum of
+ * 1 for the brightest colors. The HSB color system is sometimes also called
+ * HSV, where the V stands for value.
  * 
  * @author micycle1
  *
@@ -108,8 +114,8 @@ final class HSB implements ColorSpace {
 //	}
 
 	/**
-	 * http://lolengine.net/blog/2013/01/13/fast-rgb-to-hsv
-	 * Possibly faster in Java, haven't tested.
+	 * http://lolengine.net/blog/2013/01/13/fast-rgb-to-hsv Possibly faster in Java,
+	 * haven't tested.
 	 */
 	@Override
 	public double[] fromRGB(double[] RGB) {
@@ -122,7 +128,7 @@ final class HSB implements ColorSpace {
 		double K = 0;
 
 		if (g < b) {
-			
+
 			// swap variables
 			g = g + b;
 			b = g - b;
@@ -132,7 +138,7 @@ final class HSB implements ColorSpace {
 		}
 
 		if (r < g) {
-			
+
 			// swap variables
 			r = r + g;
 			g = r - g;
@@ -141,7 +147,7 @@ final class HSB implements ColorSpace {
 			K = -2d / 6d - K;
 		}
 
-		final double chroma = r - (g > b ? b : g); // min(g, b) 
+		final double chroma = r - (g > b ? b : g); // min(g, b)
 
 		HSB[0] = Math.abs(K + (g - b) / (6 * chroma + 1e-20d));
 		HSB[1] = chroma / (r + 1e-20d);
