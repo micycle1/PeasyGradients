@@ -11,7 +11,7 @@ This `README` provides an overview of the library — read it to get a good idea
 
 ### Key Features:
 * ### 11 Gradient Types
-* ### 11 Color Spaces
+* ### 12 Color Spaces
 * ### 14 Color Interpolation Functions
 * ### Fast!
 
@@ -72,7 +72,7 @@ Each gradient type is shown below. The screenshots are taken using the `LUV` col
 
 
 ## Interpolation: Easing Functions
-In the parts of a `Gradient` between color stops, colors are composed via interpolating the neighbouring two color stops. Easing functions affect how these two adjacent stops contribute to each point between them.
+In the parts of a `Gradient` between color stops, colors are composed via interpolating the neighbouring two color stops. Easing functions affect how these two adjacent stops contribute to the color of each point between them.
 
 For example, with *linear* interpolation, a point in a `Gradient` which is midway between 2 color stops is composed of 50% of the first color and 50% of the second color — there is a linear relationship between its position and the weighting of color it receives from each color stop. Other easing functions are non-linear (for example a point closer to one color stop may in some cases receive more color from the second color stop) which can result in more interesting gradients.
  
@@ -124,7 +124,7 @@ Remember that a 1D `Gradient` consists of only a few defined color stops; all ot
 | **LAB (CIE L\*a\*b\*)**![](resources/color_space_examples/LAB.png ) | **HLAB (Hunter LAB)**![](resources/color_space_examples/HLAB.png) |
 | **DIN99**![](resources/color_space_examples/DIN99.png ) | **ITP (ICtCp)**![](resources/color_space_examples/ITP.png) |
 | **LUV (CIE 1976 L\*, u\*, v\*)**![](resources/color_space_examples/DIN99.png ) | **JAB (JzAzBz)**![](resources/color_space_examples/JAB.png) |
-| **XYB**![](resources/color_space_examples/XYZ.png) |
+| **XYB**![](resources/color_space_examples/XYZ.png) | **IPT**![](resources/color_space_examples/IPT.png)
 
 </details>
 
@@ -274,6 +274,6 @@ PeasyGradients targets the **CPU** (as opposed to the GPU) as to not be dependen
 * Implement [four-corner](https://graphicdesign.stackexchange.com/questions/19477/4-colors-corners-gradient-with-illustrator-or-photoshop) gradients (or a more general form which distributes *N* colors, placing them around the edge and interpolating towards the middle).
 * Implement [this](https://www.filterforge.com/wiki/index.php/Spiral_Gradient) type of spiral gradient.
 * Allow easing functions to be passed in to render methods to affect the curve of whole spectrum not just the curve between each successive pair of color stops.
-* Add preset color scales (rainbow, warm, cool, etc.) to Palettes.
-* Add gradient [contour plot](https://observablehq.com/@rreusser/locally-scaled-domain-coloring-part-1-contour-plots) overlay feature.
+* Add preset color scales (rainbow, warm, cool, etc.) to `Palettes`.
+* Add a gradient [contour plot](https://observablehq.com/@rreusser/locally-scaled-domain-coloring-part-1-contour-plots) overlay feature.
 * Implement the CAM16/CAM16‐UCS Color Appearance Model as a colorspace.
