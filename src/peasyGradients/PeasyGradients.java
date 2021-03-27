@@ -220,7 +220,7 @@ public final class PeasyGradients {
 	 * sketch/render target).
 	 * 
 	 * <p>
-	 * It’s called “linear” because the colors flow from left-to-right,
+	 * It's called 'linear' because the colors flow from left-to-right,
 	 * top-to-bottom, or at any angle you chose in a single direction.
 	 * 
 	 * @param gradient 1D {@link Gradient gradient} to use as the basis for the
@@ -250,7 +250,7 @@ public final class PeasyGradients {
 	 * edges of the sketch boundary.
 	 * 
 	 * <p>
-	 * It’s called “linear” because the colors flow from left-to-right,
+	 * It's called 'linear' because the colors flow from left-to-right,
 	 * top-to-bottom, or at any angle you chose in a single direction.
 	 * 
 	 * @param gradient    1D {@link Gradient gradient} to use as the basis for the
@@ -277,7 +277,7 @@ public final class PeasyGradients {
 	 * length.
 	 * 
 	 * <p>
-	 * It’s called “linear” because the colors flow from left-to-right,
+	 * It's called 'linear' because the colors flow from left-to-right,
 	 * top-to-bottom, or at any angle you chose in a single direction.
 	 * 
 	 * @param gradient    1D {@link Gradient gradient} to use as the basis for the
@@ -348,7 +348,7 @@ public final class PeasyGradients {
 	 * 
 	 * @param gradient    1D {@link Gradient gradient} to use as the basis for the
 	 *                    radial gradient
-	 * @param centerPoint The PVector center point of the gradient — the position
+	 * @param centerPoint The PVector center point of the gradient â€” the position
 	 *                    where it radiates from.
 	 * @param zoom        default = 1
 	 */
@@ -384,7 +384,7 @@ public final class PeasyGradients {
 	 * gradient places them around the circle. Aka "angled".
 	 * 
 	 * <p>
-	 * They’re called “conic” because they tend to look like the shape of a cone
+	 * They're called 'conic' because they tend to look like the shape of a cone
 	 * that is being viewed from above. Well, at least when there is a distinct
 	 * angle provided and the contrast between the color values is great enough to
 	 * tell a difference.
@@ -398,7 +398,7 @@ public final class PeasyGradients {
 	 * 
 	 * @param gradient    1D {@link Gradient gradient} to use as the basis for the
 	 *                    conic gradient
-	 * @param centerPoint The PVector center point of the gradient — the position
+	 * @param centerPoint The PVector center point of the gradient â€” the position
 	 *                    where it radiates from.
 	 * @param angle       in radians, where 0 is east; going clockwise
 	 * @see #conicGradientSmooth(Gradient, PVector, float, float)
@@ -435,7 +435,7 @@ public final class PeasyGradients {
 	 * 
 	 * @param gradient    1D {@link Gradient gradient} to use as the basis for the
 	 *                    spiral gradient
-	 * @param centerPoint The PVector center point of the gradient — the position
+	 * @param centerPoint The PVector center point of the gradient â€” the position
 	 *                    where it radiates from.
 	 * @param angle       in radians, where 0 is east; going clockwise
 	 * @param curveCount  akin to zoom
@@ -449,7 +449,7 @@ public final class PeasyGradients {
 	 * 
 	 * @param gradient    1D {@link Gradient gradient} to use as the basis for the
 	 *                    spiral gradient
-	 * @param centerPoint The PVector center point of the gradient — the position
+	 * @param centerPoint The PVector center point of the gradient â€” the position
 	 *                    where it radiates from.
 	 * @param angle       in radians, where 0 is east; going clockwise
 	 * @param curveCount
@@ -487,7 +487,7 @@ public final class PeasyGradients {
 	 * 
 	 * @param gradient    1D {@link Gradient gradient} to use as the basis for the
 	 *                    polygon gradient
-	 * @param centerPoint The PVector center point of the gradient — the position
+	 * @param centerPoint The PVector center point of the gradient â€” the position
 	 *                    where it radiates from.
 	 * @param angle       angle offset to render polygon at
 	 * @param zoom
@@ -547,7 +547,7 @@ public final class PeasyGradients {
 	 * 
 	 * @param gradient    1D {@link Gradient gradient} to use as the basis for the
 	 *                    cross gradient
-	 * @param centerPoint The PVector center point of the gradient — the position
+	 * @param centerPoint The PVector center point of the gradient â€” the position
 	 *                    where it radiates from.
 	 * @param angle       in radians, where 0 orients the 'X' ; going clockwise
 	 * @param zoom
@@ -582,7 +582,7 @@ public final class PeasyGradients {
 	 * 
 	 * @param gradient    1D {@link Gradient gradient} to use as the basis for the
 	 *                    diamond gradient
-	 * @param centerPoint The PVector center point of the gradient — the position
+	 * @param centerPoint The PVector center point of the gradient â€” the position
 	 *                    where it radiates from.
 	 * @param angle
 	 * @param zoom

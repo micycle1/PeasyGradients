@@ -12,7 +12,7 @@ import peasyGradients.utilities.fastLog.FastLog;
  * When precision = 11 (8KB table), mean error is < 0.01%, and max error is <
  * 0.02% (proportional, ie: abs(true - approx) / true).
  * <p>
- * The essential approximation is a �staircase� function across the fraction
+ * The essential approximation is a 'staircase' function across the fraction
  * range between successive integer powers. It has full float precision y
  * values, but at limited regular x intervals. Accuracy is proportional to
  * number of table elements.

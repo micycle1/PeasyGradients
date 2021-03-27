@@ -35,7 +35,7 @@ public enum Interpolation {
 	 */
 	SMOOTH_STEP,
 	/**
-	 * Ken Perlin’s smoother step, a simoid like function.
+	 * Ken Perlin's smoother step, a simoid like function.
 	 * 
 	 * @param st step, between 0 and 1
 	 * @return the new mapped step, having undergone a transformation according to a

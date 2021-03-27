@@ -13,7 +13,7 @@ import peasyGradients.utilities.FastPow;
  * gamut-mapping applications).
  * 
  * <p>
- * IPT opponent space: I light–dark; P red–green, T yellow–blue.
+ * IPT opponent space: I lightâ€“dark; P redâ€“green, T yellowâ€“blue.
  * 
  * @author micycle1
  *

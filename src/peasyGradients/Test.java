@@ -16,7 +16,7 @@ import peasyGradients.utilities.Functions;
 import peasyGradients.utilities.FastNoiseLite.FractalType;
 import peasyGradients.utilities.FastNoiseLite.NoiseType;
 
-import com.jogamp.newt.opengl.GLWindow;
+//import com.jogamp.newt.opengl.GLWindow;
 
 /**
  * https://medium.com/@behreajj/color-gradients-in-processing-v-2-0-e5c0b87cdfd2
@@ -42,8 +42,8 @@ public class Test extends PApplet {
 		Test.main(Test.class);
 	}
 
-	int WIDTH = 1280;
-	int HEIGHT = 720;
+	int WIDTH = 1800;
+	int HEIGHT = 1200;
 
 	int[] palette = { 0xfffc0398, 0xffff7f00 }; // 0xff007fff
 	int[] bw = { color(255), 0, 0 };
@@ -69,8 +69,8 @@ public class Test extends PApplet {
 	public void settings() {
 //		
 //		fullScreen();
-		WIDTH = 1920;
-		HEIGHT = 1080;
+//		WIDTH = 800;
+//		HEIGHT = 800;
 		size(WIDTH, HEIGHT);
 //		smooth(4);
 	}
@@ -102,9 +102,10 @@ public class Test extends PApplet {
 //		gradient3 = new Gradient(color(0), color(20, 150, 20) , color(0, 50, 100));
 //		gradient3 = new Gradient(color(201, 136, 179), color(061, 243, 205), color(110, 011, 201), color(043, 18, 073), color(224, 8, 94),
 //				color(228, 247, 90), color(201, 136, 179));
+//		gradient3 = new Gradient(color(255, 255, 0), color(0, 255, 255));
 
 		print(gradient3.toString() + "\n");
-		gradient3.primeAnimation();
+//		gradient3.primeAnimation();
 //		gradient1.primeAnimation();
 		print(gradient3.toString() + "\n");
 
@@ -132,7 +133,7 @@ public class Test extends PApplet {
 //		noLoop();
 	}
 
-	GLWindow window;
+//	GLWindow window;
 
 	float pAngle = 0;
 	float angle = 0;
@@ -215,9 +216,9 @@ public class Test extends PApplet {
 //		image(textLayer, 0, 0);
 //		image(gradientLayer, 0, 0);
 //		pGradients.polygonGradient(gradient3, midPoint, angle, 1f, 3);
-//		
+		
+//			pGradients.simplexNoiseGradient(gradient3, midPoint, 0, 1);
 //			pGradients.noiseGradient(gradient3, midPoint, 0, 1);
-//			pGradients.noiseGradient(gradient3, midPoint, 0, 3, NoiseType.ValueCubic);
 //			pGradients.fractalNoiseGradient(gradient3, midPoint, 0, 1, NoiseType.OpenSimplex2, FractalType.Ridged, 3, 1, 2);
 //		pGradients.fastNoiseLite.SetFractalPingPongStrength(1);
 //		pGradients.setNoiseSeed(100);

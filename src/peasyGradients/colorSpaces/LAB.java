@@ -19,7 +19,7 @@ package peasyGradients.colorSpaces;
 final class LAB implements ColorSpace {
 
 	/**
-	 * D65/2° Illuminants: Daylight, sRGB, Adobe-RGB
+	 * D65/2Â° Illuminants: Daylight, sRGB, Adobe-RGB
 	 */
 	protected static final double illuminantX = 95.047;
 	protected static final double illuminantY = 100.000;

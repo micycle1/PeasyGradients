@@ -170,7 +170,7 @@ public final class XYZ implements ColorSpace {
 		}
 
 		/**
-		 * Normalise values to fall between 0 and 100 (roughly speaking – values greater
+		 * Normalise values to fall between 0 and 100 (roughly speaking â€“ values greater
 		 * than 100 are valid in certain cases)
 		 */
 		x *= 100;
