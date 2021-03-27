@@ -52,7 +52,8 @@ public final class Gradient {
 	 * Creates a new gradient consisting of 2 equidistant complementary colors.
 	 */
 	public Gradient() {
-		this(Palette.complementary()); // random 2 colors
+		// TODO COLORSPACE in CONSTRUCTOR
+//		this(Palette.complementary()); // random 2 colors
 	}
 
 	/**
@@ -238,6 +239,10 @@ public final class Gradient {
 		}
 	}
 
+	public void reverse() {
+		// TODO REVERSE THE COLOR PALETTE
+	}
+
 	/**
 	 * Increases the positional offset of all color stops by the amount given (call
 	 * this each frame (within draw() for example) to animate a gradient).
@@ -249,6 +254,7 @@ public final class Gradient {
 	 */
 	public void animate(float amt) {
 		offset += amt;
+		offset %= 1;
 	}
 
 	/**
@@ -368,6 +374,7 @@ public final class Gradient {
 	 * Primes this gradient for rendering.
 	 */
 	public void prime() {
+		// TODO REMOVE
 		lastCurrStopIndex = 0;
 		currStop = colorStops.get(lastCurrStopIndex);
 		prevStop = colorStops.get(0);

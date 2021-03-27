@@ -8,8 +8,19 @@ package peasyGradients.colorSpaces;
  */
 public interface ColorSpace {
 
+	/**
+	 * 
+	 * @param color the 3 channel color as represented in the implementing color
+	 *              space
+	 * @return RGB normalised to [0, 1]
+	 */
 	public double[] toRGB(double[] color); // convert from color space to RGB
 
+	/**
+	 * 
+	 * @param RGB RGB normalised to [0, 1]
+	 * @return
+	 */
 	public double[] fromRGB(double[] RGB); // convert from RGB to color space
 
 	/**

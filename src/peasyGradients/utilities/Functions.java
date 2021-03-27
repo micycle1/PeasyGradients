@@ -6,7 +6,6 @@ import java.util.Random;
 
 import peasyGradients.utilities.fastLog.DFastLog;
 import peasyGradients.utilities.fastLog.FastLog;
-
 import processing.core.PVector;
 
 /**
@@ -16,6 +15,10 @@ import processing.core.PVector;
  * @author micycle1
  */
 public final class Functions {
+
+	// TODO DELTA E 2000 COLOR DIFF
+	// https://github.com/wuchubuzai/OpenIMAJ/blob/master/image/image-processing/src/main/java/org/openimaj/image/analysis/colour/CIEDE2000.java
+	// OR http://www.easyrgb.com/en/math.php
 
 	private static final FastLog fastLog = new DFastLog(10); // Used in veryFastPow(), 10 => 2KB table
 
@@ -177,8 +180,8 @@ public final class Functions {
 			outString += String.format("%03d", Math.round(out[out.length - 1])) + close;
 			return outString;
 		} else {
-			DecimalFormat df = new DecimalFormat(
-					"0" + new String(new char[padding]).replace("\0", "0") + "." + new String(new char[decimalPlaces]).replace("\0", "0"));
+			DecimalFormat df = new DecimalFormat("0" + new String(new char[padding]).replace("\0", "0") + "."
+					+ new String(new char[decimalPlaces]).replace("\0", "0"));
 			for (double d : out) {
 				out[i] = Double.valueOf(df.format(d));
 				i++;

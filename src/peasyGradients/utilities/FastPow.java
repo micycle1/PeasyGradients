@@ -12,7 +12,7 @@ import peasyGradients.utilities.fastLog.FastLog;
  * When precision = 11 (8KB table), mean error is < 0.01%, and max error is <
  * 0.02% (proportional, ie: abs(true - approx) / true).
  * <p>
- * The essential approximation is a ‘staircase’ function across the fraction
+ * The essential approximation is a ï¿½staircaseï¿½ function across the fraction
  * range between successive integer powers. It has full float precision y
  * values, but at limited regular x intervals. Accuracy is proportional to
  * number of table elements.
@@ -35,6 +35,11 @@ public final class FastPow {
 
 	private static int[] table;
 	private static int precision;
+
+	static {
+		// init statically incase used from other library
+		init(13);
+	}
 
 	/**
 	 * Initialize powFast lookup table. Must be called once before use.

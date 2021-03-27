@@ -5,7 +5,7 @@
 
 *PeasyGradients* is a library for [Processing](https://processing.org/) that makes drawing color gradients easy-peasy. This library was inspired by Jeremy Behreandt's [*Color Gradients in Processing*](https://medium.com/@behreajj/color-gradients-in-processing-v-2-0-e5c0b87cdfd2) but has greatly developed the concepts and functionality presented there.
 
-This `README` provides an overview of the library — read it to get a good idea of what the library is capable of and how to use it. Access examples (Processing sketches) [here](https://github.com/micycle1/PeasyGradients/tree/master/examples); access documentation (online Javadocs) [here]().
+This `README` provides an overview of the library — what it's capable of and how to use it. Access examples (Processing sketches) [here](https://github.com/micycle1/PeasyGradients/tree/master/examples); access documentation (online Javadocs) [here]().
 
 ## Overview
 
@@ -66,7 +66,7 @@ Each gradient type is shown below. The screenshots are taken using the `LUV` col
 |:---:|:---:|
 | **Conic**![](resources/gradient_type_examples/conic.png) | **Spiral**![](resources/gradient_type_examples/spiral.png) |
 | **Diamond**![](resources/gradient_type_examples/diamond.png) | **Cross**![](resources/gradient_type_examples/cross.png) |
-| **Polygon**![](resources/gradient_type_examples/polygon(6).png) | **Hourglass**![](resources/gradient_type_examples/hourglass.png) |
+| **Polygon (n-sided)**![](resources/gradient_type_examples/polygon(6).png) | **Hourglass**![](resources/gradient_type_examples/hourglass.png) |
 | **Noise**![](resources/gradient_type_examples/noise.png) | **Fractal Noise**![](resources/gradient_type_examples/noise_fractal.png)
 | **Spotlight**![](resources/gradient_type_examples/spotlight.png)|
 

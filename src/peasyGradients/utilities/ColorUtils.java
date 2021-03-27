@@ -10,7 +10,7 @@ package peasyGradients.utilities;
 public final class ColorUtils {
 
 	private static final int fullAlpha = 255 << 24; // fully opaque
-	private static final float INV_255 = 1f / 255f; // used to normalise RGB values
+	private static final float INV_255 = 1f / 255f; // used to normalise RGB values // TODO use double?
 
 	/**
 	 * Linearly interpolate between 2 colors (color-space independent) using the
@@ -181,7 +181,7 @@ public final class ColorUtils {
 	/**
 	 * out 0...1
 	 * 
-	 * @param clr
+	 * @param clr RGB [0, 255]
 	 * @return
 	 */
 	public static double[] decomposeclrDouble(int clr) {
