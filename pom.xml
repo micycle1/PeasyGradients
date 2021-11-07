@@ -2,10 +2,16 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>micycle.peasyGradients</groupId>
+	<groupId>micycle</groupId>
 	<artifactId>PeasyGradients</artifactId>
-	<version>0.9-SNAPSHOT</version>
+	<version>0.9.1-SNAPSHOT</version>
 	<name>PeasyGradients</name>
+
+	<properties>
+		<sonar.projectKey>micycle1_PeasyGradients</sonar.projectKey>
+		<sonar.organization>micycle</sonar.organization>
+		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
+	</properties>
 
 	<build>
 		<sourceDirectory>src</sourceDirectory>
@@ -20,21 +26,32 @@
 				</configuration>
 			</plugin>
 			<plugin>
-				<artifactId>maven-assembly-plugin</artifactId>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>3.2.1</version>
 				<executions>
 					<execution>
-						<id>all-dependencies</id>
-						<phase>package</phase>
+						<id>attach-sources</id>
+						<phase>deploy</phase>
 						<goals>
-							<goal>single</goal>
+							<goal>jar-no-fork</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>3.3.1</version>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<phase>deploy</phase>
+						<goals>
+							<goal>jar</goal>
 						</goals>
 						<configuration>
-							<descriptorRefs>
-								<descriptorRef>jar-with-dependencies</descriptorRef>
-							</descriptorRefs>
-							<excludes>
-								<exclude>Test.java</exclude>
-							</excludes>
+							<doclint>none</doclint> <!--Prevent Javadoc incomplete errors -->
 						</configuration>
 					</execution>
 				</executions>
@@ -42,11 +59,49 @@
 		</plugins>
 	</build>
 
-	<properties>
-		<sonar.projectKey>micycle1_PeasyGradients</sonar.projectKey>
-		<sonar.organization>micycle</sonar.organization>
-		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
-	</properties>
+	<profiles>
+		<profile>
+			<id>uber-jar</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-shade-plugin</artifactId>
+						<version>3.2.4</version>
+						<configuration>
+							<createDependencyReducedPom>false</createDependencyReducedPom>
+							<filters>
+								<filter>
+									<artifact>*:*</artifact>
+									<excludes>
+										<exclude>META-INF/**</exclude>
+									</excludes>
+								</filter>
+							</filters>
+						</configuration>
+						<executions>
+							<execution>
+								<phase>package</phase>
+								<goals>
+									<goal>shade</goal>
+								</goals>
+								<configuration>
+									<minimizeJar>true</minimizeJar>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+
+	<repositories>
+		<repository>
+			<id>clojars</id>
+			<url>https://clojars.org/repo/</url>
+		</repository>
+	</repositories>
 
 	<dependencies>
 		<dependency>
@@ -55,10 +110,11 @@
 			<version>2.3.2</version>
 		</dependency>
 		<dependency>
-			<groupId>org.processing</groupId>
-			<artifactId>core</artifactId>
-			<version>3.3.7</version>
-			<scope>provided</scope> <!-- don't include processing in maven build -->
+			<groupId>quil</groupId>
+			<artifactId>processing-core</artifactId>
+			<version>3.5.4</version>
+			<scope>provided</scope> <!-- don't package into uber jar -->
+			<optional>true</optional> <!-- user artifact should override when provided -->
 		</dependency>
 	</dependencies>
 
