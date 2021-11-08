@@ -1,1 +1,1 @@
-packageSearchIndex = [{"l":"All Packages","url":"allpackages-index.html"},{"l":"micycle.peasygradients"},{"l":"micycle.peasygradients.colorSpaces"},{"l":"micycle.peasygradients.gradient"},{"l":"micycle.peasygradients.utilities"},{"l":"micycle.peasygradients.utilities.fastLog"}]
+packageSearchIndex = [{"l":"All Packages","url":"allpackages-index.html"},{"l":"micycle.peasygradients"},{"l":"micycle.peasygradients.colorSpaces"},{"l":"micycle.peasygradients.gradient"},{"l":"micycle.peasygradients.utilities.fastLog"}]
