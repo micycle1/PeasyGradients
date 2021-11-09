@@ -1,9 +1,9 @@
-package micycle.peasygradients.colorSpaces;
+package micycle.peasygradients.colorspace;
 
 /**
  * Colorspaces should implement this class.
  * 
- * @author micycle1
+ * @author Michael Carleton
  *
  */
 public interface ColorSpace {

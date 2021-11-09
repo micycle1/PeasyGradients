@@ -1,4 +1,4 @@
-package micycle.peasygradients.colorSpaces;
+package micycle.peasygradients.colorspace;
 
 /**
  * https://bottosson.github.io/posts/oklab/
@@ -18,7 +18,7 @@ package micycle.peasygradients.colorSpaces;
  * 0.5, to 0 to 1; Oklab does not need to shrink the range, and only offsets it
  * in the same way (both just add 0.5).
  * 
- * @author micycle1
+ * @author Michael Carleton
  *
  */
 final class OKLAB implements ColorSpace {

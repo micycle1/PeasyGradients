@@ -1,4 +1,4 @@
-package micycle.peasygradients.colorSpaces;
+package micycle.peasygradients.colorspace;
 
 import micycle.peasygradients.utilities.Functions;
 
@@ -7,7 +7,7 @@ import micycle.peasygradients.utilities.Functions;
  * http://nishitalab.org/user/UEI/publication/Sugita_IWAIT2015.pdf
  * http://nishitalab.org/user/UEI/publication/Sugita_SIG2015.pdf
  * // TODO check working properly
- * @author micycle1
+ * @author Michael Carleton
  *
  */
 final class RYB implements ColorSpace {

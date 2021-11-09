@@ -1,11 +1,11 @@
-package micycle.peasygradients.colorSpaces;
+package micycle.peasygradients.colorspace;
 
 /**
  * Fast XYZ, suitable to be used standalone for gradient color interpolation.
  * Unsuitable to be used to convert from into other colorspaces, as underlying
  * XYZ_FAST values are not divided by certain constants.
  * 
- * @author micycle1
+ * @author Michael Carleton
  * @deprecated not needed since the LUT optimisation.
  *
  */

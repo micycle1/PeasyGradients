@@ -1,4 +1,4 @@
-package micycle.peasygradients.colorSpaces;
+package micycle.peasygradients.colorspace;
 
 import net.jafama.FastMath;
 
@@ -9,7 +9,7 @@ import net.jafama.FastMath;
  * 
  * https://www.easyrgb.com/en/math.php
  * 
- * @author micycle1
+ * @author Michael Carleton
  *
  */
 final class HUNTER_LAB implements ColorSpace {

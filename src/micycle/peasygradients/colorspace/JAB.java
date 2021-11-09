@@ -1,4 +1,4 @@
-package micycle.peasygradients.colorSpaces;
+package micycle.peasygradients.colorspace;
 
 import micycle.peasygradients.utilities.FastPow;
 import net.jafama.FastMath;
@@ -25,7 +25,7 @@ import net.jafama.FastMath;
  * http://im.snibgo.com/jzazbz.htm
  * https://www.osapublishing.org/oe/fulltext.cfm?uri=oe-25-13-15131&id=368272
  * 
- * @author micycle1
+ * @author Michael Carleton
  *
  */
 final class JAB implements ColorSpace {

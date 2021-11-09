@@ -7,7 +7,7 @@
  * <p>
  * 
  * 
- * @author micycle1
+ * @author Michael Carleton
  *
  */
 package micycle.peasygradients;

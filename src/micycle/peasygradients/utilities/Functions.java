@@ -13,7 +13,7 @@ import processing.core.PVector;
  * This class contains static functions mostly related to color/gradient
  * processing.
  * 
- * @author micycle1
+ * @author Michael Carleton
  */
 public final class Functions {
 

@@ -1,6 +1,6 @@
 package micycle.peasygradients.gradient;
 
-import micycle.peasygradients.colorSpaces.ColorSpaces;
+import micycle.peasygradients.colorspace.ColorSpaces;
 import micycle.peasygradients.utilities.ColorUtils;
 import micycle.peasygradients.utilities.Functions;
 import processing.core.PApplet;
@@ -9,7 +9,7 @@ import processing.core.PApplet;
  * Generates random color palettes to use in gradients. Palettes are generated
  * in the HSB color space and output as sRGB integers.
  * 
- * @author micycle1
+ * @author Michael Carleton
  *
  */
 public final class Palette {

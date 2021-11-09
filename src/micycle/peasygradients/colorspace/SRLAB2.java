@@ -1,4 +1,4 @@
-package micycle.peasygradients.colorSpaces;
+package micycle.peasygradients.colorspace;
 
 import net.jafama.FastMath;
 
@@ -22,7 +22,7 @@ import net.jafama.FastMath;
  * introduction of the SRLAB2 color model'. See
  * https://www.magnetkern.de/srlab2.html
  * 
- * @author micycle1
+ * @author Michael Carleton
  *
  */
 final class SRLAB2 implements ColorSpace {

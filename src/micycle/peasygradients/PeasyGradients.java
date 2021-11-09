@@ -51,7 +51,7 @@ import net.jafama.FastMath;
  * "https://medium.com/@behreajj/color-gradients-in-processing-v-2-0-e5c0b87cdfd2">this</a>
  * work by Jeremy Behreandt; all others are mostly my own derivation.
  * 
- * @author micycle1
+ * @author Michael Carleton
  *
  */
 public final class PeasyGradients {
@@ -136,7 +136,7 @@ public final class PeasyGradients {
 	 * @see #renderIntoSketch()
 	 */
 	public void renderIntoSketch(int offSetX, int offSetY, int width, int height) {
-		if (offSetY < 0 || offSetY < 0 || (width + offSetX) > p.width || (offSetY + height) > p.height) {
+		if (offSetX < 0 || offSetY < 0 || (width + offSetX) > p.width || (offSetY + height) > p.height) {
 			System.err.println("Invalid parameters.");
 			return;
 		}
@@ -200,8 +200,6 @@ public final class PeasyGradients {
 	public void posterise(int n) {
 		if (n != gradientCacheSize) {
 			gradientCacheSize = n;
-			gradientCacheSize = n;
-			gradientCache = new int[n + 1];
 			gradientCache = new int[n + 1];
 		}
 	}
@@ -231,7 +229,7 @@ public final class PeasyGradients {
 	 */
 	public void linearGradient(Gradient gradient, float angle) {
 
-		PVector centerPoint = new PVector(gradientPG.width / 2, gradientPG.height / 2);
+		PVector centerPoint = new PVector(gradientPG.width / 2f, gradientPG.height / 2f);
 		// get edge-line intersection points
 		PVector[] o = Functions.lineRectIntersection(gradientPG.width, gradientPG.height, centerPoint, angle);
 
@@ -563,7 +561,7 @@ public final class PeasyGradients {
 		final float renderMidpointX = (centerPoint.x / gradientPG.width) * renderWidth;
 		final float renderMidpointY = (centerPoint.y / gradientPG.height) * renderHeight;
 
-		final float denominator = (Math.max(renderHeight, renderWidth) / 2) * zoom; // calc here, not in loop
+		final float denominator = (Math.max(renderHeight, renderWidth) / 2f) * zoom; // calc here, not in loop
 		angle += PConstants.QUARTER_PI; // for 'X' orientation when angle = 0
 		angle = TWO_PIf - angle; // orient rotation clockwise
 
@@ -598,7 +596,7 @@ public final class PeasyGradients {
 		final float renderMidpointX = (centerPoint.x / gradientPG.width) * renderWidth;
 		final float renderMidpointY = (centerPoint.y / gradientPG.height) * renderHeight;
 
-		final float denominator = (Math.max(renderHeight, renderWidth) / 2) * zoom; // calc here, not in loop
+		final float denominator = (Math.max(renderHeight, renderWidth) / 2f) * zoom; // calc here, not in loop
 		angle += PConstants.QUARTER_PI; // angled at 0
 		angle = TWO_PIf - angle; // orient rotation clockwise
 
@@ -829,7 +827,7 @@ public final class PeasyGradients {
 
 		final float denominator = 1 / ((Math.max(renderHeight, renderWidth)) * zoom);
 
-		final float sin = (float) FastMath.sin(PApplet.TWO_PI - angle);
+		final float sin = (float) FastMath.sin(PConstants.TWO_PI - angle);
 		final float cos = (float) FastMath.cos(angle);
 
 		makeThreadPool(renderPartitionsX, renderPartitionsY, HourglassThread.class, renderMidpointX, renderMidpointY, sin, cos, zoom, angle,
@@ -935,7 +933,7 @@ public final class PeasyGradients {
 	 * RenderThread child classes will implement call(); here the parallel gradient
 	 * rendering work is done.
 	 * 
-	 * @author micycle1
+	 * @author Michael Carleton
 	 *
 	 */
 	private abstract class RenderThread implements Callable<Boolean> {
@@ -1083,7 +1081,7 @@ public final class PeasyGradients {
 	/**
 	 * Thread for variable-curviness spiral gradients.
 	 * 
-	 * @author micycle1
+	 * @author Michael Carleton
 	 *
 	 */
 	private final class SpiralThread extends RenderThread {
@@ -1550,7 +1548,7 @@ public final class PeasyGradients {
 					 */
 					float fallOffWidth = xDiffMax * ((newYpos - originPoint.y) / renderHeight * beamAngle);
 					if (fallOffWidth < 0) { // may be negative if centrePoint.y out of screen
-						fallOffWidth = 0;
+						fallOffWidth = Float.MIN_VALUE; // avoid divide by zero error
 					}
 
 					float xDiff = Math.abs(newXpos - originPoint.x); // actual difference in x between this pixel and centerpoint.x

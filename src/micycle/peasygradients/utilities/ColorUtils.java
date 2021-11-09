@@ -4,7 +4,7 @@ package micycle.peasygradients.utilities;
  * Contains static functions mostly related to color processing (mostly
  * (de)composition).
  * 
- * @author micycle1
+ * @author Michael Carleton
  *
  */
 public final class ColorUtils {

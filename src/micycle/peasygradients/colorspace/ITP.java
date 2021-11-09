@@ -1,4 +1,4 @@
-package micycle.peasygradients.colorSpaces;
+package micycle.peasygradients.colorspace;
 
 import net.jafama.FastMath;
 
@@ -8,7 +8,7 @@ import net.jafama.FastMath;
  * https://www.dolby.com/us/en/technologies/dolby-vision/ictcp-white-paper.pdf
  * https://www.dolby.com/us/en/technologies/dolby-vision/measuring-perceptual-color-volume-v7.1.pdf
  * 
- * @author micycle1
+ * @author Michael Carleton
  *
  */
 final class ITP implements ColorSpace {

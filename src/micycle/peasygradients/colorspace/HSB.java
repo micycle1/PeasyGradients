@@ -1,4 +1,4 @@
-package micycle.peasygradients.colorSpaces;
+package micycle.peasygradients.colorspace;
 
 /**
  * The HSB color system describes a color based on the three qualities of hue,
@@ -9,7 +9,7 @@ package micycle.peasygradients.colorSpaces;
  * 1 for the brightest colors. The HSB color system is sometimes also called
  * HSV, where the V stands for value.
  * 
- * @author micycle1
+ * @author Michael Carleton
  *
  */
 final class HSB implements ColorSpace {

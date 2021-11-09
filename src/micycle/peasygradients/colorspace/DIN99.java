@@ -1,4 +1,4 @@
-package micycle.peasygradients.colorSpaces;
+package micycle.peasygradients.colorspace;
 
 import net.jafama.FastMath;
 
@@ -7,7 +7,7 @@ import net.jafama.FastMath;
  * the Working Committee FNF / FNL 2 colorimetry.
  * https://github.com/frickels/colorspace/blob/master/src/main/java/info/kuechler/frickels/colorspace/DIN99.java
  * 
- * @author micycle1
+ * @author Michael Carleton
  *
  */
 final class DIN99 implements ColorSpace {

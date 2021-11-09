@@ -9,7 +9,7 @@ package micycle.peasygradients.utilities;
  * use 50% of the left and 50% of the right; in exponential interpolation, the
  * same point be an average of x% of left color and y% of right color.
  * 
- * @author micycle1
+ * @author Michael Carleton
  *
  */
 public enum Interpolation {

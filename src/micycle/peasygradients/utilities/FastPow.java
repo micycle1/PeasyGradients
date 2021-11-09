@@ -20,7 +20,7 @@ import net.jafama.FastMath;
  * This solution has a small weakness: for radix two it produces inexact results
  * for integer powers when it need not.
  * 
- * @author micycle1
+ * @author Michael Carleton
  *
  */
 public final class FastPow {

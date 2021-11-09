@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import micycle.peasygradients.colorSpaces.*;
+import micycle.peasygradients.colorspace.*;
 import micycle.peasygradients.utilities.ColorUtils;
 import micycle.peasygradients.utilities.FastPow;
 import micycle.peasygradients.utilities.Functions;
@@ -26,7 +26,7 @@ import net.jafama.FastMath;
  * 2D spectrums.
  * 
  * 
- * @author micycle1
+ * @author Michael Carleton
  *
  */
 public final class Gradient {

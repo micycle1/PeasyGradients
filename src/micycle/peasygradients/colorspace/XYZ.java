@@ -1,4 +1,4 @@
-package micycle.peasygradients.colorSpaces;
+package micycle.peasygradients.colorspace;
 
 import micycle.peasygradients.utilities.FastPow;
 import micycle.peasygradients.utilities.Functions;
@@ -9,7 +9,7 @@ import net.jafama.FastMath;
  * representation of color. It serves as a standard reference against which many
  * other color spaces are defined.
  *
- * @author micycle1
+ * @author Michael Carleton
  *
  */
 public final class XYZ implements ColorSpace {

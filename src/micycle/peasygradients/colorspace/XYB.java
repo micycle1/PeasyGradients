@@ -1,4 +1,4 @@
-package micycle.peasygradients.colorSpaces;
+package micycle.peasygradients.colorspace;
 
 import net.jafama.FastMath;
 
@@ -20,7 +20,7 @@ import net.jafama.FastMath;
  * implementation found <a href=
  * "https://observablehq.com/@mattdesl/perceptually-smooth-multi-color-linear-gradients">here</a>.
  * 
- * @author micycle1
+ * @author Michael Carleton
  *
  */
 final class XYB implements ColorSpace {

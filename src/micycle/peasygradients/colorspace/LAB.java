@@ -1,4 +1,4 @@
-package micycle.peasygradients.colorSpaces;
+package micycle.peasygradients.colorspace;
 
 /**
  * A uniform (Opponent color scale) color space in which colors are located
@@ -13,7 +13,7 @@ package micycle.peasygradients.colorSpaces;
  * TODO
  * https://community.khronos.org/t/converting-to-and-from-color-space-in-glsl-only-works-for-few-colors/72107
  * 
- * @author micycle1
+ * @author Michael Carleton
  *
  */
 final class LAB implements ColorSpace {

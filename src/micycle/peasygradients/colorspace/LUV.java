@@ -1,4 +1,4 @@
-package micycle.peasygradients.colorSpaces;
+package micycle.peasygradients.colorspace;
 
 import net.jafama.FastMath;
 
@@ -14,7 +14,7 @@ import net.jafama.FastMath;
  * chromaticities as input and lightness, chroma, and hue predictors as output),
  * but incorporates a different form of chromatic adaptation transform.
  * 
- * @author micycle1
+ * @author Michael Carleton
  *
  */
 final class LUV implements ColorSpace {

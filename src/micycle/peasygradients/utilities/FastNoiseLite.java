@@ -290,7 +290,7 @@ public class FastNoiseLite {
 	 * noise type etc.
 	 * 
 	 * @return Simplex noise between 0...1
-	 * @author micycle1
+	 * @author Michael Carleton
 	 */
 	public float getSimplexNoiseFast(float x, float y) {
 		x *= mFrequency;

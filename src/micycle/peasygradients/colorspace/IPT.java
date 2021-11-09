@@ -1,4 +1,4 @@
-package micycle.peasygradients.colorSpaces;
+package micycle.peasygradients.colorspace;
 
 import micycle.peasygradients.utilities.FastPow;
 import net.jafama.FastMath;
@@ -15,7 +15,7 @@ import net.jafama.FastMath;
  * <p>
  * IPT opponent space: I light–dark; P red–green, T yellow–blue.
  * 
- * @author micycle1
+ * @author Michael Carleton
  *
  */
 public final class IPT implements ColorSpace {

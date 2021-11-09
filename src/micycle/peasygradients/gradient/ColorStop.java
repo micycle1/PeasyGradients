@@ -3,7 +3,7 @@ package micycle.peasygradients.gradient;
 import java.util.Arrays;
 import java.util.HashMap;
 
-import micycle.peasygradients.colorSpaces.*;
+import micycle.peasygradients.colorspace.*;
 import micycle.peasygradients.utilities.ColorUtils;
 import micycle.peasygradients.utilities.Functions;
 import processing.core.PApplet;
@@ -12,7 +12,7 @@ import processing.core.PApplet;
  * A container for color (in every color space) and the percentage position that
  * it occurs within a gradient. Gradients comprise of multiple color stops.
  * 
- * @author micycle1
+ * @author Michael Carleton
  *
  */
 public final class ColorStop implements Comparable<ColorStop> {

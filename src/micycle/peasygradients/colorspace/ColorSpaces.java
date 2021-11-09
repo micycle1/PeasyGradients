@@ -1,10 +1,10 @@
-package micycle.peasygradients.colorSpaces;
+package micycle.peasygradients.colorspace;
 
 /**
  * Colorspaces are used to specify the color space in which a gradient's
  * colors are represented and affects the results of color interpolation.
  * 
- * @author micycle1
+ * @author Michael Carleton
  *
  */
 public enum ColorSpaces {

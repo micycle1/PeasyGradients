@@ -1,4 +1,4 @@
-package micycle.peasygradients.colorSpaces;
+package micycle.peasygradients.colorspace;
 
 /***
  * Standard RGB (1996), not to be confused with CIERGB (1931). The RGB color
@@ -6,7 +6,7 @@ package micycle.peasygradients.colorSpaces;
  * and blue. Thus, a particular color has three coordinates, (R,G,B). Each
  * coordinate must be between 0 and 1.
  * 
- * @author micycle1
+ * @author Michael Carleton
  *
  */
 final class RGB implements ColorSpace {
