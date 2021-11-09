@@ -58,15 +58,15 @@ final class LAB implements ColorSpace {
 		if (X > 0.008856)
 			X = StrictMath.cbrt(X);
 		else
-			X = (7.787 * X) + (16 / 116);
+			X = (7.787 * X) + (16 / 116d);
 		if (Y > 0.008856)
 			Y = StrictMath.cbrt(Y);
 		else
-			Y = (7.787 * Y) + (16 / 116);
+			Y = (7.787 * Y) + (16 / 116d);
 		if (Z > 0.008856)
 			Z = StrictMath.cbrt(Z);
 		else
-			Z = (7.787 * Z) + (16 / 116);
+			Z = (7.787 * Z) + (16 / 116d);
 
 		return new double[] { (116 * Y) - 16, 500 * (X - Y), 200 * (Y - Z) };
 	}
@@ -89,33 +89,38 @@ final class LAB implements ColorSpace {
 	}
 
 	private static double[] lab2xyz(double[] lab) {
-		final double cache = lab[1];
+		final double ta = (lab[0] + 16d) / 116d;
+		lab[0] = ta + lab[1] / 500d;
+		lab[2] = ta - lab[2] / 200d;
 
-		lab[0] = cache * 0.002 + (lab[1] = (lab[0] + 16) * 0.00862068965);
-		lab[2] = lab[1] - lab[2] * 0.005;
-
-		if (lab[1] > 0.206897) { // 6/29
-			lab[1] = lab[1] * lab[1] * lab[1];
-		} else {
-			lab[1] = (lab[1] - 16) * 14.8966;
-		}
-
-		if (lab[0] > 0.2069) {
+		if (lab[0] > 0.206897) {
 			lab[0] = lab[0] * lab[0] * lab[0];
 		} else {
-			lab[0] = (lab[0] - 16) * 14.8966;
+			lab[0] = 0.12841854934 * lab[0] - 0.01771290335;
 		}
-
-		if (lab[2] > 0.2069) {
+		if (ta > 0.206897) {
+			lab[1] = ta * ta * ta;
+		} else {
+			lab[1] = 0.12841854934 * ta - 0.01771290335;
+		}
+		if (lab[2] > 0.206897) {
 			lab[2] = lab[2] * lab[2] * lab[2];
 		} else {
-			lab[2] = (lab[2] - 16) * 14.8966;
+			lab[2] = 0.12841854934 * lab[2] - 0.01771290335;
 		}
 
 		lab[0] *= illuminantX;
 		lab[1] *= illuminantY;
 		lab[2] *= illuminantZ;
 		return lab;
+	}
+
+	private static double f(double n) {
+		if (n > 0.206897) {
+			return n * n * n;
+		} else {
+			return 0.12841854934 * n - 0.01771290335;
+		}
 	}
 
 }

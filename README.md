@@ -266,12 +266,6 @@ void draw() {
 ## Library Optimisation
 PeasyGradients targets the **CPU** (as opposed to the GPU) as to not be dependent on `OPENGL` libraries. To this end, there have been many internal optimisations to make the library suitable for dynamic animation and interaction rather than just static rendering. Care was taken to optimise color interpolation and gradient rasterization, and finally multithreading was added to naively parallelise the workload. Therefore, rendering (most) gradients at 60fps at high resolutions (1080p+) is more than achievable on modern processors.
 
-## Known Issues
-
-*Known bugs, shortcomings or other issues.*
-
-* Gamut out of range on some color spaces (LAB, etc.) for some (high value) colours.
-
 ## Improvements
 
 * Implement [four-corner](https://graphicdesign.stackexchange.com/questions/19477/4-colors-corners-gradient-with-illustrator-or-photoshop) gradients (or a more general form which distributes *N* colors, placing them around the edge and interpolating towards the middle).
