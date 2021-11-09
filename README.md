@@ -3,6 +3,9 @@
   <img src="resources/logo/Banner-2.png" alt="PeasyGradients"/></a>
 </h1>
 
+[![](https://jitpack.io/v/micycle1/PeasyGradients.svg)](https://jitpack.io/#micycle1/PeasyGradients)
+ [![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=micycle1_PeasyGradients&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=micycle1_PeasyGradients)
+
 *PeasyGradients* is a library for [Processing](https://processing.org/) that makes drawing color gradients easy-peasy. This library was inspired by Jeremy Behreandt's [*Color Gradients in Processing*](https://medium.com/@behreajj/color-gradients-in-processing-v-2-0-e5c0b87cdfd2) but has greatly developed the concepts and functionality presented there.
 
 This `README` provides an overview of the library — what it's capable of and how to use it. Access examples (Processing sketches) [here](https://github.com/micycle1/PeasyGradients/tree/master/examples); access documentation (online Javadocs) [here]().
