@@ -10,7 +10,7 @@
 
 This `README` provides an overview of the library — what it's capable of and how to use it. Access examples (Processing sketches) [here](https://github.com/micycle1/PeasyGradients/tree/master/examples); access documentation (online Javadocs) [here]().
 
-## Overview
+## **Overview**
 
 ### Key Features:
 * ### 11 Gradient Types
@@ -51,11 +51,32 @@ See the *Gradients* section below for a showcase of each (2D) gradient type.
 
 ## Installation
 
-* To use PeasyGradients in a Java IDE, simply download the most recent .jar from [releases](https://github.com/micycle1/PeasyGradients/releases/) and include it in your project's classpath.
+<details><summary>Processing IDE — Quick</summary>
+<p>
 
-* To use it in the Processing IDE (for it to appear in the contribution manager), download the .jar as above and then see [this](https://github.com/processing/processing/wiki/How-to-Install-a-Contributed-Library). Alternatively, you can drag-and-drop the .jar onto your sketch.
+Download the latest *PGS.jar* from [releases](https://github.com/micycle1/PeasyGradients/releases/) and simply drag-and-drop it onto the [Processing IDE](https://processing.org/reference/environment/).
+</p>
+</details>
 
-## Gradients
+<details><summary>Processing IDE — Permanently</summary>
+<p>
+
+Download the latest *PGS.jar* from [releases](https://github.com/micycle1/PeasyGradients/releases/) and save it to `Documents\Processing\libraries\peasyGradients\library`.
+
+Result: `Documents\Processing\libraries\peasyGradients\library\peasyGradients.jar`.
+
+(Note the *.jar* and the folder **must** be called `peasyGradients` — rename the .jar if this is not the case).
+</p>
+</details>
+
+<details><summary>Maven/Gradle</summary>
+<p>
+
+PeasyGradients is hosted as an artifact for use in Maven or Gradle projects via [Jitpack](https://jitpack.io/#micycle1/PeasyGradients) — follow the instructions there (very easy). 
+</p>
+</details>
+
+## **Gradients**
 
 PeasyGradients provides methods to render 11 types of 2D gradients.
 
@@ -74,7 +95,7 @@ Each gradient type is shown below. The screenshots are taken using the `LUV` col
 | **Spotlight**![](resources/gradient_type_examples/spotlight.png)|
 
 
-## Interpolation: Easing Functions
+## **Interpolation: Easing Functions**
 In the parts of a `Gradient` between color stops, colors are composed via interpolating the neighbouring two color stops. Easing functions affect how these two adjacent stops contribute to the color of each point between them.
 
 For example, with *linear* interpolation, a point in a `Gradient` which is midway between 2 color stops is composed of 50% of the first color and 50% of the second color — there is a linear relationship between its position and the weighting of color it receives from each color stop. Other easing functions are non-linear (for example a point closer to one color stop may in some cases receive more color from the second color stop) which can result in more interesting gradients.
@@ -102,7 +123,7 @@ See for a comparison of all available easing functions modes in expandable secti
 
 </details>
 
-## Color Spaces
+## **Color Spaces**
 
 Color spaces define how the color value at each color stop is represented.
 
@@ -131,7 +152,7 @@ Remember that a 1D `Gradient` consists of only a few defined color stops; all ot
 
 </details>
 
-## Animating Gradients
+## **Animating Gradients**
 
 ### Animating Color Offset
 
@@ -263,10 +284,10 @@ void draw() {
 <p align="center"><a href="https://github.com/micycle1/PeasyGradients">
 <img src="resources/animation_examples/masking_example.gif" alt="PeasyGradients"/></a><br></p>
 
-## Library Optimisation
+## **Library Optimisation**
 PeasyGradients targets the **CPU** (as opposed to the GPU) as to not be dependent on `OPENGL` libraries. To this end, there have been many internal optimisations to make the library suitable for dynamic animation and interaction rather than just static rendering. Care was taken to optimise color interpolation and gradient rasterization, and finally multithreading was added to naively parallelise the workload. Therefore, rendering (most) gradients at 60fps at high resolutions (1080p+) is more than achievable on modern processors.
 
-## Improvements
+## **Improvements**
 
 * Implement [four-corner](https://graphicdesign.stackexchange.com/questions/19477/4-colors-corners-gradient-with-illustrator-or-photoshop) gradients (or a more general form which distributes *N* colors, placing them around the edge and interpolating towards the middle).
 * Implement [this](https://www.filterforge.com/wiki/index.php/Spiral_Gradient) type of spiral gradient.

@@ -2,6 +2,7 @@ package micycle.peasygradients;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -92,8 +93,11 @@ public final class PeasyGradients {
 	private int renderOffsetX, renderOffsetY; // gradient region offsets (usually 0, 0)
 	private float scaleY, scaleX;
 
-	private int renderPartitionsX = Math.max(cpuThreads / 4, 1); // number of thread render partitions in the x (horizontal) direction
-	private int renderPartitionsY = Math.max(cpuThreads / 4, 1); // number of thread render partitions in the y (vertical) direction
+	/**
+	 * Number of horizontal strips the plane is paritioned into for threaded
+	 * rendering
+	 */
+	private int renderStrips = (int) Math.max(cpuThreads * 0.75, 1);
 
 	/**
 	 * Constructs a new PeasyGradients renderer from a running Processing sketch.
@@ -175,7 +179,7 @@ public final class PeasyGradients {
 
 		gradientPG = g;
 
-		gradientCacheSize = (int) (2 * Math.ceil(Math.max(actualWidth, actualHeight)));
+		gradientCacheSize = (3 * Math.max(actualWidth, actualHeight));
 		gradientCache = new int[gradientCacheSize + 1];
 	}
 
@@ -327,7 +331,7 @@ public final class PeasyGradients {
 		final float odSqInverse = 1 / (odX * odX + odY * odY); // Distance-squared of line.
 		float opXod = -controlPoint1.x * odX + -controlPoint1.y * odY;
 
-		makeThreadPool(renderPartitionsX, renderPartitionsY, LinearThread.class, odX, odY, odSqInverse, opXod);
+		makeThreadPool(renderStrips, LinearThread.class, odX, odY, odSqInverse, opXod);
 
 		gradientPG.updatePixels();
 
@@ -360,10 +364,9 @@ public final class PeasyGradients {
 			gradientCache[i] = gradient.getColor(i / (float) gradientCache.length);
 		}
 
-		makeThreadPool(renderPartitionsX, renderPartitionsY, RadialThread.class, renderMidpointX, renderMidpointY, zoom);
+		makeThreadPool(renderStrips, RadialThread.class, renderMidpointX, renderMidpointY, zoom);
 
 		gradientPG.updatePixels();
-
 	}
 
 	/**
@@ -403,7 +406,7 @@ public final class PeasyGradients {
 		final float renderMidpointX = (centerPoint.x / gradientPG.width) * renderWidth;
 		final float renderMidpointY = (centerPoint.y / gradientPG.height) * renderHeight;
 
-		makeThreadPool(renderPartitionsX, renderPartitionsY, ConicThread.class, renderMidpointX, renderMidpointY, angle);
+		makeThreadPool(renderStrips, ConicThread.class, renderMidpointX, renderMidpointY, angle);
 
 		gradientPG.updatePixels();
 	}
@@ -460,8 +463,7 @@ public final class PeasyGradients {
 		final float renderMidpointX = (centerPoint.x / gradientPG.width) * renderWidth;
 		final float renderMidpointY = (centerPoint.y / gradientPG.height) * renderHeight;
 
-		makeThreadPool(renderPartitionsX, renderPartitionsY, SpiralThread.class, renderMidpointX, renderMidpointY, curveDenominator,
-				curviness, angle, curveCount);
+		makeThreadPool(renderStrips, SpiralThread.class, renderMidpointX, renderMidpointY, curveDenominator, curviness, angle, curveCount);
 
 		gradientPG.updatePixels();
 	}
@@ -485,7 +487,7 @@ public final class PeasyGradients {
 		final float renderMidpointX = (centerPoint.x / gradientPG.width) * renderWidth;
 		final float renderMidpointY = (centerPoint.y / gradientPG.height) * renderHeight;
 
-		/**
+		/*
 		 * Calculate minlength/maxlength of distances between edges of unit-length
 		 * polygon and its midpoint (generally around 0.85). Or, distance of the centre
 		 * of the polygon to the midpoint of each side (which are closer than vertices)
@@ -496,8 +498,6 @@ public final class PeasyGradients {
 		angle %= SEGMENT_ANGLE; // mod angle to minimise difference between theta and SEGMENT_ANGLE in loop
 
 		final double denominator = MIN_LENGTH_RATIO / ((Math.max(renderHeight, renderWidth)) * (0.01 * zoom * FastPow.fastPow(sides, 2.4)));
-
-		final float midpointXSquared = renderMidpointX * renderMidpointX;
 
 		final int LUT_SIZE = (int) Functions.min(2000, renderWidth * 10f, renderHeight * 10f); // suitable value?
 		final int HALF_LUT_SIZE = (int) (LUT_SIZE / TWO_PI);
@@ -516,8 +516,7 @@ public final class PeasyGradients {
 			ratioLookup[i] = (float) ((MIN_LENGTH_RATIO * FastMath.cosQuick(theta) + FastMath.sinQuick(theta)) * denominator);
 		}
 
-		makeThreadPool(renderPartitionsX, renderPartitionsY, PolygonThread.class, renderMidpointX, renderMidpointY, midpointXSquared,
-				ratioLookup, HALF_LUT_SIZE);
+		makeThreadPool(renderStrips, PolygonThread.class, renderMidpointX, renderMidpointY, ratioLookup, HALF_LUT_SIZE);
 
 		gradientPG.updatePixels();
 
@@ -549,7 +548,7 @@ public final class PeasyGradients {
 		final float sin = (float) FastMath.sin(angle);
 		final float cos = (float) FastMath.cos(angle);
 
-		makeThreadPool(renderPartitionsX, renderPartitionsY, CrossThread.class, renderMidpointX, renderMidpointY, denominator, sin, cos);
+		makeThreadPool(renderStrips, CrossThread.class, renderMidpointX, renderMidpointY, denominator, sin, cos);
 
 		gradientPG.updatePixels();
 	}
@@ -582,7 +581,7 @@ public final class PeasyGradients {
 		final float sin = (float) FastMath.sin(angle);
 		final float cos = (float) FastMath.cos(angle);
 
-		makeThreadPool(renderPartitionsX, renderPartitionsY, DiamondThread.class, renderMidpointX, renderMidpointY, denominator, sin, cos);
+		makeThreadPool(renderStrips, DiamondThread.class, renderMidpointX, renderMidpointY, denominator, sin, cos);
 
 		gradientPG.updatePixels();
 
@@ -619,9 +618,7 @@ public final class PeasyGradients {
 		final float sin = (float) FastMath.sin(angle + THREE_QRTR_PI); // +THREE_QRTR_PI to align centrepoint with noise position
 		final float cos = (float) FastMath.cos(angle + THREE_QRTR_PI); // +THREE_QRTR_PI to align centrepoint with noise position
 
-		final float[][] noiseVals = new float[gradientPG.width][gradientPG.height];
-
-		makeThreadPool(renderPartitionsX, renderPartitionsY, NoiseThread.class, centerPoint, sin, cos, noiseVals);
+		makeThreadPool(renderStrips, NoiseThread.class, centerPoint, sin, cos);
 
 		gradientPG.updatePixels();
 
@@ -693,9 +690,7 @@ public final class PeasyGradients {
 		final float sin = (float) FastMath.sin(angle + THREE_QRTR_PI); // +THREE_QRTR_PI to align centrepoint with noise position
 		final float cos = (float) FastMath.cos(angle + THREE_QRTR_PI); // +THREE_QRTR_PI to align centrepoint with noise position
 
-		final float[][] noiseVals = new float[gradientPG.width][gradientPG.height];
-
-		makeThreadPool(renderPartitionsX, renderPartitionsY, FractalNoiseThread.class, centerPoint, sin, cos, min, maxMinDenom, noiseVals);
+		makeThreadPool(renderStrips, FractalNoiseThread.class, centerPoint, sin, cos, min, maxMinDenom);
 
 		gradientPG.updatePixels();
 
@@ -724,7 +719,7 @@ public final class PeasyGradients {
 
 		beamAngle = Math.min(beamAngle, PIf);
 
-		/**
+		/*
 		 * fudge angle slightly to prevent solid line drawn above the gradient when
 		 * angle == 0 and divide by 2 to increase input range to a more suitable 0...180
 		 * degrees (PI)
@@ -736,7 +731,7 @@ public final class PeasyGradients {
 
 		final float xDiffMax = (renderWidth / 2f) * beamAngle; // * beamAngle for limit
 
-		makeThreadPool(renderPartitionsX, renderPartitionsY, SpotlightThread.class, originPoint, sin, cos, beamAngle, xDiffMax);
+		makeThreadPool(renderStrips, SpotlightThread.class, originPoint, sin, cos, beamAngle, xDiffMax);
 
 		gradientPG.updatePixels();
 
@@ -799,8 +794,8 @@ public final class PeasyGradients {
 		final float sin = (float) FastMath.sin(PConstants.TWO_PI - angle);
 		final float cos = (float) FastMath.cos(angle);
 
-		makeThreadPool(renderPartitionsX, renderPartitionsY, HourglassThread.class, renderMidpointX, renderMidpointY, sin, cos, zoom, angle,
-				pinch, roundness, denominator);
+		makeThreadPool(renderStrips, HourglassThread.class, renderMidpointX, renderMidpointY, sin, cos, zoom, angle, pinch, roundness,
+				denominator);
 
 		gradientPG.updatePixels();
 
@@ -811,86 +806,40 @@ public final class PeasyGradients {
 	 * type (each thread works on a portion of the pixels array). This method will
 	 * start the threads, returning when threads have completed.
 	 * 
-	 * @param partitionsX
 	 * @param partitionsY
 	 * @param gradientType class for the given gradient type thread
 	 * @param args         args to pass to gradient thread constructor
 	 */
-	private void makeThreadPool(final int partitionsX, final int partitionsY, final Class<? extends RenderThread> gradientType,
-			final Object... args) {
+	private void makeThreadPool(final int partitionsY, final Class<? extends RenderThread> gradientType, final Object... args) {
 
-		final int partitionWidth = (int) Math.floor((float) renderWidth / partitionsX); // pixel width of each parition
-		final int partitionHeight = (int) Math.floor((float) renderHeight / partitionsY); // pixel height of each parition
-
-		Object[] fullArgs = new Object[5 + args.length]; // empty obj array (to use as input args for new thread instance)
+		Object[] fullArgs = new Object[3 + args.length]; // empty obj array (to use as input args for new thread instance)
 		fullArgs[0] = this; // sub-classes require parent instance as (hidden) first param
-		System.arraycopy(args, 0, fullArgs, 5, args.length); // copy the input-args into fullargs
+		System.arraycopy(args, 0, fullArgs, 3, args.length); // copy the input-args into fullargs
 
 		List<Callable<Boolean>> taskList = new ArrayList<>();
 
 		try {
-
 			@SuppressWarnings("unchecked")
 			Constructor<? extends RenderThread> constructor = (Constructor<? extends RenderThread>) gradientType
 					.getDeclaredConstructors()[0]; // only 1 constructor per thread class
 
-			/**
-			 * Render all paritions (except for bottom-most row and right-most column)
-			 */
-			fullArgs[3] = partitionWidth; // set thread partition width
-			fullArgs[4] = partitionHeight; // set thread partition height
-			for (int a = 0; a < partitionsX - 1; a++) {
-				for (int b = 0; b < partitionsY - 1; b++) {
-
-					fullArgs[1] = a * partitionWidth; // set thread offsetX
-					fullArgs[2] = b * partitionHeight; // set thread offsetY
-
-					RenderThread thread = constructor.newInstance(fullArgs);
-					taskList.add(thread);
-				}
-			}
-
-			/*
-			 * Render bottom row partitions
-			 */
-			fullArgs[2] = (partitionsY - 1) * partitionHeight; // bottom y row offset
-			fullArgs[4] = renderHeight - (partitionHeight * (partitionsY - 1)); // set bottom row partition height (to account for when
-			// height/partitionsY isn't whole number
-			for (int a = 0; a < partitionsX - 1; a++) {
-
-				fullArgs[1] = a * partitionWidth; // set thread offsetX
-
+			int rows = renderHeight / partitionsY; // rows per strip (except for last strip, which may have less/more, due to floor
+													// division)
+			for (int strip = 0; strip < partitionsY - 1; strip++) {
+				fullArgs[1] = rows * strip;
+				fullArgs[2] = rows;
 				RenderThread thread = constructor.newInstance(fullArgs);
 				taskList.add(thread);
 			}
 
-			/**
-			 * Render right-most column partitions
-			 */
-			fullArgs[1] = (partitionsX - 1) * partitionWidth; // right-most x column offset
-			fullArgs[3] = renderWidth - (partitionWidth * (partitionsX - 1));
-			fullArgs[4] = partitionHeight; // reset to original value (changed for bottom row render above)
-			for (int b = 0; b < partitionsY - 1; b++) {
-
-				fullArgs[2] = b * partitionHeight; // set thread offsetY
-
-				RenderThread thread = constructor.newInstance(fullArgs);
-				taskList.add(thread);
-			}
-
-			/**
-			 * Render individual bottom-right parition
-			 */
-			fullArgs[1] = (partitionsX - 1) * partitionWidth; // set thread offsetX
-			fullArgs[2] = (partitionsY - 1) * partitionHeight; // set thread offsetY
-			fullArgs[4] = renderHeight - (partitionHeight * (partitionsY - 1));
+			fullArgs[1] = rows * (partitionsY - 1);
+			fullArgs[2] = renderHeight - rows * (partitionsY - 1);
 			RenderThread thread = constructor.newInstance(fullArgs);
 			taskList.add(thread);
 
 			THREAD_POOL.invokeAll(taskList); // run threads now
 
-		} catch (Exception e) { // if exception, probably because the given args don't match the thread class'
-								// args
+		} catch (Exception e) { // the given args probably don't match the thread class args
 			e.printStackTrace();
 		}
 
@@ -907,21 +856,19 @@ public final class PeasyGradients {
 	 */
 	private abstract class RenderThread implements Callable<Boolean> {
 
-		final int offsetX, offsetY; // so that each thread calculates and renders gradient spectrum into a unique
+		final int rowOffset, rows; // so that each thread calculates and renders gradient spectrum into a unique
 									// parition of the pixel grid
-		final int pixelsX, pixelsY; // specifies how many pixels, whose indexes starts at the relevant offsets, for
-									// this thread to calculate
+		int pixel;
 
-		/**
+		/*
 		 * All gradient rendering threads, regardless of their specific gradient type,
 		 * need offsets and pixel length to determine which partition of the pixels grid
 		 * it should operate on.
 		 */
-		public RenderThread(int offsetX, int offsetY, int pixelsX, int pixelsY) {
-			this.offsetX = offsetX;
-			this.offsetY = offsetY;
-			this.pixelsX = pixelsX;
-			this.pixelsY = pixelsY;
+		RenderThread(int rowOffset, int rows) {
+			this.rowOffset = rowOffset;
+			this.rows = rows;
+			pixel = rowOffset * renderWidth;
 		}
 	}
 
@@ -931,8 +878,8 @@ public final class PeasyGradients {
 		private final float odSqInverse;
 		private float opXod;
 
-		LinearThread(int offsetX, int offsetY, int pixelsX, int pixelsY, float odX, float odY, float odSqInverse, float opXod) {
-			super(offsetX, offsetY, pixelsX, pixelsY);
+		LinearThread(int rowOffset, int rows, float odX, float odY, float odSqInverse, float opXod) {
+			super(rowOffset, rows);
 			this.odX = odX;
 			this.odY = odY;
 			this.odSqInverse = odSqInverse;
@@ -941,23 +888,19 @@ public final class PeasyGradients {
 
 		@Override
 		public Boolean call() {
-
-			/**
-			 * Usually, we'd call Functions.linearProject() to calculate step, but the
-			 * function is inlined here to optimise speed.
+			/*
+			 * Usually we'd call Functions.linearProject() to calculate step at each pixel,
+			 * but the function is inlined here to optimise speed.
 			 */
-
-			opXod += offsetY * odY * scaleY; // offset for thread
-			for (int y = offsetY, x; y < offsetY + pixelsY; y++) {
-
+			opXod += rowOffset * odY * scaleY; // offset for thread
+			for (int y = rowOffset; y < rowOffset + rows; y++) {
 				opXod += odY * scaleY;
-				float xOff = odX * scaleX * pixelsX * (offsetX / (float) pixelsX); // set partition x offset to correct amount
-
-				for (x = offsetX; x < offsetX + pixelsX; x++) {
-					float step = (opXod + xOff - offsetX) * odSqInverse; // get position of point on 1D gradient and normalise
-					step = (step < 0) ? 0 : (step > 1 ? 1 : step); // clamp
+				float xOff = 0; // set partition x offset to correct amount
+				for (int x = 0; x < renderWidth; x++) {
+					float step = (opXod + xOff - rowOffset) * odSqInverse; // get position of point on 1D gradient and normalise
+					step = (step < 0) ? 0 : (step > 1 ? 1 : step); // clamp between 0...1
 					int stepInt = (int) (step * gradientCacheSize);
-					gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
+					gradientPG.pixels[pixel++] = gradientCache[stepInt];
 					xOff += odX * scaleX;
 				}
 			}
@@ -972,8 +915,8 @@ public final class PeasyGradients {
 		private final float renderMidpointX, renderMidpointY;
 		private final float zoom;
 
-		RadialThread(int offsetX, int offsetY, int pixelsX, int pixelsY, float renderMidpointX, float renderMidpointY, float zoom) {
-			super(offsetX, offsetY, pixelsX, pixelsY);
+		RadialThread(int rowOffset, int rows, float renderMidpointX, float renderMidpointY, float zoom) {
+			super(rowOffset, rows);
 			this.renderMidpointX = renderMidpointX;
 			this.renderMidpointY = renderMidpointY;
 			this.zoom = zoom;
@@ -982,11 +925,11 @@ public final class PeasyGradients {
 		@Override
 		public Boolean call() {
 
-			for (int y = offsetY, x; y < offsetY + pixelsY; y++) {
+			for (int y = rowOffset; y < rowOffset + rows; y++) {
 				float rise = renderMidpointY - y;
 				rise *= rise;
+				for (int x = 0; x < renderWidth; x++) {
 
-				for (x = offsetX; x < offsetX + pixelsX; x++) {
 					float run = renderMidpointX - x;
 					run *= run;
 
@@ -998,7 +941,7 @@ public final class PeasyGradients {
 					}
 
 					int stepInt = (int) (dist * gradientCacheSize);
-					gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
+					gradientPG.pixels[pixel++] = gradientCache[stepInt];
 				}
 			}
 
@@ -1012,8 +955,8 @@ public final class PeasyGradients {
 		private final float renderMidpointX, renderMidpointY;
 		private final float angle;
 
-		ConicThread(int offsetX, int offsetY, int pixelsX, int pixelsY, float renderMidpointX, float renderMidpointY, float angle) {
-			super(offsetX, offsetY, pixelsX, pixelsY);
+		ConicThread(int rowOffset, int rows, float renderMidpointX, float renderMidpointY, float angle) {
+			super(rowOffset, rows);
 			this.renderMidpointX = renderMidpointX;
 			this.renderMidpointY = renderMidpointY;
 			this.angle = angle;
@@ -1023,22 +966,18 @@ public final class PeasyGradients {
 		public Boolean call() {
 
 			double t;
-
 			float rise, run;
 
-			for (int y = offsetY, x; y < offsetY + pixelsY; y++) {
+			for (int y = rowOffset; y < rowOffset + rows; y++) {
 				rise = renderMidpointY - y;
-				run = renderMidpointX - offsetX; // subtract offsetX so it renders correctly when paritioned over threads
-				for (x = offsetX; x < offsetX + pixelsX; x++) {
-
+				for (int x = 0; x < gradientPG.width; x++) { // FULL WIDTH
+					run = renderMidpointX - x;
 					t = Functions.fastAtan2b(rise, run) + PConstants.PI - angle; // + PI to align bump with angle
 					t *= INV_TWO_PI; // normalise
 					t -= Math.floor(t); // modulo
 
 					int stepInt = (int) (t * gradientCacheSize);
-					gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
-
-					run--;
+					gradientPG.pixels[pixel++] = gradientCache[stepInt];
 				}
 			}
 
@@ -1061,9 +1000,9 @@ public final class PeasyGradients {
 		private final float curviness;
 		private final double curveDenominator;
 
-		SpiralThread(int offsetX, int offsetY, int pixelsX, int pixelsY, float renderMidpointX, float renderMidpointY,
-				double curveDenominator, float curviness, float angle, float curveCount) {
-			super(offsetX, offsetY, pixelsX, pixelsY);
+		SpiralThread(int rowOffset, int rows, float renderMidpointX, float renderMidpointY, double curveDenominator, float curviness,
+				float angle, float curveCount) {
+			super(rowOffset, rows);
 			this.renderMidpointX = renderMidpointX;
 			this.renderMidpointY = renderMidpointY;
 			this.curveCount = curveCount;
@@ -1078,72 +1017,40 @@ public final class PeasyGradients {
 			double t;
 			double spiralOffset = 0;
 
-			/**
-			 * Choose sqrt version (default, faster) or version with custom curviness
-			 * exponent. Choose here once, rather than each iteration in loop
-			 */
-			if (curviness == 0.5f) {
-				for (int y = offsetY, x; y < offsetY + pixelsY; y++) {
+			for (int y = rowOffset; y < rowOffset + rows; y++) {
+				float rise = renderMidpointY - y;
+				final float riseSquared = rise * rise;
+				for (int x = 0; x < gradientPG.width; x++) { // FULL WIDTH
 
-					float rise = renderMidpointY - y;
-					final float riseSquared = rise * rise;
+					float run = renderMidpointX - x;
+					t = Functions.fastAtan2b(rise, run) - angle; // -PI...PI
+					spiralOffset = curveCount * curviness == 0.5f ? Math.sqrt((riseSquared + run * run) * curveDenominator)
+							: FastPow.fastPow((riseSquared + run * run) * curveDenominator, curviness);
+					t += spiralOffset;
 
-					for (x = offsetX; x < offsetX + pixelsX; x++) {
-						float run = renderMidpointX - x;
-						t = Functions.fastAtan2b(rise, run) - angle; // -PI...PI
-						spiralOffset = curveCount * Math.sqrt((riseSquared + run * run) * curveDenominator);
-						t += spiralOffset;
+					t *= INV_TWO_PI; // normalise
+					t -= Math.floor(t); // modulo
 
-						t *= INV_TWO_PI; // normalise
-						t -= Math.floor(t); // modulo
+					int stepInt = (int) (t * gradientCacheSize);
 
-						int stepInt = (int) (t * gradientCacheSize);
-						gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
-
-						run--;
-					}
-				}
-			} else {
-				for (int y = offsetY, x; y < offsetY + pixelsY; y++) {
-
-					float rise = renderMidpointY - y;
-					final float riseSquared = rise * rise;
-
-					for (x = offsetX; x < offsetX + pixelsX; x++) {
-						float run = renderMidpointX - x;
-						t = Functions.fastAtan2b(rise, run) - angle; // -PI...PI
-						spiralOffset = curveCount * FastPow.fastPow((riseSquared + run * run) * curveDenominator, curviness);
-						t += spiralOffset;
-
-						t *= INV_TWO_PI; // normalise
-						t -= Math.floor(t); // modulo
-
-						int stepInt = (int) (t * gradientCacheSize);
-						gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
-
-						run--;
-					}
+					gradientPG.pixels[pixel++] = gradientCache[stepInt];
 				}
 			}
 
 			return true;
-
 		}
 	}
 
 	private final class PolygonThread extends RenderThread {
 
 		private final float renderMidpointX, renderMidpointY;
-		private final float midpointXSquared;
 		private final float[] ratioLookup;
 		private final int HALF_LUT_SIZE;
 
-		PolygonThread(int offsetX, int offsetY, int pixelsX, int pixelsY, float renderMidpointX, float renderMidpointY,
-				float midpointXSquared, float[] ratioLookup, int HALF_LUT_SIZE) {
-			super(offsetX, offsetY, pixelsX, pixelsY);
+		PolygonThread(int rowOffset, int rows, float renderMidpointX, float renderMidpointY, float[] ratioLookup, int HALF_LUT_SIZE) {
+			super(rowOffset, rows);
 			this.renderMidpointX = renderMidpointX;
 			this.renderMidpointY = renderMidpointY;
-			this.midpointXSquared = midpointXSquared;
 			this.ratioLookup = ratioLookup;
 			this.HALF_LUT_SIZE = HALF_LUT_SIZE;
 		}
@@ -1154,19 +1061,13 @@ public final class PeasyGradients {
 			double yDist; // y distance between midpoint and a given pixel
 			double xDist; // x distance between midpoint and a given pixel
 
-			for (int y = offsetY, x; y < offsetY + pixelsY; y++) {
-
-				int inc = 1 + (2 * offsetX); // (N+x*i)^2, difference between successive Ns; account for thread offset
-				yDist = (renderMidpointY - y) * (renderMidpointY - y);
-				xDist = midpointXSquared + 1;
-				xDist -= offsetX * 2 * renderMidpointX; // account for thread offset
-				xDist += offsetX * (inc / 2d); // account for thread offset
-
-				for (x = offsetX; x < offsetX + pixelsX; x++) {
-					xDist -= 2 * renderMidpointX;
-					xDist += inc;
-					float pointDistance = (float) Math.sqrt(yDist + xDist); // euclidean dist between (x,y) and midpoint
-					inc += 2;
+			for (int y = rowOffset; y < rowOffset + rows; y++) {
+				yDist = (renderMidpointY - y);
+				xDist = renderMidpointX;
+				for (int x = 0; x < renderWidth; x++) {
+					final float pointDistance = (float) Math.sqrt(yDist * yDist + xDist * xDist); // euclidean dist between (x,y) and
+																									// midpoint
+					xDist--;
 
 					final double theta = Functions.fastAtan2b((renderMidpointY - y), (renderMidpointX - x)); // range = -PI...PI
 
@@ -1181,7 +1082,7 @@ public final class PeasyGradients {
 
 					final int stepInt = (int) (dist * gradientCacheSize);
 
-					gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
+					gradientPG.pixels[pixel++] = gradientCache[stepInt];
 				}
 			}
 
@@ -1196,9 +1097,8 @@ public final class PeasyGradients {
 		private final float denominator;
 		private final float sin, cos;
 
-		CrossThread(int offsetX, int offsetY, int pixelsX, int pixelsY, float renderMidpointX, float renderMidpointY, float denominator,
-				float sin, float cos) {
-			super(offsetX, offsetY, pixelsX, pixelsY);
+		CrossThread(int rowOffset, int rows, float renderMidpointX, float renderMidpointY, float denominator, float sin, float cos) {
+			super(rowOffset, rows);
 			this.renderMidpointX = renderMidpointX;
 			this.renderMidpointY = renderMidpointY;
 			this.denominator = denominator;
@@ -1209,9 +1109,9 @@ public final class PeasyGradients {
 		@Override
 		public Boolean call() {
 
-			for (int y = offsetY, x; y < offsetY + pixelsY; y++) {
+			for (int y = rowOffset; y < rowOffset + rows; y++) {
 				final float yTranslate = (y - renderMidpointY);
-				for (x = offsetX; x < offsetX + pixelsX; x++) {
+				for (int x = 0; x < renderWidth; x++) {
 					final float newXpos = (x - renderMidpointX) * cos - yTranslate * sin + renderMidpointX; // rotate x about midpoint
 					final float newYpos = yTranslate * cos + (x - renderMidpointX) * sin + renderMidpointY; // rotate y about midpoint
 
@@ -1223,7 +1123,7 @@ public final class PeasyGradients {
 
 					final int stepInt = (int) (dist * gradientCacheSize);
 
-					gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
+					gradientPG.pixels[pixel++] = gradientCache[stepInt];
 				}
 			}
 
@@ -1238,9 +1138,8 @@ public final class PeasyGradients {
 		private final float denominator;
 		private final float sin, cos;
 
-		DiamondThread(int offsetX, int offsetY, int pixelsX, int pixelsY, float renderMidpointX, float renderMidpointY, float denominator,
-				float sin, float cos) {
-			super(offsetX, offsetY, pixelsX, pixelsY);
+		DiamondThread(int rowOffset, int rows, float renderMidpointX, float renderMidpointY, float denominator, float sin, float cos) {
+			super(rowOffset, rows);
 			this.renderMidpointX = renderMidpointX;
 			this.renderMidpointY = renderMidpointY;
 			this.denominator = denominator;
@@ -1251,9 +1150,9 @@ public final class PeasyGradients {
 		@Override
 		public Boolean call() {
 
-			for (int y = offsetY, x; y < offsetY + pixelsY; y++) {
+			for (int y = rowOffset; y < rowOffset + rows; y++) {
 				final float yTranslate = (y - renderMidpointY);
-				for (x = offsetX; x < offsetX + pixelsX; x++) {
+				for (int x = 0; x < renderWidth; x++) {
 					final float newXpos = (x - renderMidpointX) * cos - yTranslate * sin + renderMidpointX; // rotate x about midpoint
 					final float newYpos = yTranslate * cos + (x - renderMidpointX) * sin + renderMidpointY; // rotate y about midpoint
 
@@ -1265,7 +1164,7 @@ public final class PeasyGradients {
 
 					final int stepInt = (int) (dist * gradientCacheSize);
 
-					gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
+					gradientPG.pixels[pixel++] = gradientCache[stepInt];
 				}
 			}
 
@@ -1278,96 +1177,30 @@ public final class PeasyGradients {
 
 		private final PVector centerPoint;
 		private final float sin, cos;
-		float[][] noiseVals; // reference to main method var
 
-		NoiseThread(int offsetX, int offsetY, int pixelsX, int pixelsY, PVector centerPoint, float sin, float cos, float[][] noisevals) {
-			super(offsetX, offsetY, pixelsX, pixelsY);
+		NoiseThread(int rowOffset, int rows, PVector centerPoint, float sin, float cos) {
+			super(rowOffset, rows);
 			this.centerPoint = centerPoint;
 			this.sin = sin;
 			this.cos = cos;
-			this.noiseVals = noisevals;
 		}
 
 		@Override
 		public Boolean call() {
 
-			/**
-			 * Even the simpler noise types are quite expensive to compute for every pixel,
-			 * so we calculate a noise value for every 4th pixel (every 2nd pixel on both
-			 * axes), and then interpolate these values for other pixels later. Visually
-			 * this isn't apparent since noise is a gradual function anyway.
-			 */
-			for (int y = offsetY, x; y < offsetY + pixelsY; y += 2) {
+			for (int y = rowOffset; y < rowOffset + rows; y++) {
 				final float yTranslate = (y - centerPoint.y);
-				for (x = offsetX; x < offsetX + pixelsX; x += 2) {
-
+				for (int x = 0; x < gradientPG.width; x += 2) {
 					float newXpos = (x - centerPoint.x) * cos - yTranslate * sin + centerPoint.x; // rotate x about midpoint
 					float newYpos = yTranslate * cos + (x - centerPoint.x) * sin + centerPoint.y; // rotate y about midpoint
 
 					float step = fastNoiseLite.getSimplexNoiseFast(newXpos, newYpos); // call custom method
-					noiseVals[x][y] = step;
 
 					final int stepInt = (int) (step * gradientCacheSize);
 
-					gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
+					gradientPG.pixels[pixel += 2] = gradientCache[stepInt];
 				}
-			}
-
-			/**
-			 * Interpolate horizontally (x-axis)
-			 */
-			for (int y = offsetY, x; y < offsetY + pixelsY; y++) {
-				for (x = offsetX + 1; x < offsetX + pixelsX - 1; x += 2) {
-					noiseVals[x][y] = (noiseVals[x - 1][y] + noiseVals[x + 1][y]) / 2;
-					final int stepInt = (int) (noiseVals[x][y] * gradientCacheSize);
-					gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
-				}
-			}
-
-			/**
-			 * Interpolate vertically (y-axis)
-			 */
-			for (int y = offsetY + 1, x; y < offsetY + pixelsY - 1; y += 2) {
-				for (x = offsetX; x < offsetX + pixelsX; x += 1) {
-					noiseVals[x][y] = (noiseVals[x][y - 1] + noiseVals[x][y + 1]) / 2;
-					final int stepInt = (int) (noiseVals[x][y] * gradientCacheSize);
-					gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
-				}
-			}
-
-			/**
-			 * Pass over very bottom row (of each parition)
-			 */
-			float yTranslate = (offsetY + pixelsY - 1 - centerPoint.y);
-			for (int x = offsetX; x < offsetX + pixelsX; x++) {
-				float newXpos = (x - centerPoint.x) * cos - yTranslate * sin + centerPoint.x; // rotate x about midpoint
-				float newYpos = yTranslate * cos + (x - centerPoint.x) * sin + centerPoint.y; // rotate y about midpoint
-
-				float step = fastNoiseLite.getSimplexNoiseFast(newXpos, newYpos); // call custom method
-
-				final int stepInt = (int) (step * gradientCacheSize);
-
-				gradientPG.pixels[gradientPG.width * (offsetY + pixelsY - 1 + renderOffsetY)
-						+ (x + renderOffsetX)] = gradientCache[stepInt];
-			}
-
-			/**
-			 * Pass over right-most column (of each parition)
-			 */
-
-			for (int y = 0; y < renderHeight; y++) {
-				yTranslate = (y - centerPoint.y);
-				float newXpos = ((offsetX + pixelsX - 1) - centerPoint.x) * cos - yTranslate * sin + centerPoint.x; // rotate x about
-																													// midpoint
-				float newYpos = yTranslate * cos + ((offsetX + pixelsX - 1) - centerPoint.x) * sin + centerPoint.y; // rotate y about
-																													// midpoint
-
-				float step = fastNoiseLite.getSimplexNoiseFast(newXpos, newYpos); // call custom method
-
-				final int stepInt = (int) (step * gradientCacheSize);
-
-				gradientPG.pixels[gradientPG.width * (y + renderOffsetY)
-						+ (offsetX + pixelsX - 1 + renderOffsetX)] = gradientCache[stepInt];
+				pixel += gradientPG.width;
 			}
 
 			return true;
@@ -1380,103 +1213,32 @@ public final class PeasyGradients {
 		private final PVector centerPoint;
 		private final float sin, cos;
 		private final float min, maxMinDenom;
-		float[][] noiseVals; // reference to main method var
 
-		FractalNoiseThread(int offsetX, int offsetY, int pixelsX, int pixelsY, PVector centerPoint, float sin, float cos, float min,
-				float maxMinDenom, float[][] noiseVals) {
-			super(offsetX, offsetY, pixelsX, pixelsY);
+		FractalNoiseThread(int rowOffset, int rows, PVector centerPoint, float sin, float cos, float min, float maxMinDenom) {
+			super(rowOffset, rows);
 			this.centerPoint = centerPoint;
 			this.sin = sin;
 			this.cos = cos;
 			this.min = min;
 			this.maxMinDenom = maxMinDenom;
-			this.noiseVals = noiseVals;
 		}
 
 		@Override
 		public Boolean call() {
 
-			/**
-			 * Even the simpler noise types are quite expensive to compute for every pixel,
-			 * so we calculate a noise value for every 4th pixel (every 2nd pixel on both
-			 * axes), and then interpolate these values for other pixels later. Visually
-			 * this isn't apparent since noise is a gradual function anyway.
-			 */
-			for (int y = offsetY, x; y < offsetY + pixelsY; y += 2) {
+			for (int y = rowOffset; y < rowOffset + rows; y++) {
 				final float yTranslate = (y - centerPoint.y);
-				for (x = offsetX; x < offsetX + pixelsX; x += 2) {
-
+				for (int x = 0; x < gradientPG.width; x++) {
 					float newXpos = (x - centerPoint.x) * cos - yTranslate * sin + centerPoint.x; // rotate x about midpoint
 					float newYpos = yTranslate * cos + (x - centerPoint.x) * sin + centerPoint.y; // rotate y about midpoint
 
 					float step = fastNoiseLite.GetNoise(newXpos, newYpos);
 					step = ((step - min) * (maxMinDenom)); // scale to 0...1
-					noiseVals[x][y] = step;
 
 					final int stepInt = (int) (step * gradientCacheSize);
 
-					gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
+					gradientPG.pixels[pixel++] = gradientCache[stepInt];
 				}
-			}
-
-			/**
-			 * Interpolate horizontally (x-axis)
-			 */
-			for (int y = offsetY, x; y < offsetY + pixelsY; y++) {
-				for (x = offsetX + 1; x < offsetX + pixelsX - 1; x += 2) {
-					noiseVals[x][y] = (noiseVals[x - 1][y] + noiseVals[x + 1][y]) / 2;
-					final int stepInt = (int) (noiseVals[x][y] * gradientCacheSize);
-					gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
-				}
-			}
-
-			/**
-			 * Interpolate vertically (y-axis)
-			 */
-			for (int y = offsetY + 1, x; y < offsetY + pixelsY - 1; y += 2) {
-				for (x = offsetX; x < offsetX + pixelsX; x += 1) {
-					noiseVals[x][y] = (noiseVals[x][y - 1] + noiseVals[x][y + 1]) / 2;
-					final int stepInt = (int) (noiseVals[x][y] * gradientCacheSize);
-					gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
-				}
-			}
-
-			/**
-			 * Pass over very bottom row (of each parition)
-			 */
-			float yTranslate = (offsetY + pixelsY - 1 - centerPoint.y);
-			for (int x = offsetX; x < offsetX + pixelsX; x++) {
-				float newXpos = (x - centerPoint.x) * cos - yTranslate * sin + centerPoint.x; // rotate x about midpoint
-				float newYpos = yTranslate * cos + (x - centerPoint.x) * sin + centerPoint.y; // rotate y about midpoint
-
-				float step = fastNoiseLite.GetNoise(newXpos, newYpos);
-
-				step = ((step - min) * (maxMinDenom));
-				final int stepInt = (int) (step * gradientCacheSize);
-
-				gradientPG.pixels[gradientPG.width * (offsetY + pixelsY - 1 + renderOffsetY)
-						+ (x + renderOffsetX)] = gradientCache[stepInt];
-			}
-
-			/**
-			 * Pass over right-most column (of each parition)
-			 */
-
-			for (int y = 0; y < renderHeight; y++) {
-				yTranslate = (y - centerPoint.y);
-				float newXpos = ((offsetX + pixelsX - 1) - centerPoint.x) * cos - yTranslate * sin + centerPoint.x; // rotate x about
-																													// midpoint
-				float newYpos = yTranslate * cos + ((offsetX + pixelsX - 1) - centerPoint.x) * sin + centerPoint.y; // rotate y about
-																													// midpoint
-
-				float step = fastNoiseLite.GetNoise(newXpos, newYpos);
-
-				step = ((step - min) * (maxMinDenom));
-
-				final int stepInt = (int) (step * gradientCacheSize);
-
-				gradientPG.pixels[gradientPG.width * (y + renderOffsetY)
-						+ (offsetX + pixelsX - 1 + renderOffsetX)] = gradientCache[stepInt];
 			}
 
 			return true;
@@ -1491,9 +1253,8 @@ public final class PeasyGradients {
 		private final float xDiffMax;
 		private final float sin, cos;
 
-		SpotlightThread(int offsetX, int offsetY, int pixelsX, int pixelsY, PVector originPoint, float sin, float cos, float beamAngle,
-				float xDiffMax) {
-			super(offsetX, offsetY, pixelsX, pixelsY);
+		SpotlightThread(int rowOffset, int rows, PVector originPoint, float sin, float cos, float beamAngle, float xDiffMax) {
+			super(rowOffset, rows);
 			this.originPoint = originPoint;
 			this.sin = sin;
 			this.cos = cos;
@@ -1504,14 +1265,13 @@ public final class PeasyGradients {
 		@Override
 		public Boolean call() {
 
-			for (int y = offsetY, x; y < offsetY + pixelsY; y++) {
+			for (int y = rowOffset; y < rowOffset + rows; y++) {
 				final float yTranslate = (y - originPoint.y);
-				for (x = offsetX; x < offsetX + pixelsX; x++) {
-
+				for (int x = 0; x < renderWidth; x++) {
 					float newXpos = (x - originPoint.x) * cos - yTranslate * sin + originPoint.x; // rotate x about midpoint
 					float newYpos = yTranslate * cos + (x - originPoint.x) * sin + originPoint.y; // rotate y about midpoint
 
-					/**
+					/*
 					 * Calculate the max X difference between this pixel and centrepoint.x when
 					 * light fall off reaches the maximum (step = 1) for a given row (at an angle)
 					 */
@@ -1529,7 +1289,7 @@ public final class PeasyGradients {
 
 					int stepInt = (int) (step * gradientCacheSize);
 
-					gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
+					gradientPG.pixels[pixel++] = gradientCache[stepInt];
 				}
 			}
 
@@ -1545,9 +1305,9 @@ public final class PeasyGradients {
 		private final float pinch, roundness;
 		private final float denominator;
 
-		HourglassThread(int offsetX, int offsetY, int pixelsX, int pixelsY, float renderMidpointX, float renderMidpointY, float sin,
-				float cos, float zoom, float angle, float pinch, float roundness, float denominator) {
-			super(offsetX, offsetY, pixelsX, pixelsY);
+		HourglassThread(int rowOffset, int rows, float renderMidpointX, float renderMidpointY, float sin, float cos, float zoom,
+				float angle, float pinch, float roundness, float denominator) {
+			super(rowOffset, rows);
 			this.renderMidpointX = renderMidpointX;
 			this.renderMidpointY = renderMidpointY;
 			this.sin = sin;
@@ -1566,18 +1326,16 @@ public final class PeasyGradients {
 			float yDist;
 			float xDist;
 
-			for (int y = offsetY, x; y < offsetY + pixelsY; y++) {
+			for (int y = rowOffset; y < rowOffset + rows; y++) {
 				yDist = (renderMidpointY - y) * (renderMidpointY - y);
 				final float yTranslate = (y - renderMidpointY);
-
-				for (x = offsetX; x < offsetX + pixelsX; x++) {
-
+				for (int x = 0; x < renderWidth; x++) {
 					xDist = (renderMidpointX - x) * (renderMidpointX - x);
 
 					newXpos = (x - renderMidpointX) * cos - yTranslate * sin + renderMidpointX; // rotate x about midpoint
 					newYpos = yTranslate * cos + (x - renderMidpointX) * sin + renderMidpointY; // rotate y about midpoint
 
-					/**
+					/*
 					 * In the 2 lines below, we are effectively calculating dist = eDist/(cos(angle)
 					 * + sin(angle)), where eDist is euclidean distance between (x,y) & midpoint,
 					 * and angle is the (atan2) angle between (x,y) & midpoint. These trig functions
@@ -1596,7 +1354,7 @@ public final class PeasyGradients {
 
 					final int stepInt = (int) (dist * gradientCacheSize);
 
-					gradientPG.pixels[gradientPG.width * (y + renderOffsetY) + (x + renderOffsetX)] = gradientCache[stepInt];
+					gradientPG.pixels[pixel++] = gradientCache[stepInt];
 				}
 			}
 
