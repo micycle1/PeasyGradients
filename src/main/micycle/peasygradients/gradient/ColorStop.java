@@ -1,9 +1,10 @@
 package micycle.peasygradients.gradient;
 
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.EnumMap;
+import java.util.Map;
 
-import micycle.peasygradients.colorspace.*;
+import micycle.peasygradients.colorspace.ColorSpaces;
 import micycle.peasygradients.utilities.ColorUtils;
 import micycle.peasygradients.utilities.Functions;
 import processing.core.PApplet;
@@ -25,7 +26,7 @@ public final class ColorStop implements Comparable<ColorStop> {
 	int clr; // 32bit ARGB color int
 	int alpha; // 0-255 alpha
 
-	private HashMap<ColorSpaces, double[]> colorsMap;
+	private Map<ColorSpaces, double[]> colorsMap;
 	double[] colorOut;
 
 	private ColorSpaces colorSpace; // used to update colorOut when color is changed
@@ -39,23 +40,23 @@ public final class ColorStop implements Comparable<ColorStop> {
 	 */
 	public ColorStop(int clr, float fraction) {
 		position = fraction > 1 ? 1 : fraction < 0 ? 0 : fraction; // constrain 0...1
-		colorsMap = new HashMap<>(ColorSpaces.size);
-		setcolor(clr);
+		colorsMap = new EnumMap<>(ColorSpaces.class);
+		setColor(clr);
 	}
 
 	/**
-	 * Compute the color value for all color spaces given a ARGB integer.
+	 * Computes this color stop's value in every color space.
 	 * 
 	 * @param color 32bit ARGB
 	 */
-	void setcolor(int color) {
+	void setColor(int color) {
 		colorsMap.clear();
 		this.clr = color;
 		this.alpha = (color >> 24) & 0xff;
 
 		final double[] clrRGBDouble = ColorUtils.decomposeclrDouble(color);
 
-		for (int i = 0; i < ColorSpaces.size; i++) {
+		for (int i = 0; i < ColorSpaces.SIZE; i++) {
 			colorsMap.put(ColorSpaces.get(i), ColorSpaces.get(i).getColorSpace().fromRGB(clrRGBDouble));
 		}
 
@@ -78,7 +79,7 @@ public final class ColorStop implements Comparable<ColorStop> {
 	 * @param colorSpace
 	 * @return double[a, b, c] representing color in given colorspace
 	 */
-	double[] getcolor(ColorSpaces colorSpace) {
+	public double[] getColor(ColorSpaces colorSpace) {
 		return colorsMap.get(colorSpace);
 	}
 
@@ -87,7 +88,7 @@ public final class ColorStop implements Comparable<ColorStop> {
 	 * 
 	 * @param colorSpace
 	 */
-	void setcolorSpace(ColorSpaces colorSpace) {
+	void setColorSpace(ColorSpaces colorSpace) {
 		this.colorSpace = colorSpace;
 		colorOut = colorsMap.get(colorSpace);
 	}
@@ -99,15 +100,25 @@ public final class ColorStop implements Comparable<ColorStop> {
 		for (int i = 0; i < decomposed.length - 1; i++) {
 			decomposed[i] = PApplet.constrain(decomposed[i] + (Functions.randomFloat() < 0.5 ? -1 : 1) * amt, 0, 255);
 		}
-		setcolor(ColorUtils.composeclr255(decomposed));
+		setColor(ColorUtils.composeclr255(decomposed));
 	}
 
 	/**
 	 * Enables color stops to be sorted by Collections.sort via pairwise comparison
 	 * on the percent of each stop.
 	 */
+	@Override
 	public int compareTo(ColorStop cs) {
 		return position > cs.position ? 1 : position < cs.position ? -1 : 0;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof ColorStop) {
+			ColorStop other = (ColorStop) obj;
+			return (other.position == position && Arrays.equals(other.colorOut, colorOut));
+		}
+		return false;
 	}
 
 	@Override

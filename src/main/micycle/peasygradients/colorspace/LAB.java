@@ -28,10 +28,12 @@ final class LAB implements ColorSpace {
 	LAB() {
 	}
 
+	@Override
 	public double[] fromRGB(double[] rgb) {
 		return rgb2lab(rgb);
 	}
 
+	@Override
 	public double[] toRGB(double[] lab) {
 		return lab2rgb(lab);
 	}
@@ -55,18 +57,21 @@ final class LAB implements ColorSpace {
 		double Y = xyz[1] / illuminantY;
 		double Z = xyz[2] / illuminantZ;
 
-		if (X > 0.008856)
+		if (X > 0.008856) {
 			X = StrictMath.cbrt(X);
-		else
+		} else {
 			X = (7.787 * X) + (16 / 116d);
-		if (Y > 0.008856)
+		}
+		if (Y > 0.008856) {
 			Y = StrictMath.cbrt(Y);
-		else
+		} else {
 			Y = (7.787 * Y) + (16 / 116d);
-		if (Z > 0.008856)
+		}
+		if (Z > 0.008856) {
 			Z = StrictMath.cbrt(Z);
-		else
+		} else {
 			Z = (7.787 * Z) + (16 / 116d);
+		}
 
 		return new double[] { (116 * Y) - 16, 500 * (X - Y), 200 * (Y - Z) };
 	}
@@ -113,14 +118,6 @@ final class LAB implements ColorSpace {
 		lab[1] *= illuminantY;
 		lab[2] *= illuminantZ;
 		return lab;
-	}
-
-	private static double f(double n) {
-		if (n > 0.206897) {
-			return n * n * n;
-		} else {
-			return 0.12841854934 * n - 0.01771290335;
-		}
 	}
 
 }

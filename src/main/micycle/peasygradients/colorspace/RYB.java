@@ -5,13 +5,14 @@ import micycle.peasygradients.utilities.Functions;
 /**
  * Red, yellow, blue RYB color Compositing:
  * http://nishitalab.org/user/UEI/publication/Sugita_IWAIT2015.pdf
- * http://nishitalab.org/user/UEI/publication/Sugita_SIG2015.pdf
- * // TODO check working properly
+ * http://nishitalab.org/user/UEI/publication/Sugita_SIG2015.pdf // TODO check
+ * working properly
+ * 
  * @author Michael Carleton
  *
  */
 final class RYB implements ColorSpace {
-	
+
 	RYB() {
 	}
 
@@ -20,6 +21,7 @@ final class RYB implements ColorSpace {
 	 * @param RGBA vals 0...1
 	 * @return
 	 */
+	@Override
 	public double[] fromRGB(double[] RGB) {
 		double R = RGB[0];
 		double G = RGB[1];
@@ -51,9 +53,10 @@ final class RYB implements ColorSpace {
 		y += black;
 		b += black;
 
-		return new double[] { r, y, b};
+		return new double[] { r, y, b };
 	}
 
+	@Override
 	public double[] toRGB(double[] ryb) {
 		double r = ryb[0];
 		double y = ryb[1];
@@ -85,7 +88,7 @@ final class RYB implements ColorSpace {
 		G += w;
 		B += w;
 
-		return new double[] { R, G, B};
+		return new double[] { R, G, B };
 	}
 
 }

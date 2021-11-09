@@ -181,8 +181,8 @@ public final class Functions {
 			outString += String.format("%03d", Math.round(out[out.length - 1])) + close;
 			return outString;
 		} else {
-			DecimalFormat df = new DecimalFormat("0" + new String(new char[padding]).replace("\0", "0") + "."
-					+ new String(new char[decimalPlaces]).replace("\0", "0"));
+			DecimalFormat df = new DecimalFormat(
+					"0" + new String(new char[padding]).replace("\0", "0") + "." + new String(new char[decimalPlaces]).replace("\0", "0"));
 			for (double d : out) {
 				out[i] = Double.valueOf(df.format(d));
 				i++;
@@ -256,7 +256,7 @@ public final class Functions {
 	}
 
 	public static double fastSqrt(double d) {
-		return Double.longBitsToDouble(((Double.doubleToLongBits(d) - (1l << 52)) >> 1) + (1l << 61));
+		return Double.longBitsToDouble(((Double.doubleToLongBits(d) - (1L << 52)) >> 1) + (1L << 61));
 	}
 
 	/**
@@ -343,12 +343,10 @@ public final class Functions {
 					return -fastAtan(z) - HALF_PI;
 				}
 			}
-		} else {
-			if (y > 0.0f) { // x = 0, y > 0
-				return HALF_PI;
-			} else if (y < 0.0f) { // x = 0, y < 0
-				return -HALF_PI;
-			}
+		} else if (y > 0.0f) { // x = 0, y > 0
+			return HALF_PI;
+		} else if (y < 0.0f) { // x = 0, y < 0
+			return -HALF_PI;
 		}
 		return 0.0f; // x,y = 0. Could return NaN instead.
 	}
@@ -374,10 +372,11 @@ public final class Functions {
 			angle = QRTR_PI; // (2)
 		}
 		angle += (0.1963f * r * r - 0.9817f) * r; // (2 | 4)
-		if (y < 0.0f)
+		if (y < 0.0f) {
 			return (-angle); // negate if in quad III or IV
-		else
+		} else {
 			return (angle);
+		}
 	}
 
 	/**
@@ -390,17 +389,20 @@ public final class Functions {
 	 */
 	public static float fastAtan2c(float y, float x) {
 		if (x == 0f) {
-			if (y > 0f)
+			if (y > 0f) {
 				return PI / 2;
-			if (y == 0f)
+			}
+			if (y == 0f) {
 				return 0f;
+			}
 			return -PI / 2;
 		}
 		final float atan, z = y / x;
 		if (Math.abs(z) < 1f) {
 			atan = z / (1f + 0.28f * z * z);
-			if (x < 0f)
+			if (x < 0f) {
 				return atan + (y < 0f ? -PI : PI);
+			}
 			return atan;
 		}
 		atan = PI / 2 - z / (z * z + 0.28f);

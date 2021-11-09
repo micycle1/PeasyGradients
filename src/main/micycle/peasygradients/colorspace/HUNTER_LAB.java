@@ -27,10 +27,12 @@ final class HUNTER_LAB implements ColorSpace {
 	HUNTER_LAB() {
 	}
 
+	@Override
 	public double[] fromRGB(double rgb[]) {
 		return xyz2hlab(XYZ.rgb2xyz(rgb));
 	}
 
+	@Override
 	public double[] toRGB(double[] lab) {
 		return XYZ.xyz2rgb(hlab2xyz(lab));
 	}

@@ -1,11 +1,6 @@
 package micycle.peasygradients;
 
-import processing.core.PApplet;
-import processing.core.PConstants;
-import processing.core.PGraphics;
-import processing.core.PImage;
-import processing.core.PVector;
-
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -14,15 +9,18 @@ import java.util.concurrent.Executors;
 
 import micycle.peasygradients.gradient.Gradient;
 import micycle.peasygradients.utilities.FastNoiseLite;
-import micycle.peasygradients.utilities.FastPow;
-import micycle.peasygradients.utilities.Functions;
 import micycle.peasygradients.utilities.FastNoiseLite.CellularDistanceFunction;
 import micycle.peasygradients.utilities.FastNoiseLite.CellularReturnType;
 import micycle.peasygradients.utilities.FastNoiseLite.FractalType;
 import micycle.peasygradients.utilities.FastNoiseLite.NoiseType;
-
-import java.lang.reflect.Constructor;
+import micycle.peasygradients.utilities.FastPow;
+import micycle.peasygradients.utilities.Functions;
 import net.jafama.FastMath;
+import processing.core.PApplet;
+import processing.core.PConstants;
+import processing.core.PGraphics;
+import processing.core.PImage;
+import processing.core.PVector;
 
 /**
  * Renders 1D {@link Gradient gradients} as 2D spectrums in your Processing
@@ -317,8 +315,6 @@ public final class PeasyGradients {
 	 */
 	public void linearGradient(Gradient gradient, PVector controlPoint1, PVector controlPoint2) {
 
-		gradient.prime();
-
 		for (int i = 0; i < gradientCache.length; i++) { // calc LUT
 			gradientCache[i] = gradient.getColor(i / (float) gradientCache.length);
 		}
@@ -360,8 +356,6 @@ public final class PeasyGradients {
 		final float renderMidpointX = (centerPoint.x / gradientPG.width) * renderWidth;
 		final float renderMidpointY = (centerPoint.y / gradientPG.height) * renderHeight;
 
-		gradient.prime();
-
 		for (int i = 0; i < gradientCache.length; i++) { // calc LUT
 			gradientCache[i] = gradient.getColor(i / (float) gradientCache.length);
 		}
@@ -402,9 +396,6 @@ public final class PeasyGradients {
 	 * @see #conicGradientSmooth(Gradient, PVector, float, float)
 	 */
 	public void conicGradient(Gradient gradient, PVector centerPoint, float angle) {
-
-		gradient.prime();
-
 		for (int i = 0; i < gradientCache.length; i++) { // calc LUT
 			gradientCache[i] = gradient.getColor(i / (float) gradientCache.length);
 		}
@@ -415,7 +406,6 @@ public final class PeasyGradients {
 		makeThreadPool(renderPartitionsX, renderPartitionsY, ConicThread.class, renderMidpointX, renderMidpointY, angle);
 
 		gradientPG.updatePixels();
-
 	}
 
 	/**
@@ -455,9 +445,6 @@ public final class PeasyGradients {
 	 *                    affects curve. default = 1
 	 */
 	public void spiralGradient(Gradient gradient, PVector centerPoint, float angle, float curveCount, float curviness) {
-
-		gradient.prime();
-
 		for (int i = 0; i < gradientCache.length; i++) { // calc LUT
 			gradientCache[i] = gradient.getColor(i / (float) gradientCache.length);
 		}
@@ -477,7 +464,6 @@ public final class PeasyGradients {
 				curviness, angle, curveCount);
 
 		gradientPG.updatePixels();
-
 	}
 
 	/**
@@ -492,9 +478,6 @@ public final class PeasyGradients {
 	 * @param sides       Number of polgyon sides. Should be at least 3 (a triangle)
 	 */
 	public void polygonGradient(Gradient gradient, PVector centerPoint, float angle, float zoom, int sides) {
-
-		gradient.prime();
-
 		for (int i = 0; i < gradientCache.length; i++) { // calc LUT
 			gradientCache[i] = gradient.getColor(i / (float) gradientCache.length);
 		}
@@ -516,9 +499,9 @@ public final class PeasyGradients {
 
 		final float midpointXSquared = renderMidpointX * renderMidpointX;
 
-		final int LUT_SIZE = (int) Functions.min(10000, renderWidth * 10, renderHeight * 10); // suitable value?
+		final int LUT_SIZE = (int) Functions.min(2000, renderWidth * 10f, renderHeight * 10f); // suitable value?
 		final int HALF_LUT_SIZE = (int) (LUT_SIZE / TWO_PI);
-		final float[] ratioLookup = new float[(int) (LUT_SIZE) + 1]; // LUT
+		final float[] ratioLookup = new float[(LUT_SIZE) + 1]; // LUT
 
 		/*
 		 * Pre-compute the ratio used to scale euclidean distance between each pixel and
@@ -552,8 +535,6 @@ public final class PeasyGradients {
 	 */
 	public void crossGradient(Gradient gradient, PVector centerPoint, float angle, float zoom) {
 
-		gradient.prime();
-
 		for (int i = 0; i < gradientCache.length; i++) { // calc LUT
 			gradientCache[i] = gradient.getColor(i / (float) gradientCache.length);
 		}
@@ -586,8 +567,6 @@ public final class PeasyGradients {
 	 * @param zoom
 	 */
 	public void diamondGradient(Gradient gradient, PVector centerPoint, float angle, float zoom) {
-
-		gradient.prime();
 
 		for (int i = 0; i < gradientCache.length; i++) { // calc LUT
 			gradientCache[i] = gradient.getColor(i / (float) gradientCache.length);
@@ -632,8 +611,6 @@ public final class PeasyGradients {
 
 		fastNoiseLite.SetNoiseType(NoiseType.OpenSimplex2);
 		fastNoiseLite.SetFrequency(1 / scale * 0.001f); // normalise scale to a more appropriate value
-
-		gradient.prime();
 
 		for (int i = 0; i < gradientCache.length; i++) { // calc LUT
 			gradientCache[i] = gradient.getColor(i / (float) gradientCache.length);
@@ -696,8 +673,6 @@ public final class PeasyGradients {
 		fastNoiseLite.SetFractalGain(fractalGain);
 		fastNoiseLite.SetFractalLacunarity(fractalLacunarity);
 
-		gradient.prime();
-
 		/**
 		 * The range of noise values from fastnoise are generally [-1...1] (some have
 		 * slightly less range). We use this min and max to map the noise [-1...1] to a
@@ -741,10 +716,7 @@ public final class PeasyGradients {
 	 *                    default value would be PI/2 (90degrees).
 	 */
 	public void spotlightGradient(Gradient gradient, final PVector originPoint, float angle, float beamAngle) {
-
 		// TODO horizontal falloff
-
-		gradient.prime(); // prime curr color stop
 
 		for (int i = 0; i < gradientCache.length; i++) { // calc LUT
 			gradientCache[i] = gradient.getColor(i / (float) gradientCache.length);
@@ -811,9 +783,6 @@ public final class PeasyGradients {
 	 * @see #hourglassGradient(Gradient, PVector, float, float)
 	 */
 	public void hourglassGradient(Gradient gradient, PVector centerPoint, float angle, float zoom, float pinch, float roundness) {
-
-		gradient.prime();
-
 		pinch *= pinch; // square here (since value is used in sqrt() function)
 
 		angle += HALF_PI; // hourglass shape at angle=0
@@ -1191,7 +1160,7 @@ public final class PeasyGradients {
 				yDist = (renderMidpointY - y) * (renderMidpointY - y);
 				xDist = midpointXSquared + 1;
 				xDist -= offsetX * 2 * renderMidpointX; // account for thread offset
-				xDist += offsetX * (inc / 2); // account for thread offset
+				xDist += offsetX * (inc / 2d); // account for thread offset
 
 				for (x = offsetX; x < offsetX + pixelsX; x++) {
 					xDist -= 2 * renderMidpointX;

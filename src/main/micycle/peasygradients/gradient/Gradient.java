@@ -4,7 +4,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import micycle.peasygradients.colorspace.*;
+import micycle.peasygradients.colorspace.ColorSpace;
+import micycle.peasygradients.colorspace.ColorSpaces;
 import micycle.peasygradients.utilities.ColorUtils;
 import micycle.peasygradients.utilities.FastPow;
 import micycle.peasygradients.utilities.Functions;
@@ -12,8 +13,9 @@ import micycle.peasygradients.utilities.Interpolation;
 import net.jafama.FastMath;
 
 /**
- * A Gradient comprises of {@link micycle.peasygradients.gradient.ColorStop color stops}
- * (each specifying a color and a position) arranged on a 1D axis.
+ * A Gradient is a color spectrum, comprising of
+ * {@link micycle.peasygradients.gradient.ColorStop color stops} (each
+ * specifying a color and a position) arranged on a 1D axis.
  * 
  * <p>
  * Gradients each define the gradient <b>interpolation</b> function (such as
@@ -25,7 +27,6 @@ import net.jafama.FastMath;
  * Use a {@link #peasyGradients.PeasyGradients} instance to render Gradients as
  * 2D spectrums.
  * 
- * 
  * @author Michael Carleton
  *
  */
@@ -33,7 +34,7 @@ public final class Gradient {
 
 	// TODO export as JSON / load from JSON
 
-	private ArrayList<ColorStop> colorStops = new ArrayList<ColorStop>();
+	private ArrayList<ColorStop> colorStops = new ArrayList<>();
 
 	private double[] interpolatedcolorOUT = new double[4]; // define once here
 
@@ -67,7 +68,11 @@ public final class Gradient {
 		for (int i = 0; i < sz; i++) {
 			colorStops.add(new ColorStop(colors[i], i / szf));
 		}
-		this.colorStops.forEach(c -> c.setcolorSpace(colorSpace));
+		this.colorStops.forEach(c -> c.setColorSpace(colorSpace));
+
+		currStop = colorStops.get(0);
+		prevStop = colorStops.get(0);
+		lastCurrStopIndex = 0;
 	}
 
 	/**
@@ -82,7 +87,11 @@ public final class Gradient {
 		}
 
 		java.util.Collections.sort(this.colorStops);
-		this.colorStops.forEach(c -> c.setcolorSpace(colorSpace));
+		this.colorStops.forEach(c -> c.setColorSpace(colorSpace));
+
+		currStop = this.colorStops.get(0);
+		prevStop = this.colorStops.get(0);
+		lastCurrStopIndex = 0;
 	}
 
 	/**
@@ -91,21 +100,26 @@ public final class Gradient {
 	 * @param colorStops a list of colorstops
 	 */
 	public Gradient(List<ColorStop> colorStops) {
-		this.colorStops = new ArrayList<ColorStop>(colorStops);
+		this.colorStops = new ArrayList<>(colorStops);
 		java.util.Collections.sort(this.colorStops);
-		this.colorStops.forEach(c -> c.setcolorSpace(colorSpace));
+		this.colorStops.forEach(c -> c.setColorSpace(colorSpace));
+
+		currStop = colorStops.get(0);
+		prevStop = colorStops.get(0);
+		lastCurrStopIndex = 0;
 	}
 
 	/**
-	 * Evalutes the ARGB color value of the gradient at the given step through the
-	 * 1D axis (0.0...1.0).
+	 * Evalutes the ARGB (Processing) color value of the gradient at the given step
+	 * through its 1D color axis.
 	 * 
 	 * <p>
 	 * This is the main method of Gradient class. Internally, the the position input
 	 * undergoes is transformed by the current interpolation function.
 	 * 
-	 * @param position a linear position expressed as a decimal between numbers
-	 *                 outside the range of 0...1 will wrap back into the gradient
+	 * @param position a linear position expressed as a decimal between 0 and 1.
+	 *                 Numbers outside the range of 0...1 will wrap back into the
+	 *                 gradient
 	 * @return ARGB integer for Processing pixel array.
 	 */
 	public int getColor(float position) {
@@ -209,7 +223,7 @@ public final class Gradient {
 	 */
 	public void setStopColor(int stopIndex, int col) {
 		if (stopIndex > -1 && stopIndex < colorStops.size()) {
-			colorStops.get(stopIndex).setcolor(col);
+			colorStops.get(stopIndex).setColor(col);
 		} else {
 			System.err.println("Color stop index out of bounds.");
 		}
@@ -366,17 +380,7 @@ public final class Gradient {
 	public void add(final ColorStop colorStop) {
 		colorStops.add(colorStop);
 		java.util.Collections.sort(colorStops); // sort color stops by position
-		colorStop.setcolorSpace(colorSpace);
-	}
-
-	/**
-	 * Primes this gradient for rendering.
-	 */
-	public void prime() {
-		// TODO REMOVE
-		lastCurrStopIndex = 0;
-		currStop = colorStops.get(lastCurrStopIndex);
-		prevStop = colorStops.get(0);
+		colorStop.setColorSpace(colorSpace);
 	}
 
 	/**
@@ -389,19 +393,19 @@ public final class Gradient {
 		// TODO color space is defined for user at peasyGradients level, not gradient?
 		this.colorSpace = colorSpace;
 		colorSpaceInstance = colorSpace.getColorSpace();
-		colorStops.forEach(c -> c.setcolorSpace(colorSpace));
+		colorStops.forEach(c -> c.setColorSpace(colorSpace));
 	}
 
 	public void nextColSpace() {
 		colorSpace = colorSpace.next();
 		colorSpaceInstance = colorSpace.getColorSpace();
-		colorStops.forEach(c -> c.setcolorSpace(colorSpace));
+		colorStops.forEach(c -> c.setColorSpace(colorSpace));
 	}
 
 	public void prevColSpace() {
 		colorSpace = colorSpace.prev();
 		colorSpaceInstance = colorSpace.getColorSpace();
-		colorStops.forEach(c -> c.setcolorSpace(colorSpace));
+		colorStops.forEach(c -> c.setColorSpace(colorSpace));
 	}
 
 	/**
@@ -485,7 +489,7 @@ public final class Gradient {
 		for (ColorStop colorStop : colorStops) {
 			sb.append(String.format("    " + "%-10s%-25s%-12s%-20s\n", colorStop.position,
 					Functions.formatArray(ColorUtils.decomposeclrRGBDouble(colorStop.clr, colorStop.alpha), 0, 2), colorStop.clr,
-					Functions.formatArray(colorStop.getcolor(colorSpace), 2, 3)));
+					Functions.formatArray(colorStop.getColor(colorSpace), 2, 3)));
 		}
 		return sb.toString();
 	}

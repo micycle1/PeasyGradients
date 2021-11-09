@@ -42,6 +42,7 @@ final class ITP implements ColorSpace {
 	 * @param rgb [R,G,B] 0...1
 	 * @return [I,T,P]
 	 */
+	@Override
 	public double[] fromRGB(double[] rgb) {
 		double L = 1688 * rgb[0] + 2146 * rgb[1] + 262 * rgb[2];
 		double M = 683 * rgb[0] + 2951 * rgb[1] + 462 * rgb[2];
@@ -68,6 +69,7 @@ final class ITP implements ColorSpace {
 		return new double[] { I, P, T };
 	}
 
+	@Override
 	public double[] toRGB(double[] itp) {
 		double I = itp[0] + 0.00860904 * itp[1] + 0.11102963 * itp[2];
 		double T = itp[0] + -0.00860904 * itp[1] + -0.11102963 * itp[2];

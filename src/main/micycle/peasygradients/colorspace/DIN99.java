@@ -17,7 +17,7 @@ final class DIN99 implements ColorSpace {
 	private static final double FAC_1 = 100. / Math.log(129. / 50.); // = 105.51
 	private static final double kCH = 1.;
 	private static final double kE = 1.;
-	
+
 	DIN99() {
 	}
 
@@ -26,10 +26,12 @@ final class DIN99 implements ColorSpace {
 	 * @param rgb [R,G,B] 0...1
 	 * @return
 	 */
+	@Override
 	public double[] fromRGB(double[] rgb) {
 		return lab2din(LAB.rgb2lab(rgb));
 	}
 
+	@Override
 	public double[] toRGB(double[] din) {
 		return LAB.lab2rgb(din2lab(din));
 	}

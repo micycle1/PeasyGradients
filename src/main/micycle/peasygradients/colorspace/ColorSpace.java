@@ -1,7 +1,10 @@
 package micycle.peasygradients.colorspace;
 
 /**
- * Colorspaces should implement this class.
+ * Interface for defining a color space that provides conversion to and from
+ * RGB.
+ * <p>
+ * It is more important the {@link #toRGB(double[])} method is optimised.
  * 
  * @author Michael Carleton
  *
@@ -9,6 +12,7 @@ package micycle.peasygradients.colorspace;
 public interface ColorSpace {
 
 	/**
+	 * Converts a color space representation of the color into RGB.
 	 * 
 	 * @param color the 3 channel color as represented in the implementing color
 	 *              space
@@ -17,8 +21,9 @@ public interface ColorSpace {
 	public double[] toRGB(double[] color); // convert from color space to RGB
 
 	/**
+	 * Converts an RGB color into the target color space.
 	 * 
-	 * @param RGB RGB normalised to [0, 1]
+	 * @param RGB [R,G,B] where each component is normalised to [0, 1]
 	 * @return
 	 */
 	public double[] fromRGB(double[] RGB); // convert from RGB to color space

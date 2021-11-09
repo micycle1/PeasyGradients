@@ -17,6 +17,7 @@ final class RGB implements ColorSpace {
 	/**
 	 * Functionless, but satisfies interface
 	 */
+	@Override
 	public double[] toRGB(double[] rgb) {
 		return rgb;
 	}
@@ -24,6 +25,7 @@ final class RGB implements ColorSpace {
 	/*
 	 * Functionless, but satisfies interface
 	 */
+	@Override
 	public double[] fromRGB(double[] rgb) {
 		return rgb;
 	}

@@ -34,10 +34,12 @@ final class LUV implements ColorSpace {
 	 * @param rgb [R,G,B] 0...1
 	 * @return
 	 */
+	@Override
 	public double[] fromRGB(double rgb[]) {
 		return xyz2luv(XYZ.rgb2xyz(rgb));
 	}
 
+	@Override
 	public double[] toRGB(double luv[]) {
 		return XYZ.xyz2rgb(luv2xyz(luv));
 	}
@@ -91,6 +93,7 @@ final class LUV implements ColorSpace {
 	/**
 	 * @deprecated
 	 */
+	@Deprecated
 	private static double[] luv2xyzQuick(double[] tuple) {
 
 		double varU = tuple[1] / (13 * tuple[0]) + refU;

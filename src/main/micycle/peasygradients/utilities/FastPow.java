@@ -30,7 +30,7 @@ public final class FastPow {
 	private static final float ln2_INV = (float) (1 / Math.log(2));
 	private static final float floatBaseE = getBaseRepresentation(Math.E);
 	private static final float doubleBaseE = getBaseRepresentation(Math.E);
-	
+
 	private static FastLog fastLog;
 
 	private static int[] table;
@@ -54,13 +54,13 @@ public final class FastPow {
 
 		table = new int[(int) Math.pow(2, precision)];
 
-		float zeroToOne = 1.0f / ((float) (1 << precision) * 2.0f);
+		float zeroToOne = 1.0f / ((1 << precision) * 2.0f);
 		for (int i = 0; i < (1 << precision); ++i) {
 			/* make y-axis value for table element */
 			final float f = ((float) Math.pow(2.0f, zeroToOne) - 1.0f) * _2p23;
 			table[i] = (int) (f < _2p23 ? f : (_2p23 - 1.0f));
 
-			zeroToOne += 1.0f / (float) (1 << precision);
+			zeroToOne += 1.0f / (1 << precision);
 		}
 
 		fastLog = new DFastLog(precision);
@@ -85,7 +85,7 @@ public final class FastPow {
 		/* convert bits to float */
 		return Float.intBitsToFloat(it); // Calls a JNI binding
 	}
-	
+
 	public static float fastPowConstantBase(final double baseRepresentation, final double exponent) {
 		final int i = (int) ((exponent * (_2p23 * baseRepresentation)) + (127.0f * _2p23));
 
@@ -132,7 +132,7 @@ public final class FastPow {
 	public static float exp(final float exponent) {
 		return fastPowConstantBase(floatBaseE, exponent);
 	}
-	
+
 	/**
 	 * @param exponent the exponent to raise e to
 	 * @return the value e^a, where e is the base of the natural logarithms.
@@ -152,7 +152,7 @@ public final class FastPow {
 	public static float getBaseRepresentation(float radix) {
 		return (float) FastMath.log(radix) * ln2_INV;
 	}
-	
+
 	public static float getBaseRepresentation(double radix) {
 		return (float) FastMath.log(radix) * ln2_INV;
 	}

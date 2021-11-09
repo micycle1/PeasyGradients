@@ -9,7 +9,10 @@ package micycle.peasygradients.utilities;
  */
 public final class ColorUtils {
 
-	private static final int fullAlpha = 255 << 24; // fully opaque
+	private ColorUtils() {
+	}
+
+	private static final int OPAQUE = 255 << 24; // fully opaque
 	private static final float INV_255 = 1f / 255f; // used to normalise RGB values // TODO use double?
 
 	/**
@@ -52,7 +55,7 @@ public final class ColorUtils {
 	/**
 	 * Compose a 32 bit sARGB int from float[] 0...1
 	 * 
-	 * @param in
+	 * @param RGBA
 	 * @return
 	 */
 	public static int composeclr(float[] RGBA) {
@@ -62,7 +65,7 @@ public final class ColorUtils {
 	/**
 	 * Compose a 32 bit sARGB int from float[] 0...255
 	 * 
-	 * @param in
+	 * @param RGBA
 	 * @return
 	 */
 	public static int composeclr255(float[] RGBA) {
@@ -79,7 +82,7 @@ public final class ColorUtils {
 	 * @return integer representation of RGBA
 	 */
 	public static int composeclr(float red, float green, float blue, float alpha) {
-		return (int) (alpha * 255) << 24 | (int) (red * 255) << 16 | (int) (green * 255) << 8 | (int) (red * 255);
+		return (int) (alpha * 255) << 24 | (int) (red * 255) << 16 | (int) (green * 255) << 8 | (int) (blue * 255);
 	}
 
 	public static int composeclr(float red, float green, float blue) {
@@ -93,7 +96,7 @@ public final class ColorUtils {
 	 * @return
 	 */
 	public static int composeclr(double[] in) {
-		return fullAlpha | (int) (in[0] * 255 + 0.5) << 16 | (int) (in[1] * 255 + 0.5) << 8 | (int) (in[2] * 255 + 0.5);
+		return OPAQUE | (int) (in[0] * 255 + 0.5) << 16 | (int) (in[1] * 255 + 0.5) << 8 | (int) (in[2] * 255 + 0.5);
 	}
 
 	/**
@@ -125,11 +128,11 @@ public final class ColorUtils {
 	}
 
 	/**
-	 * Decompose color integer (RGBA) into 4 separate components (0...255)
+	 * Decompose color integer (ARGB) into 4 separate components (0...255)
 	 * 
 	 * @param clr
 	 * @param out
-	 * @return [R,G,B] 0...255
+	 * @return [R,G,B,A] 0...255
 	 */
 	public static float[] decomposeclrRGB(int clr) {
 		float[] out = new float[4];

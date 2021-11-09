@@ -25,6 +25,7 @@ final class HSB implements ColorSpace {
 	 * @param out
 	 * @return
 	 */
+	@Override
 	public double[] toRGB(double[] HSB) {
 		double[] RGB = new double[3];
 
@@ -169,6 +170,7 @@ final class HSB implements ColorSpace {
 	 * @param out  The new interpolated color, represented by a [H,S,B] array.
 	 * @return
 	 */
+	@Override
 	public double[] interpolateLinear(double[] a, double[] b, double st, double[] out) {
 
 		// Find difference in hues.

@@ -45,10 +45,12 @@ final class JAB implements ColorSpace {
 	JAB() {
 	}
 
+	@Override
 	public double[] fromRGB(double[] rgb) {
 		return xyz2jab(XYZ.rgb2xyz(rgb));
 	}
 
+	@Override
 	public double[] toRGB(double[] jab) {
 		return XYZ.xyz2rgb(jab2xyz(jab));
 	}
@@ -56,6 +58,7 @@ final class JAB implements ColorSpace {
 	/**
 	 * @deprecated
 	 */
+	@Deprecated
 	public static double[] jab2rgbQuick(double[] jab) {
 		return XYZ.xyz2rgbQuick(jab2xyzQuick(jab));
 	}
@@ -125,6 +128,7 @@ final class JAB implements ColorSpace {
 	 * @return
 	 * @deprecated
 	 */
+	@Deprecated
 	private static double[] jab2xyzQuick(double[] jab) {
 		double[] xyz = new double[3];
 

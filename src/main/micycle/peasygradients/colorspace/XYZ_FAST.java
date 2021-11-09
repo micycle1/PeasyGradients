@@ -9,10 +9,13 @@ package micycle.peasygradients.colorspace;
  * @deprecated not needed since the LUT optimisation.
  *
  */
+@Deprecated
 final class XYZ_FAST {
 
 	/**
-	 * This method is not faster, since only called once during colorstop instantiation.
+	 * This method is not faster, since only called once during colorstop
+	 * instantiation.
+	 * 
 	 * @param sRGB [R,G,B] where values are 0...1.0
 	 * @return XYZ representation (where values have same relative difference as
 	 *         real XYZ values)
@@ -64,8 +67,8 @@ final class XYZ_FAST {
 
 	/**
 	 * The following polynomial approximations have been generated with sollya, and
-	 * have a worst case relative error of 0.0144%.
-	 * Source: https://stackoverflow.com/a/39652091/9808792
+	 * have a worst case relative error of 0.0144%. Source:
+	 * https://stackoverflow.com/a/39652091/9808792
 	 * 
 	 * @param x
 	 * @return
@@ -75,9 +78,10 @@ final class XYZ_FAST {
 
 		// Piecewise polynomial approximation (divided by x^3)
 		// of 1.055 * x^(1/2.4) - 0.055.
-		if (x <= 0.0523)
+		if (x <= 0.0523) {
 			return poly7(x, -6681.49576364495442248881, 1224.97114922729451791383, -100.23413743425112443219, 6.60361150127077944916,
 					0.06114808961060447245, -0.00022244138470139442, 0.00000041231840827815, -0.00000000035133685895) / (x * x * x);
+		}
 
 		return poly7(x, -0.18730034115395793881, 0.64677431008037400417, -0.99032868647877825286, 1.20939072663263713636,
 				0.33433459165487383613, -0.01345095746411287783, 0.00044351684288719036, -0.00000664263587520855) / (x * x * x);

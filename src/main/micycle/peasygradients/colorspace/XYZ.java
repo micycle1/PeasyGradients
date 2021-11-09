@@ -24,6 +24,7 @@ public final class XYZ implements ColorSpace {
 	 * @param rgb [R,G,B] where values are 0...1.0
 	 * @return
 	 */
+	@Override
 	public double[] fromRGB(double[] rgb) {
 		return rgb2xyz(rgb);
 	}
@@ -33,6 +34,7 @@ public final class XYZ implements ColorSpace {
 	 * @param xyz [X,Y,Z]
 	 * @return [R,G,B] where values are 0...1.0
 	 */
+	@Override
 	public double[] toRGB(final double[] xyz) {
 
 		double r, g, b;
@@ -71,6 +73,7 @@ public final class XYZ implements ColorSpace {
 	 * @return [R,G,B] where values are 0...1.0
 	 * @deprecated
 	 */
+	@Deprecated
 	public static double[] xyz2rgbQuick(final double[] xyz) {
 
 		double r, g, b;
@@ -108,6 +111,7 @@ public final class XYZ implements ColorSpace {
 	 * @return [R,G,B] where values are 0...1.0
 	 * @deprecated
 	 */
+	@Deprecated
 	public static double[] xyz2rgbVeryQuick(final double[] xyz) {
 
 		double r, g, b;
@@ -219,7 +223,7 @@ public final class XYZ implements ColorSpace {
 		} else {
 			b *= 12.92;
 		}
-		
+
 		// TODO constrain here?
 
 		return new double[] { r, g, b };
