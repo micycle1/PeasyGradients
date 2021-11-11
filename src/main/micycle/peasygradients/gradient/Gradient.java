@@ -19,7 +19,7 @@ import net.jafama.FastMath;
  * 
  * <p>
  * Gradients each define the gradient <b>interpolation</b> function (such as
- * sine()) -- the function governing how the gradient's color transtions (the
+ * sine()), which governs how the gradient's color transitions (the
  * step used during interpolation) and the <b>color space</b> this gradient will
  * be rendered this gradient's color stops are represented by.
  * 
@@ -49,11 +49,11 @@ public final class Gradient {
 	public Interpolation interpolationMode = Interpolation.SMOOTH_STEP; // TODO public for testing
 
 	/**
-	 * Creates a new gradient consisting of 2 equidistant complementary colors.
+	 * Creates a new gradient consisting of 2 random equidistant complementary
+	 * colors.
 	 */
 	public Gradient() {
-		// TODO COLORSPACE in CONSTRUCTOR
-//		this(Palette.complementary()); // random 2 colors
+		this(Palette.complementary()); // random 2 colors
 	}
 
 	/**
@@ -212,7 +212,7 @@ public final class Gradient {
 		 * Finally convert the given colorspace value to sARGB int to eventually write
 		 * to Processing's pixels[] array
 		 */
-		return ColorUtils.composeclr(colorSpaceInstance.toRGB(interpolatedcolorOUT), alpha);
+		return ColorUtils.composeclrFloor(colorSpaceInstance.toRGB(interpolatedcolorOUT), alpha);
 	}
 
 	/**
@@ -252,7 +252,7 @@ public final class Gradient {
 		}
 	}
 
-	public void reverse() {
+	void reverse() {
 		// TODO REVERSE THE COLOR PALETTE
 	}
 

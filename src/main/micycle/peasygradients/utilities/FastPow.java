@@ -5,9 +5,9 @@ import micycle.peasygradients.utilities.fastLog.FastLog;
 import net.jafama.FastMath;
 
 /**
- * Java implementation of 'Fast pow() With Adjustable Accuracy' by Harrison
- * Ainsworth from
- * http://www.hxa7241.org/articles/content/fast-pow-adjustable_hxa7241_2007.html
+ * Java implementation of <a href=
+ * "http://www.hxa7241.org/articles/content/fast-pow-adjustable_hxa7241_2007.html">Fast
+ * pow() With Adjustable Accuracy</a> by Harrison Ainsworth.
  * <p>
  * When precision = 11 (8KB table), mean error is < 0.01%, and max error is <
  * 0.02% (proportional, ie: abs(true - approx) / true).
@@ -39,6 +39,9 @@ public final class FastPow {
 	static {
 		// init statically incase used from other library
 		init(13);
+	}
+
+	private FastPow() {
 	}
 
 	/**

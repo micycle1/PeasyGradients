@@ -2,7 +2,6 @@ package micycle.peasygradients;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -14,6 +13,7 @@ import micycle.peasygradients.utilities.FastNoiseLite.CellularDistanceFunction;
 import micycle.peasygradients.utilities.FastNoiseLite.CellularReturnType;
 import micycle.peasygradients.utilities.FastNoiseLite.FractalType;
 import micycle.peasygradients.utilities.FastNoiseLite.NoiseType;
+import micycle.uniformnoise.UniformNoise;
 import micycle.peasygradients.utilities.FastPow;
 import micycle.peasygradients.utilities.Functions;
 import net.jafama.FastMath;
@@ -81,6 +81,7 @@ public final class PeasyGradients {
 	}
 
 	private final FastNoiseLite fastNoiseLite = new FastNoiseLite(0); // create noise generator using a fixed default seed (0)
+	private final UniformNoise uniformNoise = new UniformNoise(0);
 
 	private final PApplet p; // reference to host Processing sketch (PApplet)
 //	int colorMode = PConstants.RGB; // TODO colour mode in this class?
@@ -629,7 +630,8 @@ public final class PeasyGradients {
 	 * 
 	 * @param gradient    1D {@link Gradient gradient} to use as the basis for the
 	 *                    noise gradient
-	 * @param centerPoint
+	 * @param centerPoint For noise gradients, the centre point is used only when
+	 *                    rotating (the point to rotate around).
 	 * @param angle
 	 * @param scale
 	 * @param noiseType   The type of noise: Cellular (Voronoi), Simplex, Perlin,
@@ -637,6 +639,33 @@ public final class PeasyGradients {
 	 */
 	public void noiseGradient(Gradient gradient, PVector centerPoint, float angle, float scale, NoiseType noiseType) {
 		fractalNoiseGradient(gradient, centerPoint, angle, scale, noiseType, FractalType.None, 0, 0, 0);
+	}
+
+	/**
+	 * Renders a noise gradient having a uniform distribution, and using a given
+	 * noise z value.
+	 * 
+	 * @param gradient    1D {@link Gradient gradient} to use as the basis for the
+	 *                    noise gradient
+	 * @param centerPoint For noise gradients, the centre point is used only when
+	 *                    rotating (the point to rotate around).
+	 * @param z           the z value of the noise (mutate this to animate the
+	 *                    noise)
+	 * @param angle
+	 * @param scale       frequency/scale of noise. larger values are more "zoomed
+	 *                    in"
+	 */
+	public void uniformNoiseGradient(Gradient gradient, PVector centerPoint, float z, float angle, float scale) {
+		for (int i = 0; i < gradientCache.length; i++) { // calc LUT
+			gradientCache[i] = gradient.getColor(i / (float) gradientCache.length);
+		}
+
+		final float sin = (float) FastMath.sin(angle + THREE_QRTR_PI); // +THREE_QRTR_PI to align centrepoint with noise position
+		final float cos = (float) FastMath.cos(angle + THREE_QRTR_PI); // +THREE_QRTR_PI to align centrepoint with noise position
+
+		makeThreadPool(renderStrips, UniformNoiseThread.class, centerPoint, sin, cos, scale, z);
+
+		gradientPG.updatePixels();
 	}
 
 	/**
@@ -810,7 +839,7 @@ public final class PeasyGradients {
 	 * @param gradientType class for the given gradient type thread
 	 * @param args         args to pass to gradient thread constructor
 	 */
-	private void makeThreadPool(final int partitionsY, final Class<? extends RenderThread> gradientType, final Object... args) {
+	private void makeThreadPool(final int partitionsY, final Class<?> gradientType, final Object... args) {
 
 		Object[] fullArgs = new Object[3 + args.length]; // empty obj array (to use as input args for new thread instance)
 		fullArgs[0] = this; // sub-classes require parent instance as (hidden) first param
@@ -1173,10 +1202,10 @@ public final class PeasyGradients {
 
 	}
 
-	private final class NoiseThread extends RenderThread {
+	private class NoiseThread extends RenderThread {
 
-		private final PVector centerPoint;
-		private final float sin, cos;
+		final PVector centerPoint;
+		final float sin, cos;
 
 		NoiseThread(int rowOffset, int rows, PVector centerPoint, float sin, float cos) {
 			super(rowOffset, rows);
@@ -1190,7 +1219,7 @@ public final class PeasyGradients {
 
 			for (int y = rowOffset; y < rowOffset + rows; y++) {
 				final float yTranslate = (y - centerPoint.y);
-				for (int x = 0; x < gradientPG.width; x += 2) {
+				for (int x = 0; x < gradientPG.width; x++) {
 					float newXpos = (x - centerPoint.x) * cos - yTranslate * sin + centerPoint.x; // rotate x about midpoint
 					float newYpos = yTranslate * cos + (x - centerPoint.x) * sin + centerPoint.y; // rotate y about midpoint
 
@@ -1198,9 +1227,41 @@ public final class PeasyGradients {
 
 					final int stepInt = (int) (step * gradientCacheSize);
 
-					gradientPG.pixels[pixel += 2] = gradientCache[stepInt];
+					gradientPG.pixels[pixel++] = gradientCache[stepInt];
 				}
-				pixel += gradientPG.width;
+			}
+
+			return true;
+		}
+
+	}
+
+	private final class UniformNoiseThread extends NoiseThread {
+
+		private final float z;
+		private final float scale;
+
+		UniformNoiseThread(int rowOffset, int rows, PVector centerPoint, float sin, float cos, float scale, float z) {
+			super(rowOffset, rows, centerPoint, sin, cos);
+			this.scale = 1 / (200 * scale);
+			this.z = z;
+		}
+
+		@Override
+		public Boolean call() {
+
+			for (int y = rowOffset; y < rowOffset + rows; y++) {
+				final float yTranslate = (y - centerPoint.y);
+				for (int x = 0; x < gradientPG.width; x++) {
+					float newXpos = (x - centerPoint.x) * cos - yTranslate * sin + centerPoint.x; // rotate x about midpoint
+					float newYpos = yTranslate * cos + (x - centerPoint.x) * sin + centerPoint.y; // rotate y about midpoint
+
+					float step = uniformNoise.uniformNoise(scale * newXpos, newYpos * scale, z);
+
+					final int stepInt = (int) (step * gradientCacheSize);
+
+					gradientPG.pixels[pixel++] = gradientCache[stepInt];
+				}
 			}
 
 			return true;

@@ -109,6 +109,18 @@ public final class ColorUtils {
 		return alpha << 24 | (int) (in[0] * 255 + 0.5) << 16 | (int) (in[1] * 255 + 0.5) << 8 | (int) (in[2] * 255 + 0.5);
 	}
 
+	/**
+	 * Floor of 0.
+	 * 
+	 * @param in
+	 * @param alpha
+	 * @return integer representation of RGBA
+	 */
+	public static int composeclrFloor(double[] in, int alpha) {
+		return alpha << 24 | Math.max((int) (in[0] * 255 + 0.5), 0) << 16 | Math.max((int) (in[1] * 255 + 0.5), 0) << 8
+				| Math.max((int) (in[2] * 255 + 0.5), 0);
+	}
+
 	public static int[] composeclrTo255(double[] in) {
 		return new int[] { (int) Math.round(in[0] * 255), (int) Math.round(in[1] * 255), (int) Math.round(in[2] * 255) };
 	}
