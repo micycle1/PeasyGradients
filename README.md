@@ -54,14 +54,14 @@ See the *Gradients* section below for a showcase of each (2D) gradient type.
 <details><summary>Processing IDE — Quick</summary>
 <p>
 
-Download the latest *PGS.jar* from [releases](https://github.com/micycle1/PeasyGradients/releases/) and simply drag-and-drop it onto the [Processing IDE](https://processing.org/reference/environment/).
+Download the latest *peasyGradients.jar* from [releases](https://github.com/micycle1/PeasyGradients/releases/) and simply drag-and-drop it onto the [Processing IDE](https://processing.org/reference/environment/).
 </p>
 </details>
 
 <details><summary>Processing IDE — Permanently</summary>
 <p>
 
-Download the latest *PGS.jar* from [releases](https://github.com/micycle1/PeasyGradients/releases/) and save it to `Documents\Processing\libraries\peasyGradients\library`.
+Download the latest *peasyGradients.jar* from [releases](https://github.com/micycle1/PeasyGradients/releases/) and save it to `Documents\Processing\libraries\peasyGradients\library`.
 
 Result: `Documents\Processing\libraries\peasyGradients\library\peasyGradients.jar`.
 

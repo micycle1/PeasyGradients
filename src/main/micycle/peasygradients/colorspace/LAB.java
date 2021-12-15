@@ -5,13 +5,10 @@ package micycle.peasygradients.colorspace;
  * within a threedimensional rectangular coordinate system; the three dimensions
  * are lightness (L*), redness/ greenness (a*) and yellowness/blueness (b*).
  * Equal distances in the space approximately represent equal color differences
- * 
+ * <p>
  * The standard CIE 1976 L*a*b* color space. L* is scaled to vary from 0 to 100;
  * a* and b* are likewise scaled to roughly the range -50 to 50. Also known as
  * L*a*b* or CIE-L*ab.
- * 
- * TODO
- * https://community.khronos.org/t/converting-to-and-from-color-space-in-glsl-only-works-for-few-colors/72107
  * 
  * @author Michael Carleton
  *

@@ -224,8 +224,6 @@ public final class XYZ implements ColorSpace {
 			b *= 12.92;
 		}
 
-		// TODO constrain here?
-
 		return new double[] { r, g, b };
 	}
 }

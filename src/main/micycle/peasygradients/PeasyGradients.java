@@ -13,9 +13,9 @@ import micycle.peasygradients.utilities.FastNoiseLite.CellularDistanceFunction;
 import micycle.peasygradients.utilities.FastNoiseLite.CellularReturnType;
 import micycle.peasygradients.utilities.FastNoiseLite.FractalType;
 import micycle.peasygradients.utilities.FastNoiseLite.NoiseType;
-import micycle.uniformnoise.UniformNoise;
 import micycle.peasygradients.utilities.FastPow;
 import micycle.peasygradients.utilities.Functions;
+import micycle.uniformnoise.UniformNoise;
 import net.jafama.FastMath;
 import processing.core.PApplet;
 import processing.core.PConstants;
@@ -353,7 +353,7 @@ public final class PeasyGradients {
 	 */
 	public void radialGradient(Gradient gradient, PVector centerPoint, float zoom) {
 
-		final float hypotSq = (renderWidth * renderWidth) + (renderHeight * renderHeight);
+		final int hypotSq = (renderWidth * renderWidth) + (renderHeight * renderHeight);
 
 		zoom = 4 / zoom; // calc here, not in loop
 		zoom /= hypotSq; // calc here, not in loop

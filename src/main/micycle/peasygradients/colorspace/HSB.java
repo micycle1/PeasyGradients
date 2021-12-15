@@ -80,46 +80,12 @@ final class HSB implements ColorSpace {
 		return RGB;
 	}
 
-//	@Override
-//	public double[] fromRGB(double[] RGB) {
-//		double[] HSB = new double[3];
-//
-//		// Find highest and lowest values.
-//		double max = Functions.max(RGB[0], RGB[1], RGB[2]);
-//		double min = Functions.min(RGB[0], RGB[1], RGB[2]);
-//
-//		// Find the difference between max and min.
-//		double delta = max - min;
-//
-//		// Calculate hue.
-//		double hue = 0;
-//		if (delta != 0.0) {
-//			if (RGB[0] == max) {
-//				hue = (RGB[1] - RGB[2]) / delta;
-//			} else if (RGB[1] == max) {
-//				hue = 2 + (RGB[2] - RGB[0]) / delta;
-//			} else {
-//				hue = 4 + (RGB[0] - RGB[1]) / delta;
-//			}
-//
-//			hue /= 6.0;
-//			if (hue < 0.0) {
-//				hue += 1.0;
-//			}
-//		}
-//
-//		HSB[0] = hue;
-//		HSB[1] = max == 0 ? 0 : (max - min) / max;
-//		HSB[2] = max;
-//		return HSB;
-//	}
-
-	/**
-	 * http://lolengine.net/blog/2013/01/13/fast-rgb-to-hsv Possibly faster in Java,
-	 * haven't tested.
-	 */
 	@Override
 	public double[] fromRGB(double[] RGB) {
+		/*
+		 * From http://lolengine.net/blog/2013/01/13/fast-rgb-to-hsv. Possibly faster in
+		 * Java, but haven't tested.
+		 */
 		double[] HSB = new double[3];
 
 		double r = RGB[0];

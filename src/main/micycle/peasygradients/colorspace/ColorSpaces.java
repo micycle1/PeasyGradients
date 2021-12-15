@@ -10,7 +10,7 @@ package micycle.peasygradients.colorspace;
 public enum ColorSpaces {
 
 	RGB(new RGB()), XYZ(new XYZ()), LAB(new LAB()), DIN99(new DIN99()), ITP(new ITP()), HLAB(new HUNTER_LAB()), SRLAB2(new SRLAB2()),
-	LUV(new LUV()), JAB(new JAB()), XYB(new XYB()), IPT(new IPT()), RYB(new RYB()), HSB(new HSB());
+	LUV(new LUV()), OKLAB(new OKLAB()), JAB(new JAB()), XYB(new XYB()), IPT(new IPT()), RYB(new RYB()), HSB(new HSB());
 
 	public static final int SIZE = values().length;
 

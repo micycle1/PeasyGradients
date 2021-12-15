@@ -547,39 +547,9 @@ public class FastNoiseLite {
 	// Noise Coordinate Transforms (frequency, and possible skew or rotation)
 
 	private void UpdateTransformType3D() {
-		switch (mRotationType3D) {
-			case ImproveXYPlanes :
-				break;
-			case ImproveXZPlanes :
-				break;
-			default :
-				switch (mNoiseType) {
-					case OpenSimplex2 :
-					case OpenSimplex2S :
-						break;
-					default :
-						break;
-				}
-				break;
-		}
 	}
 
 	private void UpdateWarpTransformType3D() {
-		switch (mRotationType3D) {
-			case ImproveXYPlanes :
-				break;
-			case ImproveXZPlanes :
-				break;
-			default :
-				switch (mDomainWarpType) {
-					case OpenSimplex2 :
-					case OpenSimplex2Reduced :
-						break;
-					default :
-						break;
-				}
-				break;
-		}
 	}
 
 	// Fractal FBm

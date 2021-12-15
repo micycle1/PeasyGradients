@@ -5,12 +5,13 @@ import net.jafama.FastMath;
 /**
  * DIN99 is a further development of the CIELAB color space system developed by
  * the Working Committee FNF / FNL 2 colorimetry.
- * https://github.com/frickels/colorspace/blob/master/src/main/java/info/kuechler/frickels/colorspace/DIN99.java
  * 
  * @author Michael Carleton
  *
  */
 final class DIN99 implements ColorSpace {
+	
+	// https://github.com/frickels/colorspace/blob/master/src/main/java/info/kuechler/frickels/colorspace/DIN99.java
 
 	private static final double SIN_16DEG = Math.sin(Math.toRadians(16.));
 	private static final double COS_16DEG = Math.cos(Math.toRadians(16.));

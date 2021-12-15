@@ -126,6 +126,7 @@ final class ITP implements ColorSpace {
 	 * @return
 	 * @deprecated LUT called inline in {@link #itp2rgbQuick(double[])} instead
 	 */
+	@Deprecated
 	private static double EOTFQuick(double N) {
 		return LUT[(int) (N * LUT_SIZE)];
 	}

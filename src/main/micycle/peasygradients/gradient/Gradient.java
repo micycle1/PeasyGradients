@@ -19,9 +19,9 @@ import net.jafama.FastMath;
  * 
  * <p>
  * Gradients each define the gradient <b>interpolation</b> function (such as
- * sine()), which governs how the gradient's color transitions (the
- * step used during interpolation) and the <b>color space</b> this gradient will
- * be rendered this gradient's color stops are represented by.
+ * sine()), which governs how the gradient's color transitions (the step used
+ * during interpolation) and the <b>color space</b> this gradient will be
+ * rendered this gradient's color stops are represented by.
  * 
  * <p>
  * Use a {@link #peasyGradients.PeasyGradients} instance to render Gradients as

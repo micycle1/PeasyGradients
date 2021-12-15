@@ -120,6 +120,11 @@ public final class ColorStop implements Comparable<ColorStop> {
 		}
 		return false;
 	}
+	
+	@Override
+	public int hashCode() {
+		return Arrays.hashCode(colorOut);
+	}
 
 	@Override
 	public String toString() {

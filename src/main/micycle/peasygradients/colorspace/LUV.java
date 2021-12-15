@@ -35,12 +35,12 @@ final class LUV implements ColorSpace {
 	 * @return
 	 */
 	@Override
-	public double[] fromRGB(double rgb[]) {
+	public double[] fromRGB(double[] rgb) {
 		return xyz2luv(XYZ.rgb2xyz(rgb));
 	}
 
 	@Override
-	public double[] toRGB(double luv[]) {
+	public double[] toRGB(double[] luv) {
 		return XYZ.xyz2rgb(luv2xyz(luv));
 	}
 

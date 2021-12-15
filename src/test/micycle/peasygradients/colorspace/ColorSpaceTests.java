@@ -54,6 +54,11 @@ class ColorSpaceTests {
 		test(new LUV());
 	}
 
+//	@Test
+//	void test_OKLAB() {
+//		test(new OKLAB());
+//	}
+
 	@Test
 	void test_RGB() {
 		test(new RGB());
@@ -79,6 +84,10 @@ class ColorSpaceTests {
 		test(new XYZ());
 	}
 
+	/**
+	 * Tests forward->backward conversion for a given colorspace across many random
+	 * colors.
+	 */
 	private static void test(ColorSpace space) {
 		for (int i = 0; i <= 255; i++) { // test ascending greyscale
 			final double[] rgb = new double[] { i / 255d, i / 255d, i / 255d };
