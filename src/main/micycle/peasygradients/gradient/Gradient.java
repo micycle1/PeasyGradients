@@ -206,7 +206,7 @@ public final class Gradient {
 		/**
 		 * Treat alpha separately (to simplify colorspace classes)
 		 */
-		int alpha = (int) Math.floor((currStop.alpha + (position * (prevStop.alpha - currStop.alpha))) + 0.5d); // TODO sometimes 254?
+		int alpha = (int) Math.floor((prevStop.alpha + (position * (currStop.alpha - prevStop.alpha))) + 0.5d); // TODO sometimes 254?
 
 		/**
 		 * Finally convert the given colorspace value to sARGB int to eventually write
