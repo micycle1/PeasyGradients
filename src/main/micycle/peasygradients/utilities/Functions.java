@@ -10,7 +10,7 @@ import micycle.peasygradients.utilities.fastLog.FastLog;
 import processing.core.PVector;
 
 /**
- * This class contains static functions mostly related to color/gradient
+ * A class containing static functions mostly related to color/gradient
  * processing.
  * 
  * @author Michael Carleton
@@ -449,13 +449,13 @@ public final class Functions {
 		output[0] = new PVector();
 		output[1] = new PVector();
 
-		float tanA = (float) Math.tan(TWO_PI - angle); // 'TWO_PI - ___' for clockwise orientation
-
+		final float tanA = (float) Math.tan(TWO_PI - angle); // 'TWO_PI - ___' for clockwise orientation
+		
 		// Avoid division by zero
 		if (tanA == 0) {
 			output[0].x = rect[3].x;
 			output[0].y = point.y;
-			output[1].x = rect[3].x;
+			output[1].x = rect[1].x;
 			output[1].y = point.y;
 		} else {
 			// Transform input (make p relative to rectangle)
