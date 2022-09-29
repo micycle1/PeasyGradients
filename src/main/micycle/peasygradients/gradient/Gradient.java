@@ -158,7 +158,7 @@ public final class Gradient {
 				denom = 1 / (prevStop.position - currStop.position); // compute denominator inverse
 			}
 
-		} else if (position <= prevStop.position) {
+		} else if (position < prevStop.position) {
 			if (lastCurrStopIndex == 0) { // if at zero stay, otherwise prev
 				denom = 1;
 				currStop = colorStops.get(0);

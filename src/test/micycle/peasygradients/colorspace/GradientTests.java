@@ -2,6 +2,7 @@ package micycle.peasygradients.colorspace;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.EnumSource.Mode;
@@ -12,31 +13,62 @@ import micycle.peasygradients.utilities.Interpolation;
 
 class GradientTests {
 
-	private static final int BLACK = ColorUtils.composeclr(0, 0, 0);
 	private static final int WHITE = ColorUtils.composeclr(255, 255, 255);
+	private static final int GREY = ColorUtils.composeclr(128, 128, 128);
+	private static final int BLACK = ColorUtils.composeclr(0, 0, 0);
+
+	@Test
+	void testMidPoint() {
+		Gradient gradient = new Gradient(WHITE, BLACK);
+		gradient.setInterpolationMode(Interpolation.LINEAR);
+		gradient.setColorSpace(ColorSpaces.RGB);
+		assertEquals(GREY, gradient.getColor(0.5f));
+	}
+
+	@Test
+	void testMidPointMatch() {
+		for (int i = 0; i < 10; i++) {
+			Gradient gradient = Gradient.randomGradient(2);
+			gradient.setInterpolationMode(Interpolation.LINEAR);
+			gradient.setColorSpace(ColorSpaces.RGB);
+			int midCol = gradient.getColor(0.5f);
+
+			Gradient tri = new Gradient(gradient.colorAt(0), midCol, gradient.colorAt(1));
+			assertEquals(midCol, tri.getColor(0.5f));
+		}
+	}
 
 	@ParameterizedTest
-	@EnumSource(value = ColorSpaces.class, mode = Mode.EXCLUDE, names = { "JAB", "IPT" })
-	void testGradientIsMonotonic(ColorSpaces colorSpace) {
-		Gradient gradient = new Gradient(BLACK, WHITE);
+	@EnumSource(value = ColorSpaces.class, mode = Mode.EXCLUDE, names = { "JAB", "IPT" }) // NOTE exlude failing
+	void testBiGradientIsMonotonic(ColorSpaces colorSpace) {
+		Gradient gradient = new Gradient(WHITE, BLACK);
+		gradient.setInterpolationMode(Interpolation.LINEAR);
+		gradient.setColorSpace(colorSpace);
+		testGradientIsMonotonic(gradient);
+	}
+
+	@ParameterizedTest
+	@EnumSource(value = ColorSpaces.class, mode = Mode.INCLUDE, names = { "RGB", "RYB" }) // NOTE only linear spaces
+	void testTriGradientIsMonotonic(ColorSpaces colorSpace) {
+		Gradient gradient = new Gradient(WHITE, GREY, BLACK);
 		gradient.setInterpolationMode(Interpolation.LINEAR);
 		gradient.setColorSpace(colorSpace);
 		testGradientIsMonotonic(gradient);
 	}
 
 	private static void testGradientIsMonotonic(Gradient gradient) {
-		assertEquals(BLACK, gradient.getColor(0));
-		assertEquals(WHITE, gradient.getColor(1));
-		assertEquals(BLACK, gradient.colorAt(0));
-		assertEquals(WHITE, gradient.colorAt(1));
+		assertEquals(WHITE, gradient.colorAt(0));
+		assertEquals(BLACK, gradient.lastcolor());
+		assertEquals(WHITE, gradient.getColor(0));
+		assertEquals(BLACK, gradient.getColor(1));
 
-		float[] lastCol = new float[] { -1, -1, -1 };
+		float[] lastCol = new float[] { 256, 256, 256 };
 		for (int j = 0; j < 10000; j++) {
 			float step = j / 10000f;
 			float[] col = ColorUtils.decomposeclrRGB(gradient.getColor(step));
-			assertTrue(col[0] >= lastCol[0], String.format("R: %s came after %s at %s", col[0], lastCol[0], step));
-			assertTrue(col[1] >= lastCol[1], String.format("R: %s came after %s at %s", col[1], lastCol[1], step));
-			assertTrue(col[2] >= lastCol[2], String.format("R: %s came after %s at %s", col[2], lastCol[2], step));
+			assertTrue(col[0] <= lastCol[0], String.format("R: %s came after %s at %s", col[0], lastCol[0], step));
+			assertTrue(col[1] <= lastCol[1], String.format("R: %s came after %s at %s", col[1], lastCol[1], step));
+			assertTrue(col[2] <= lastCol[2], String.format("R: %s came after %s at %s", col[2], lastCol[2], step));
 			lastCol = col;
 		}
 	}
