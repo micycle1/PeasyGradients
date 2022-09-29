@@ -26,34 +26,27 @@ import processing.core.PVector;
 /**
  * Renders 1D {@link Gradient gradients} as 2D spectrums in your Processing
  * sketch.
- * 
  * <p>
  * The class offers both quick constructors for more simple gradients (such as 2
  * color horizontal gradients) and more powerful constructors for more involved
  * gradients (centre-offset, angled, n-color gradient with color stops).
- * 
  * <p>
  * By default, a PeasyGradients instance draws directly into the Processing
  * sketch; you can give it a specific <code>PGraphics</code> pane to draw into
  * with the <code>.setRenderTarget()</code> method).
- * 
- * <p>
- * TODO set color interpolation method shape, TODO interpolation mode in this
- * class!
- * 
- * <p>
- * https://helpx.adobe.com/illustrator/using/gradients.html#create_apply_freeform_gradient
- * for examples
- * 
  * <p>
  * Algorithms for linear, radial & conic gradients are based on <a href=
  * "https://medium.com/@behreajj/color-gradients-in-processing-v-2-0-e5c0b87cdfd2">this</a>
  * work by Jeremy Behreandt; all others are mostly my own derivation.
  * 
  * @author Michael Carleton
- *
  */
 public final class PeasyGradients {
+
+	// TODO set color interpolation method shape, TODO interpolation mode in this
+	// class?!
+	// https://helpx.adobe.com/illustrator/using/gradients.html#create_apply_freeform_gradient
+	// for examples
 
 	private static final double TWO_PI = (2 * Math.PI);
 	private static final float TWO_PIf = (float) (2 * Math.PI);
@@ -83,7 +76,6 @@ public final class PeasyGradients {
 	private final FastNoiseLite fastNoiseLite = new FastNoiseLite(0); // create noise generator using a fixed default seed (0)
 	private final UniformNoise uniformNoise = new UniformNoise(0);
 
-	private final PApplet p; // reference to host Processing sketch (PApplet)
 //	int colorMode = PConstants.RGB; // TODO colour mode in this class?
 	private PImage gradientPG; // reference to the PGraphics object to render gradients into
 
@@ -101,15 +93,33 @@ public final class PeasyGradients {
 	private int renderStrips = (int) Math.max(cpuThreads * 0.75, 1);
 
 	/**
-	 * Constructs a new PeasyGradients renderer from a running Processing sketch.
+	 * Constructs a new PeasyGradients renderer from a running Processing sketch;
+	 * gradients will be rendered directly into the sketch.
 	 * 
 	 * @param p the Processing sketch. You'll usually refer to it as {@code this}
 	 */
 	public PeasyGradients(PApplet p) {
-		this.p = p;
+		this(p.getGraphics());
+	}
 
-		renderIntoSketch(); // render into parent sketch (full size) by default
+	/**
+	 * Constructs a new PeasyGradients renderer targeting a specfic
+	 * <code>PImage</code>.
+	 * 
+	 * @param g
+	 */
+	public PeasyGradients(PImage g) {
+		this();
+		gradientPG = g;
+		setRenderTarget(g);
+	}
 
+	/**
+	 * Constructs a new PeasyGradients renderer with no rendering target. Note
+	 * {@link #setRenderTarget(PImage)} must be called at least once later (before a
+	 * gradient is drawn).
+	 */
+	public PeasyGradients() {
 		fastNoiseLite.SetCellularReturnType(CellularReturnType.Distance2Div);
 		fastNoiseLite.SetCellularDistanceFunction(CellularDistanceFunction.EuclideanSq);
 		fastNoiseLite.SetFractalPingPongStrength(1);
@@ -119,30 +129,25 @@ public final class PeasyGradients {
 	 * Tells this PeasyGradients renderer to render 2D gradients into the Processing
 	 * sketch (spanning the full size of the sketch).
 	 * 
-	 * @see #renderIntoSketch(int, int, int, int)
-	 * @see #setRenderTarget(PImage)
+	 * @param p
 	 */
-	public void renderIntoSketch() {
-		renderIntoSketch(0, 0, p.width, p.height);
+	public void setRenderTarget(PApplet p) {
+		setRenderTarget(p.getGraphics(), 0, 0, p.width, p.height);
 	}
 
 	/**
 	 * Tells this PeasyGradients renderer to render 2D gradients into the Processing
 	 * sketch, within a certain region specified by input arguments.
 	 * 
+	 * @param p
 	 * @param offSetX x-axis offset of the region to render gradients into (where 0
 	 *                is top-left corner)
 	 * @param offSetY y-axis offset of the region to render gradients into (where 0
 	 *                is top-left corner)
 	 * @param width   width of region to render gradients into
 	 * @param height  height of region to render gradients into
-	 * @see #renderIntoSketch()
 	 */
-	public void renderIntoSketch(int offSetX, int offSetY, int width, int height) {
-		if (offSetX < 0 || offSetY < 0 || (width + offSetX) > p.width || (offSetY + height) > p.height) {
-			System.err.println("Invalid parameters.");
-			return;
-		}
+	public void setRenderTarget(PApplet p, int offSetX, int offSetY, int width, int height) {
 		setRenderTarget(p.getGraphics(), offSetX, offSetY, width, height);
 	}
 
@@ -157,7 +162,23 @@ public final class PeasyGradients {
 		setRenderTarget(g, 0, 0, g.width, g.height);
 	}
 
-	private void setRenderTarget(PImage g, int offSetX, int offSetY, int width, int height) {
+	/**
+	 * Sets the graphics object and the rectangular region into which this
+	 * PeasyGradients object will renderer gradients.
+	 * 
+	 * @param g
+	 * @param offSetX x-axis offset of the region to render gradients into (where 0
+	 *                is top-left corner)
+	 * @param offSetY y-axis offset of the region to render gradients into (where 0
+	 *                is top-left corner)
+	 * @param width   width of region to render gradients into
+	 * @param height  height of region to render gradients into
+	 */
+	public void setRenderTarget(PImage g, int offSetX, int offSetY, int width, int height) {
+		if (offSetX < 0 || offSetY < 0 || (width + offSetX) > g.width || (offSetY + height) > g.height) {
+			System.err.println("Invalid parameters.");
+			return;
+		}
 
 		final int actualWidth = width - offSetX;
 		final int actualHeight = height - offSetY;
@@ -217,18 +238,18 @@ public final class PeasyGradients {
 	}
 
 	/**
-	 * Renders a linear gradient (with its midpoint at the centre of the
+	 * Renders a linear gradient (having its midpoint at the centre of the
 	 * sketch/render target).
-	 * 
 	 * <p>
 	 * It's called 'linear' because the colors flow from left-to-right,
 	 * top-to-bottom, or at any angle you chose in a single direction.
 	 * 
 	 * @param gradient 1D {@link Gradient gradient} to use as the basis for the
 	 *                 linear gradient
-	 * @param angle    radians. East is 0 (meaning gradient will change color from
-	 *                 west to east, meaning each line of color is drawn parallel to
-	 *                 the angle); moves clockwise
+	 * @param angle    gradient angle in radians (color is drawn parallel to this
+	 *                 angle), where a value of <code>0</code> corresponds to a
+	 *                 horizontal gradient spanning left-to-right. larger (positive)
+	 *                 values correspond to a clockwise direction
 	 */
 	public void linearGradient(Gradient gradient, float angle) {
 
@@ -832,8 +853,8 @@ public final class PeasyGradients {
 
 	/**
 	 * Creates a pool of threads to split the rendering work for the given gradient
-	 * type (each thread works on a portion of the pixels array). This method will
-	 * start the threads, returning when threads have completed.
+	 * type (each thread works on a portion of the pixels array). This method starts
+	 * the threads and returns when all threads have completed.
 	 * 
 	 * @param partitionsY
 	 * @param gradientType class for the given gradient type thread
@@ -866,7 +887,7 @@ public final class PeasyGradients {
 			RenderThread thread = constructor.newInstance(fullArgs);
 			taskList.add(thread);
 
-			THREAD_POOL.invokeAll(taskList); // run threads now
+			THREAD_POOL.invokeAll(taskList); // run threads; wait for completion
 
 		} catch (Exception e) { // the given args probably don't match the thread class args
 			e.printStackTrace();
