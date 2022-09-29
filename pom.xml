@@ -11,6 +11,7 @@
 		<sonar.projectKey>micycle1_PeasyGradients</sonar.projectKey>
 		<sonar.organization>micycle</sonar.organization>
 		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
+		<junit>[5.9,)</junit>
 	</properties>
 
 	<build>
@@ -43,7 +44,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.3.1</version>
+				<version>3.4.1</version>
 				<executions>
 					<execution>
 						<id>attach-javadocs</id>
@@ -102,10 +103,6 @@
 
 	<repositories>
 		<repository>
-			<id>clojars</id>
-			<url>https://clojars.org/repo/</url>
-		</repository>
-		<repository>
 			<id>jitpack.io</id>
 			<url>https://jitpack.io</url>
 		</repository>
@@ -118,8 +115,8 @@
 			<version>2.3.2</version>
 		</dependency>
 		<dependency>
-			<groupId>quil</groupId>
-			<artifactId>processing-core</artifactId>
+			<groupId>com.github.micycle1</groupId>
+			<artifactId>processing3</artifactId>
 			<version>3.5.4</version>
 			<scope>provided</scope> <!-- don't package into uber jar -->
 			<optional>true</optional> <!-- user artifact should override when provided -->
@@ -132,13 +129,19 @@
 		<dependency> <!-- for test running -->
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-api</artifactId>
-			<version>[5.7,)</version>
+			<version>${junit}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency> <!-- for test running -->
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-engine</artifactId>
-			<version>[5.7,)</version>
+			<version>${junit}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-params</artifactId>
+			<version>${junit}</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

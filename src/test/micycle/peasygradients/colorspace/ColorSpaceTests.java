@@ -2,7 +2,9 @@ package micycle.peasygradients.colorspace;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.EnumSource.Mode;
 
 /**
  * Tests forward-backward color conversion from RGB across all color spaces.
@@ -14,78 +16,14 @@ class ColorSpaceTests {
 
 	private static final double DELTA = 0.05;
 
-	@Test
-	void test_DIN99() {
-		test(new DIN99());
-	}
-
-	@Test
-	void test_HSB() {
-		test(new HSB());
-	}
-
-	@Test
-	void test_HUNTERLAB() {
-		test(new HUNTER_LAB());
-	}
-
-	@Test
-	void test_IPT() {
-		test(new IPT());
-	}
-
-	@Test
-	void test_ITP() {
-		test(new ITP());
-	}
-
-	@Test
-	void test_JAB() {
-		test(new JAB());
-	}
-
-	@Test
-	void test_LAB() {
-		test(new LAB());
-	}
-
-	@Test
-	void test_LUV() {
-		test(new LUV());
-	}
-
-//	@Test
-//	void test_OKLAB() {
-//		test(new OKLAB());
-//	}
-
-	@Test
-	void test_RGB() {
-		test(new RGB());
-	}
-
-//	@Test
-//	void test_RYB() {
-//		test(new RYB()); // NOTE failing
-//	}
-
-	@Test
-	void test_SRLAB2() {
-		test(new SRLAB2());
-	}
-
-	@Test
-	void test_XYB() {
-		test(new XYB());
-	}
-
-	@Test
-	void test_XYZ() {
-		test(new XYZ());
+	@ParameterizedTest
+	@EnumSource(value = ColorSpaces.class, mode = Mode.EXCLUDE, names = { "OKLAB", "RYB" })
+	void testColorSpace(ColorSpaces colorSpace) {
+		test(colorSpace.getColorSpace());
 	}
 
 	/**
-	 * Tests forward->backward conversion for a given colorspace across many random
+	 * Tests forward<->backward conversion for a given colorspace across many random
 	 * colors.
 	 */
 	private static void test(ColorSpace space) {
