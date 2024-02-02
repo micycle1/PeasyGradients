@@ -6,11 +6,12 @@ import micycle.peasygradients.utilities.Functions;
 import processing.core.PApplet;
 
 /**
- * Generates random color palettes to use in gradients. Palettes are generated
- * in the HSB color space and output as sRGB integers.
+ * Provides methods for generating color palettes based on various color harmony
+ * principles, employing the HSB color space and producing colors as sRGB
+ * integers. The palettes can be used for creating gradients and other
+ * color-related visual elements.
  * 
  * @author Michael Carleton
- *
  */
 public final class Palette {
 
@@ -21,63 +22,68 @@ public final class Palette {
 	 * https://observablehq.com/@makio135/give-me-colors
 	 */
 
+	// Constants defining the minimum saturation, minimum brightness, and their
+	// respective maximum variances.
 	private static final float sMin = 0.75f; // min saturation
 	private static final float bMin = 0.75f; // min brightness
 	private static final float sVarMax = 0.1f; // max saturation variance
 	private static final float bVarMax = 0.1f; // max brightness variance
+	private static final float GRC = 0.618033988749895f; // Golden ratio conjugate for hue distribution
+
 	/**
 	 * https://martin.ankerl.com/2009/12/09/how-to-create-random-colors-programmatically/
 	 */
-	private static final float GRC = 0.618033988749895f; // golden ratio conjugate
 
 	/**
-	 * Generates a palette of two colors that are on opposite sides of the color
-	 * wheel.
+	 * Generates a complementary color palette consisting of two colors that are
+	 * diametrically opposite on the color wheel.
 	 * 
-	 * @return
+	 * @return An array of two colors, represented as ARGB integers.
 	 */
 	public static int[] complementary() {
 		return generic(2, 1 / 2f);
 	}
 
 	/**
-	 * Generates a palette of three colors that are evenly spaced on the color
-	 * wheel.
+	 * Generates a triadic color palette consisting of three colors that are evenly
+	 * spaced around the color wheel, creating a harmonious and balanced color
+	 * scheme.
 	 * 
-	 * @return
+	 * @return An array of three colors, represented as ARGB integers.
 	 */
 	public static int[] triadic() {
 		return generic(3, 1 / 3f);
 	}
 
 	/**
-	 * Generates a palette of four colors that are evenly spaced on the color wheel.
+	 * Generates a tetradic color palette consisting of four colors that are evenly
+	 * spaced around the color wheel, offering a diverse range of hues.
 	 * 
-	 * @return
+	 * @return An array of four colors, represented as ARGB integers.
 	 */
 	public static int[] tetradic() {
 		return generic(4, 1 / 4f);
 	}
 
 	/**
-	 * Generate a color palette of n random colors. colors are distributed using the
-	 * golden ratio.
+	 * Generates a palette of randomly selected colors using the golden ratio for
+	 * hue distribution, which tends to produce aesthetically pleasing results.
 	 * 
-	 * @param ncolors number of random colors to generate
-	 * @return array of colors, represented by (Processing-compatible) ARGB integers
+	 * @param ncolors The number of random colors to generate.
+	 * @return An array of colors, represented as ARGB integers.
 	 */
 	public static int[] randomcolors(int ncolors) {
 		return generic(ncolors, GRC);
 	}
 
 	/**
-	 * Generate a color palette of n random colors. colors are generated completely
-	 * randomly.
+	 * Generates a palette of completely random colors without any constraints on
+	 * hue distribution, saturation, or brightness.
 	 * 
-	 * @param ncolors
-	 * @return
-	 * @see #randomcolors(int) generates colors with similar saturation and
-	 *      brightness
+	 * @param ncolors The number of random colors to generate.
+	 * @return An array of colors, represented as ARGB integers.
+	 * @see #randomcolors(int) For generating colors with similar saturation and
+	 *      brightness.
 	 */
 	public static int[] randomRandomcolors(int ncolors) {
 		int[] out = new int[ncolors];
@@ -88,12 +94,13 @@ public final class Palette {
 	}
 
 	/**
-	 * Generate an n-color palette by cycling hue and varying saturation and
-	 * brightness a little.
+	 * Generic method for generating a color palette with specified number of
+	 * colors, incrementally adjusting the hue, and applying slight variations to
+	 * saturation and brightness.
 	 * 
-	 * @param colors
-	 * @param increment
-	 * @return array of colors, represented by ARGB integers
+	 * @param colors    The number of colors to generate in the palette.
+	 * @param increment The hue increment between consecutive colors.
+	 * @return An array of colors, represented as ARGB integers.
 	 */
 	private static int[] generic(int colors, float increment) {
 		int[] out = new int[colors];

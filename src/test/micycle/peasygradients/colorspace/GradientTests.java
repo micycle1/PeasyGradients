@@ -13,9 +13,9 @@ import micycle.peasygradients.utilities.Interpolation;
 
 class GradientTests {
 
-	private static final int WHITE = ColorUtils.composeclr(255, 255, 255);
-	private static final int GREY = ColorUtils.composeclr(128, 128, 128);
-	private static final int BLACK = ColorUtils.composeclr(0, 0, 0);
+	private static final int WHITE = ColorUtils.composeclr255(255, 255, 255);
+	private static final int GREY = ColorUtils.composeclr255(128, 128, 128);
+	private static final int BLACK = ColorUtils.composeclr255(0, 0, 0);
 
 	@Test
 	void testMidPoint() {

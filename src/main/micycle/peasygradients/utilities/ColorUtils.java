@@ -1,11 +1,11 @@
 package micycle.peasygradients.utilities;
 
 /**
- * Contains static functions mostly related to color processing (mostly
- * (de)composition).
+ * Provides static utility methods for color processing, including color
+ * composition and decomposition, as well as linear interpolation between
+ * colors.
  * 
  * @author Michael Carleton
- *
  */
 public final class ColorUtils {
 
@@ -16,14 +16,14 @@ public final class ColorUtils {
 	private static final float INV_255 = 1f / 255f; // used to normalise RGB values // TODO use double?
 
 	/**
-	 * Linearly interpolate between 2 colors (color-space independent) using the
-	 * given step.
+	 * Linearly interpolates between two colors represented as double arrays.
 	 * 
-	 * @param a    double[3] (col 1)
-	 * @param b    double[3] (col 2)
-	 * @param step
-	 * @param out  double[]
-	 * @return
+	 * @param a    The first color as a double array [R,G,B].
+	 * @param b    The second color as a double array [R,G,B].
+	 * @param step The interpolation factor, where 0.0 is the start color and 1.0 is
+	 *             the end color.
+	 * @param out  The array to store the interpolated color [R,G,B].
+	 * @return The interpolated color as a double array.
 	 */
 	public static double[] interpolateLinear(double[] a, double[] b, float step, double[] out) {
 		out[0] = a[0] + step * (b[0] - a[0]);
@@ -33,16 +33,16 @@ public final class ColorUtils {
 	}
 
 	/**
-	 * Returns a color by interpolating between two given colors. An alternative to
-	 * Processing's native lerpcolor() method (which is linear).
+	 * Linearly interpolates between two colors with alpha values.
 	 * 
-	 * @param col1 First color, represented as [R,G,B,A] array; each value between
-	 *             0...1.
-	 * @param col2 Second color, represented as [R,G,B,A] array; each value between
-	 *             0...1.
-	 * @param st   step: percentage between the two colors.
-	 * @param out  The new interpolated color, represented by a [R,G,B,A] array.
-	 * @return
+	 * @param col1 The first color as a float array [R,G,B,A] with each component in
+	 *             the range 0...1.
+	 * @param col2 The second color as a float array [R,G,B,A] with each component
+	 *             in the range 0...1.
+	 * @param step The interpolation factor, where 0.0 is the start color and 1.0 is
+	 *             the end color.
+	 * @param out  The array to store the interpolated color [R,G,B,A].
+	 * @return The interpolated color as a float array.
 	 */
 	public static float[] interpolateLinear(float[] col1, float[] col2, float step, float[] out) {
 		out[0] = col1[0] + step * (col2[0] - col1[0]);
@@ -53,82 +53,88 @@ public final class ColorUtils {
 	}
 
 	/**
-	 * Compose a 32 bit sARGB int from float[] 0...1
+	 * Composes a 32-bit ARGB color from RGBA components represented as a float
+	 * array.
 	 * 
-	 * @param RGBA
-	 * @return
+	 * @param RGBA The RGBA components as a float array [R,G,B,A] with each value in
+	 *             the range 0...1.
+	 * @return The composed ARGB color as an integer.
 	 */
 	public static int composeclr(float[] RGBA) {
 		return (int) (RGBA[3] * 255) << 24 | (int) (RGBA[0] * 255) << 16 | (int) (RGBA[1] * 255) << 8 | (int) (RGBA[2] * 255);
 	}
 
 	/**
-	 * Compose a 32 bit sARGB int from float[] 0...255
+	 * Composes a 32-bit ARGB color from RGBA components represented as a float
+	 * array.
 	 * 
-	 * @param RGBA
-	 * @return
+	 * @param RGBA The RGBA components as a float array [R,G,B,A] with each value in
+	 *             the range 0...255.
+	 * @return The composed ARGB color as an integer.
 	 */
 	public static int composeclr255(float[] RGBA) {
 		return (int) (RGBA[3]) << 24 | (int) (RGBA[0]) << 16 | (int) (RGBA[1]) << 8 | (int) (RGBA[2]);
 	}
 
 	/**
-	 * Compose an RGBA color using a float[] of values in range 0...1
+	 * Composes a 32-bit ARGB color from individual RGBA components.
 	 * 
-	 * @param red
-	 * @param green
-	 * @param blue
-	 * @param alpha
-	 * @return integer representation of RGBA
+	 * @param red   The red component in the range 0...1.
+	 * @param green The green component in the range 0...1.
+	 * @param blue  The blue component in the range 0...1.
+	 * @param alpha The alpha component in the range 0...1.
+	 * @return The composed ARGB color as an integer.
 	 */
 	public static int composeclr(float red, float green, float blue, float alpha) {
 		return (int) (alpha * 255) << 24 | (int) (red * 255) << 16 | (int) (green * 255) << 8 | (int) (blue * 255);
 	}
 
-	public static int composeclr(float red, float green, float blue) {
+	/**
+	 * Composes a 32-bit ARGB color from individual RGB components, defaulting to
+	 * full opacity.
+	 * 
+	 * @param red   The red component as a float.
+	 * @param green The green component as a float.
+	 * @param blue  The blue component as a float.
+	 * @return The composed ARGB color as an integer.
+	 */
+	public static int composeclr255(float red, float green, float blue) {
 		return 255 << 24 | (int) red << 16 | (int) green << 8 | (int) blue;
 	}
 
 	/**
-	 * sRGB (0...1) in. Assumes full alpha.
+	 * Composes a 32-bit ARGB color from RGB components represented as a double
+	 * array. Assumes full opacity.
 	 * 
-	 * @param in
-	 * @return
+	 * @param in The RGB components as a double array [R,G,B] with each value in the
+	 *           range 0...1.
+	 * @return The composed ARGB color as an integer.
 	 */
 	public static int composeclr(double[] in) {
 		return OPAQUE | (int) (in[0] * 255 + 0.5) << 16 | (int) (in[1] * 255 + 0.5) << 8 | (int) (in[2] * 255 + 0.5);
 	}
 
 	/**
+	 * Composes a 32-bit ARGB color from RGB components represented as a double
+	 * array and an alpha component as an integer.
 	 * 
-	 * @param in    double[3] each is 0...1
-	 * @param alpha 0...255
-	 * @return
+	 * @param in    The RGB components as a double array [R,G,B] with each value in
+	 *              the range 0...1.
+	 * @param alpha The alpha component as an integer in the range 0...255.
+	 * @return The composed ARGB color as an integer.
 	 */
 	public static int composeclr(double[] in, int alpha) {
 		return alpha << 24 | (int) (in[0] * 255 + 0.5) << 16 | (int) (in[1] * 255 + 0.5) << 8 | (int) (in[2] * 255 + 0.5);
 	}
 
 	/**
-	 * Floor of 0.
+	 * Composes a 32-bit ARGB color from RGB components represented as a double
+	 * array, clamping each channel output between 0 and 255.
 	 * 
-	 * @param in
-	 * @param alpha
-	 * @return integer representation of RGBA
-	 */
-	public static int composeclrFloor(double[] in, int alpha) {
-		return alpha << 24 | Math.max((int) (in[0] * 255 + 0.5), 0) << 16 | Math.max((int) (in[1] * 255 + 0.5), 0) << 8
-				| Math.max((int) (in[2] * 255 + 0.5), 0);
-	}
-
-	/**
-	 * Compose an ARGB color from a double input, clamping the output of each
-	 * channel between 0 and 255.
-	 * 
-	 * @param in    [r,g,b] where each channel's range is 0...1 (but may slightly
-	 *              over/underflow).
-	 * @param alpha 0...2555
-	 * @return
+	 * @param in    The RGB components as a double array [R,G,B] with possible
+	 *              over/underflow.
+	 * @param alpha The alpha component as an integer in the range 0...255.
+	 * @return The composed ARGB color as an integer.
 	 */
 	public static int composeclrClamp(double[] in, int alpha) {
 		// https://stackoverflow.com/a/70420549/9808792
@@ -148,17 +154,26 @@ public final class ColorUtils {
 		return alpha << 24 | r << 16 | g << 8 | b;
 	}
 
+	/**
+	 * Converts RGB components from a double array to an integer array with values
+	 * scaled to range 0...255.
+	 * 
+	 * @param in The RGB components as a double array [R,G,B] with each value in the
+	 *           range 0...1.
+	 * @return The RGB components as an integer array [R,G,B] scaled to range
+	 *         0...255.
+	 */
 	public static int[] composeclrTo255(double[] in) {
 		return new int[] { (int) Math.round(in[0] * 255), (int) Math.round(in[1] * 255), (int) Math.round(in[2] * 255) };
 	}
 
 	/**
-	 * Decompose color integer (ARGB) into 4 separate components and scale between
-	 * 0...1
+	 * Decomposes a 32-bit ARGB color into its components and scales them to range
+	 * 0...1.
 	 * 
-	 * @param clr
-	 * @param out
-	 * @return [R,G,B,A] 0...1
+	 * @param clr The ARGB color as an integer.
+	 * @return The color components as a float array [R,G,B,A] scaled to range
+	 *         0...1.
 	 */
 	public static float[] decomposeclr(int clr) {
 		// 1.0 / 255.0 = 0.003921569
@@ -167,11 +182,12 @@ public final class ColorUtils {
 	}
 
 	/**
-	 * Decompose color integer (ARGB) into 4 separate components (0...255)
+	 * Decomposes a 32-bit ARGB color into its components with values in the range
+	 * 0...255.
 	 * 
-	 * @param clr
-	 * @param out
-	 * @return [R,G,B,A] 0...255
+	 * @param clr The ARGB color as an integer.
+	 * @return The color components as a float array [R,G,B,A] with values in the
+	 *         range 0...255.
 	 */
 	public static float[] decomposeclrRGB(int clr) {
 		float[] out = new float[4];
@@ -183,10 +199,12 @@ public final class ColorUtils {
 	}
 
 	/**
-	 * out 255
+	 * Decomposes a 32-bit RGB color into its components, returning them as a double
+	 * array.
 	 * 
-	 * @param clr
-	 * @return
+	 * @param clr The RGB color as an integer.
+	 * @return The color components as a double array [R,G,B] with values in the
+	 *         range 0...255.
 	 */
 	public static double[] decomposeclrRGBDouble(int clr) {
 		double[] out = new double[3];
@@ -196,6 +214,15 @@ public final class ColorUtils {
 		return out;
 	}
 
+	/**
+	 * Decomposes a 32-bit RGB color into its components, including an alpha value
+	 * as an additional parameter.
+	 * 
+	 * @param clr   The RGB color as an integer.
+	 * @param alpha The alpha component as an integer in the range 0...255.
+	 * @return The color components as a double array [R,G,B,A] with RGB values in
+	 *         the range 0...255 and the given alpha.
+	 */
 	public static double[] decomposeclrRGBDouble(int clr, int alpha) {
 		double[] out = new double[4];
 		out[0] = (clr >> 16 & 0xff);
@@ -206,10 +233,12 @@ public final class ColorUtils {
 	}
 
 	/**
-	 * Unpack a 32-Bit ARGB int, normalising to 0..1
+	 * Decomposes a 32-bit ARGB color into its components and normalizes them to
+	 * range 0...1.
 	 * 
-	 * @param clr
-	 * @return sRGB representing the argb color
+	 * @param clr The ARGB color as an integer.
+	 * @return The color components as a float array [R,G,B,A] normalized to range
+	 *         0...1.
 	 */
 	public static float[] decomposeclrRGBA(int clr) {
 		float[] out = new float[4];
@@ -221,10 +250,12 @@ public final class ColorUtils {
 	}
 
 	/**
-	 * out 0...1
+	 * Decomposes a 32-bit RGB color into its components and normalizes them to
+	 * range 0...1.
 	 * 
-	 * @param clr RGB [0, 255]
-	 * @return
+	 * @param clr The RGB color as an integer.
+	 * @return The color components as a double array [R,G,B] normalized to range
+	 *         0...1.
 	 */
 	public static double[] decomposeclrDouble(int clr) {
 		double[] out = new double[3];
