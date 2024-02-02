@@ -947,7 +947,7 @@ public final class PeasyGradients {
 				opXod += odY * scaleY;
 				float xOff = 0; // set partition x offset to correct amount
 				for (int x = 0; x < renderWidth; x++) {
-					float step = (opXod + xOff - rowOffset) * odSqInverse; // get position of point on 1D gradient and normalise
+					float step = (opXod + xOff) * odSqInverse; // get position of point on 1D gradient and normalise
 					step = (step < 0) ? 0 : (step > 1 ? 1 : step); // clamp between 0...1
 					int stepInt = (int) (step * gradientCacheSize);
 					gradientPG.pixels[pixel++] = gradientCache[stepInt];
