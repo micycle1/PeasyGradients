@@ -121,6 +121,33 @@ public final class ColorUtils {
 				| Math.max((int) (in[2] * 255 + 0.5), 0);
 	}
 
+	/**
+	 * Compose an ARGB color from a double input, clamping the output of each
+	 * channel between 0 and 255.
+	 * 
+	 * @param in    [r,g,b] where each channel's range is 0...1 (but may slightly
+	 *              over/underflow).
+	 * @param alpha 0...2555
+	 * @return
+	 */
+	public static int composeclrClamp(double[] in, int alpha) {
+		// https://stackoverflow.com/a/70420549/9808792
+		int r = (int) (in[0] * 255.0 + 0.5);
+		r = (r & ~(r >> 31) | 255 - r >> 31) & 255;
+		int g = (int) (in[1] * 255.0 + 0.5);
+		g = (g & ~(g >> 31) | 255 - g >> 31) & 255;
+		int b = (int) (in[2] * 255.0 + 0.5);
+		b = (b & ~(b >> 31) | 255 - b >> 31) & 255;
+		return alpha << 24 | r << 16 | g << 8 | b;
+	}
+
+	private static int composeclrClampSimple(double[] in, int alpha) {
+		int r = (int) Math.min(Math.max(in[0] * 255, 0), 255);
+		int g = (int) Math.min(Math.max(in[1] * 255, 0), 255);
+		int b = (int) Math.min(Math.max(in[2] * 255, 0), 255);
+		return alpha << 24 | r << 16 | g << 8 | b;
+	}
+
 	public static int[] composeclrTo255(double[] in) {
 		return new int[] { (int) Math.round(in[0] * 255), (int) Math.round(in[1] * 255), (int) Math.round(in[2] * 255) };
 	}

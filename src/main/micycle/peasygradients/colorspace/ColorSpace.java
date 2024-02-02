@@ -16,7 +16,8 @@ public interface ColorSpace {
 	 * 
 	 * @param color the 3 channel color as represented in the implementing color
 	 *              space
-	 * @return RGB normalised to [0, 1]
+	 * @return RGB normalised to [0, 1]. Implementations of this class do not
+	 *         necessarily need to clamp the output between 0 and 1.
 	 */
 	public double[] toRGB(double[] color); // convert from color space to RGB
 

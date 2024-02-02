@@ -214,7 +214,7 @@ public final class Gradient {
 		 * Finally convert the given colorspace value to sARGB int to eventually write
 		 * to Processing's pixels[] array
 		 */
-		return ColorUtils.composeclrFloor(colorSpaceInstance.toRGB(interpolatedcolorOUT), alpha);
+		return ColorUtils.composeclrClamp(colorSpaceInstance.toRGB(interpolatedcolorOUT), alpha);
 	}
 
 	/**
