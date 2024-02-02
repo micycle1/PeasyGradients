@@ -1,6 +1,7 @@
 package micycle.peasygradients.gradient;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -86,7 +87,7 @@ public final class Gradient {
 			add(colorStops[i]);
 		}
 
-		java.util.Collections.sort(this.colorStops);
+		Collections.sort(this.colorStops);
 		this.colorStops.forEach(c -> c.setColorSpace(colorSpace));
 
 		currStop = this.colorStops.get(0);
@@ -101,7 +102,7 @@ public final class Gradient {
 	 */
 	public Gradient(List<ColorStop> colorStops) {
 		this.colorStops = new ArrayList<>(colorStops);
-		java.util.Collections.sort(this.colorStops);
+		Collections.sort(this.colorStops);
 		this.colorStops.forEach(c -> c.setColorSpace(colorSpace));
 
 		currStop = colorStops.get(0);
@@ -206,7 +207,8 @@ public final class Gradient {
 		/**
 		 * Treat alpha separately (to simplify colorspace classes)
 		 */
-		int alpha = (int) Math.floor((prevStop.alpha + (position * (currStop.alpha - prevStop.alpha))) + 0.5d); // TODO sometimes 254?
+		int alpha = (int) Math.floor((prevStop.alpha + (position * (currStop.alpha - prevStop.alpha))) + 0.5d); // TODO sometimes
+																												// 254?
 
 		/**
 		 * Finally convert the given colorspace value to sARGB int to eventually write
@@ -246,14 +248,19 @@ public final class Gradient {
 				position %= 1;
 			}
 			colorStops.get(index).setPosition(position);
-			java.util.Collections.sort(colorStops);
+			Collections.sort(colorStops);
 		} else {
 			System.err.println("Color stop index out of bounds.");
 		}
 	}
 
-	void reverse() {
-		// TODO REVERSE THE COLOR PALETTE
+	/**
+	 * Reverses the order of colors in this gradient. This mutates the gradient's
+	 * colorstops' positions.
+	 */
+	public void reverse() {
+		colorStops.forEach(s -> s.position = 1 - s.position);
+		Collections.sort(colorStops);
 	}
 
 	/**
@@ -379,7 +386,7 @@ public final class Gradient {
 	 */
 	public void add(final ColorStop colorStop) {
 		colorStops.add(colorStop);
-		java.util.Collections.sort(colorStops); // sort color stops by position
+		Collections.sort(colorStops); // sort color stops by position
 		colorStop.setColorSpace(colorSpace);
 	}
 

@@ -11,7 +11,7 @@ import processing.core.PApplet;
 
 /**
  * A container for color (in every color space) and the percentage position that
- * it occurs within a gradient. Gradients comprise of multiple color stops.
+ * it occurs within a gradient. Gradients comprise multiple color stops.
  * 
  * @author Michael Carleton
  *
@@ -108,8 +108,8 @@ public final class ColorStop implements Comparable<ColorStop> {
 	 * on the percent of each stop.
 	 */
 	@Override
-	public int compareTo(ColorStop cs) {
-		return position > cs.position ? 1 : position < cs.position ? -1 : 0;
+	public int compareTo(ColorStop other) {
+		return Float.compare(this.position, other.position);
 	}
 
 	@Override
@@ -120,7 +120,7 @@ public final class ColorStop implements Comparable<ColorStop> {
 		}
 		return false;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return Arrays.hashCode(colorOut);
