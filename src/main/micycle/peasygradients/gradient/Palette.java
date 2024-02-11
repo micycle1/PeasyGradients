@@ -1,6 +1,6 @@
 package micycle.peasygradients.gradient;
 
-import micycle.peasygradients.colorspace.ColorSpaces;
+import micycle.peasygradients.colorspace.ColorSpace;
 import micycle.peasygradients.utilities.ColorUtils;
 import micycle.peasygradients.utilities.Functions;
 import processing.core.PApplet;
@@ -112,7 +112,7 @@ public final class Palette {
 
 			double[] HSB = new double[] { h, PApplet.constrain(s + Functions.random(-sVarMax, sVarMax), sMin, 1),
 					PApplet.constrain(b + Functions.random(-bVarMax, bVarMax), bMin, 1) };
-			out[i] = ColorUtils.composeclr(ColorSpaces.HSB.getColorSpace().toRGB(HSB));
+			out[i] = ColorUtils.composeclr(ColorSpace.HSB.getColorSpace().toRGB(HSB));
 			h += increment;
 			h %= 1;
 		}

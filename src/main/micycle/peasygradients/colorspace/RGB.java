@@ -9,7 +9,7 @@ package micycle.peasygradients.colorspace;
  * @author Michael Carleton
  *
  */
-final class RGB implements ColorSpace {
+final class RGB implements ColorSpaceTransform {
 
 	RGB() {
 	}

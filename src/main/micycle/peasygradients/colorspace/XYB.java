@@ -23,7 +23,7 @@ import net.jafama.FastMath;
  * @author Michael Carleton
  *
  */
-final class XYB implements ColorSpace {
+final class XYB implements ColorSpaceTransform {
 
 	// Parameters for gamma conversion (linear RGB <-> sRGB)
 	private static final double gamma = 2.4;

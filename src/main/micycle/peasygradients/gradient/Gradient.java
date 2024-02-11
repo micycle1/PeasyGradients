@@ -5,8 +5,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import micycle.peasygradients.colorspace.ColorSpaceTransform;
 import micycle.peasygradients.colorspace.ColorSpace;
-import micycle.peasygradients.colorspace.ColorSpaces;
 import micycle.peasygradients.utilities.ColorUtils;
 import micycle.peasygradients.utilities.FastPow;
 import micycle.peasygradients.utilities.Functions;
@@ -45,8 +45,8 @@ public final class Gradient {
 	private ColorStop currStop, prevStop;
 	private float denom;
 
-	public ColorSpaces colorSpace = ColorSpaces.LUV; // TODO public for testing
-	private ColorSpace colorSpaceInstance = colorSpace.getColorSpace();
+	public ColorSpace colorSpace = ColorSpace.LUV; // TODO public for testing
+	private ColorSpaceTransform colorSpaceInstance = colorSpace.getColorSpace();
 	public Interpolation interpolationMode = Interpolation.SMOOTH_STEP; // TODO public for testing
 
 	/**
@@ -396,7 +396,7 @@ public final class Gradient {
 	 * 
 	 * @param colorSpace
 	 */
-	public void setColorSpace(ColorSpaces colorSpace) {
+	public void setColorSpace(ColorSpace colorSpace) {
 		// TODO color space is defined for user at peasyGradients level, not gradient?
 		this.colorSpace = colorSpace;
 		colorSpaceInstance = colorSpace.getColorSpace();

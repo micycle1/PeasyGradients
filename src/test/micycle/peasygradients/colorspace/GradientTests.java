@@ -21,7 +21,7 @@ class GradientTests {
 	void testMidPoint() {
 		Gradient gradient = new Gradient(WHITE, BLACK);
 		gradient.setInterpolationMode(Interpolation.LINEAR);
-		gradient.setColorSpace(ColorSpaces.RGB);
+		gradient.setColorSpace(ColorSpace.RGB);
 		assertEquals(GREY, gradient.getColor(0.5f));
 	}
 
@@ -30,7 +30,7 @@ class GradientTests {
 		for (int i = 0; i < 10; i++) {
 			Gradient gradient = Gradient.randomGradient(2);
 			gradient.setInterpolationMode(Interpolation.LINEAR);
-			gradient.setColorSpace(ColorSpaces.RGB);
+			gradient.setColorSpace(ColorSpace.RGB);
 			int midCol = gradient.getColor(0.5f);
 
 			Gradient tri = new Gradient(gradient.colorAt(0), midCol, gradient.colorAt(1));
@@ -39,8 +39,8 @@ class GradientTests {
 	}
 
 	@ParameterizedTest
-	@EnumSource(value = ColorSpaces.class, mode = Mode.EXCLUDE, names = { "JAB", "IPT" }) // NOTE exlude failing
-	void testBiGradientIsMonotonic(ColorSpaces colorSpace) {
+	@EnumSource(value = ColorSpace.class, mode = Mode.EXCLUDE, names = { "JAB", "IPT" }) // NOTE exlude failing
+	void testBiGradientIsMonotonic(ColorSpace colorSpace) {
 		Gradient gradient = new Gradient(WHITE, BLACK);
 		gradient.setInterpolationMode(Interpolation.LINEAR);
 		gradient.setColorSpace(colorSpace);
@@ -48,8 +48,8 @@ class GradientTests {
 	}
 
 	@ParameterizedTest
-	@EnumSource(value = ColorSpaces.class, mode = Mode.INCLUDE, names = { "RGB", "RYB" }) // NOTE only linear spaces
-	void testTriGradientIsMonotonic(ColorSpaces colorSpace) {
+	@EnumSource(value = ColorSpace.class, mode = Mode.INCLUDE, names = { "RGB", "RYB" }) // NOTE only linear spaces
+	void testTriGradientIsMonotonic(ColorSpace colorSpace) {
 		Gradient gradient = new Gradient(WHITE, GREY, BLACK);
 		gradient.setInterpolationMode(Interpolation.LINEAR);
 		gradient.setColorSpace(colorSpace);

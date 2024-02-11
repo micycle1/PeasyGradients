@@ -17,7 +17,7 @@ import net.jafama.FastMath;
  * @author Michael Carleton
  *
  */
-final class LUV implements ColorSpace {
+final class LUV implements ColorSpaceTransform {
 
 	private static final double refU = 0.19783000664283;
 	private static final double refV = 0.46831999493879;

@@ -22,7 +22,7 @@ import net.jafama.FastMath;
  * @author Björn Ottosson
  *
  */
-final class OKLAB implements ColorSpace {
+final class OKLAB implements ColorSpaceTransform {
 
 	// https://bottosson.github.io/posts/oklab/
 

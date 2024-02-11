@@ -12,7 +12,7 @@ import net.jafama.FastMath;
  * @author Michael Carleton
  *
  */
-final class HUNTER_LAB implements ColorSpace {
+final class HUNTER_LAB implements ColorSpaceTransform {
 
 	/**
 	 * D65/2° Illuminants: Daylight, sRGB, Adobe-RGB

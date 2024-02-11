@@ -133,10 +133,10 @@ Remember that a 1D `Gradient` consists of only a few defined color stops; all ot
  Set the color space for a given `Gradient` with `.setColorSpace()`, like so:
  
  ```
- myGradient.setColorSpace(ColorSpaces.RGB);
+ myGradient.setColorSpace(ColorSpace.RGB);
  ```
 
- PeasyGradients supports many different color spaces — all possible color spaces are accessible via `ColorSpaces.class` and examples of each are shown in the expandable section below:
+ PeasyGradients supports many different color spaces — all possible color spaces are accessible via `ColorSpace.class` and examples of each are shown in the expandable section below:
 
 <details><summary style="font-size:135%; color:blue">💥See Color Space Comparison...</summary>
 

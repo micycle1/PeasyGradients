@@ -17,8 +17,8 @@ class ColorSpaceTests {
 	private static final double DELTA = 0.05;
 
 	@ParameterizedTest
-	@EnumSource(value = ColorSpaces.class, mode = Mode.EXCLUDE, names = { "OKLAB", "RYB" })
-	void testColorSpace(ColorSpaces colorSpace) {
+	@EnumSource(value = ColorSpace.class, mode = Mode.EXCLUDE, names = { "OKLAB", "RYB" })
+	void testColorSpace(ColorSpace colorSpace) {
 		test(colorSpace.getColorSpace());
 	}
 
@@ -26,7 +26,7 @@ class ColorSpaceTests {
 	 * Tests forward<->backward conversion for a given colorspace across many random
 	 * colors.
 	 */
-	private static void test(ColorSpace space) {
+	private static void test(ColorSpaceTransform space) {
 		for (int i = 0; i <= 255; i++) { // test ascending greyscale
 			final double[] rgb = new double[] { i / 255d, i / 255d, i / 255d };
 			assertArrayEquals(rgb, space.toRGB(space.fromRGB(rgb)), DELTA);

@@ -11,7 +11,7 @@ import net.jafama.FastMath;
  * @author Michael Carleton
  *
  */
-final class ITP implements ColorSpace {
+final class ITP implements ColorSpaceTransform {
 
 	private static final double m1 = 2610d / 16384;
 	private static final double m2 = 2523d / 4096 * 128;

@@ -13,7 +13,7 @@ package micycle.peasygradients.colorspace;
  * @author Michael Carleton
  *
  */
-final class LAB implements ColorSpace {
+final class LAB implements ColorSpaceTransform {
 
 	/**
 	 * D65/2° Illuminants: Daylight, sRGB, Adobe-RGB

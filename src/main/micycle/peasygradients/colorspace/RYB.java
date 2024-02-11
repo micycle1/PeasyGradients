@@ -11,7 +11,7 @@ import micycle.peasygradients.utilities.Functions;
  * @author Michael Carleton
  *
  */
-final class RYB implements ColorSpace {
+final class RYB implements ColorSpaceTransform {
 
 	RYB() {
 	}

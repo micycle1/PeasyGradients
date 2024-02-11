@@ -17,7 +17,7 @@ import net.jafama.FastMath;
  * @author Michael Carleton
  *
  */
-final class JAB implements ColorSpace {
+final class JAB implements ColorSpaceTransform {
 
 	// NOTE: Removed mul/div by 10000 because doesn't affect interpolation
 

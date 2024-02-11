@@ -12,7 +12,7 @@ import net.jafama.FastMath;
  * @author Michael Carleton
  *
  */
-public final class XYZ implements ColorSpace {
+public final class XYZ implements ColorSpaceTransform {
 
 	private static final double constA = 1 / 2.4d; // 1/ sRGB gamma
 

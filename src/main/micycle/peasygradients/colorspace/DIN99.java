@@ -9,7 +9,7 @@ import net.jafama.FastMath;
  * @author Michael Carleton
  *
  */
-final class DIN99 implements ColorSpace {
+final class DIN99 implements ColorSpaceTransform {
 	
 	// https://github.com/frickels/colorspace/blob/master/src/main/java/info/kuechler/frickels/colorspace/DIN99.java
 

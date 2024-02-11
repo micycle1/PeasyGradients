@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.Map;
 
-import micycle.peasygradients.colorspace.ColorSpaces;
+import micycle.peasygradients.colorspace.ColorSpace;
 import micycle.peasygradients.utilities.ColorUtils;
 import micycle.peasygradients.utilities.Functions;
 import processing.core.PApplet;
@@ -26,10 +26,10 @@ public final class ColorStop implements Comparable<ColorStop> {
 	int clr; // 32bit ARGB color int
 	int alpha; // 0-255 alpha
 
-	private Map<ColorSpaces, double[]> colorsMap;
+	private Map<ColorSpace, double[]> colorsMap;
 	double[] colorOut;
 
-	private ColorSpaces colorSpace; // used to update colorOut when color is changed
+	private ColorSpace colorSpace; // used to update colorOut when color is changed
 
 	/**
 	 * 
@@ -40,7 +40,7 @@ public final class ColorStop implements Comparable<ColorStop> {
 	 */
 	public ColorStop(int clr, float fraction) {
 		position = fraction > 1 ? 1 : fraction < 0 ? 0 : fraction; // constrain 0...1
-		colorsMap = new EnumMap<>(ColorSpaces.class);
+		colorsMap = new EnumMap<>(ColorSpace.class);
 		setColor(clr);
 	}
 
@@ -56,8 +56,8 @@ public final class ColorStop implements Comparable<ColorStop> {
 
 		final double[] clrRGBDouble = ColorUtils.decomposeclrDouble(color);
 
-		for (int i = 0; i < ColorSpaces.SIZE; i++) {
-			colorsMap.put(ColorSpaces.get(i), ColorSpaces.get(i).getColorSpace().fromRGB(clrRGBDouble));
+		for (int i = 0; i < ColorSpace.SIZE; i++) {
+			colorsMap.put(ColorSpace.get(i), ColorSpace.get(i).getColorSpace().fromRGB(clrRGBDouble));
 		}
 
 		colorOut = colorsMap.get(colorSpace);
@@ -79,7 +79,7 @@ public final class ColorStop implements Comparable<ColorStop> {
 	 * @param colorSpace
 	 * @return double[a, b, c] representing color in given colorspace
 	 */
-	public double[] getColor(ColorSpaces colorSpace) {
+	public double[] getColor(ColorSpace colorSpace) {
 		return colorsMap.get(colorSpace);
 	}
 
@@ -88,7 +88,7 @@ public final class ColorStop implements Comparable<ColorStop> {
 	 * 
 	 * @param colorSpace
 	 */
-	void setColorSpace(ColorSpaces colorSpace) {
+	void setColorSpace(ColorSpace colorSpace) {
 		this.colorSpace = colorSpace;
 		colorOut = colorsMap.get(colorSpace);
 	}

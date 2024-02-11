@@ -1,48 +1,69 @@
 package micycle.peasygradients.colorspace;
 
 /**
- * Interface for defining a color space that provides conversion to and from
- * RGB.
+ * Represents the different color spaces that can be used for color gradients.
+ * Each color space has its own way of representing colors and this affects how
+ * colors are interpolated within the gradient.
  * <p>
- * It is more important the {@link #toRGB(double[])} method is optimised.
+ * Additionally, utility methods are provided to navigate through the enum
+ * values, allowing one to easily cycle through the various color spaces.
  * 
  * @author Michael Carleton
- *
  */
-public interface ColorSpace {
+public enum ColorSpace {
+
+	RGB(new RGB()), XYZ(new XYZ()), LAB(new LAB()), DIN99(new DIN99()), ITP(new ITP()), HLAB(new HUNTER_LAB()),
+	SRLAB2(new SRLAB2()), LUV(new LUV()), OKLAB(new OKLAB()), JAB(new JAB()), XYB(new XYB()), IPT(new IPT()), RYB(new RYB()),
+	HSB(new HSB());
+
+	public static final int SIZE = values().length;
+
+	private static final ColorSpace[] vals = values();
+
+	private ColorSpaceTransform instance;
+
+	ColorSpace(ColorSpaceTransform instance) {
+		this.instance = instance;
+	}
 
 	/**
-	 * Converts a color space representation of the color into RGB.
+	 * Retrieves a {@code ColorSpace} based on its ordinal index.
 	 * 
-	 * @param color the 3 channel color as represented in the implementing color
-	 *              space
-	 * @return RGB normalised to [0, 1]. Implementations of this class do not
-	 *         necessarily need to clamp the output between 0 and 1.
+	 * @param index the ordinal index of the color space
+	 * @return the {@code ColorSpace} at the specified index
 	 */
-	public double[] toRGB(double[] color); // convert from color space to RGB
+	public static ColorSpace get(int index) {
+		return vals[index];
+	}
 
 	/**
-	 * Converts an RGB color into the target color space.
+	 * Returns the instance of {@link ColorSpaceTransform} associated with the color
+	 * space. This instance provides the methods for converting to and from the RGB
+	 * color space.
 	 * 
-	 * @param RGB [R,G,B] where each component is normalised to [0, 1]
-	 * @return
+	 * @return the {@link ColorSpaceTransform} instance bound to this color space
 	 */
-	public double[] fromRGB(double[] RGB); // convert from RGB to color space
+	public ColorSpaceTransform getColorSpace() {
+		return instance;
+	}
 
 	/**
-	 * Default linear interpolation method -- colorspace independent. Most color
-	 * spaces use this; a few (like HSB) may need to override.
+	 * Returns the next color space in the sequence. This method wraps around to the
+	 * first element after the last one.
 	 * 
-	 * @param a    colorA
-	 * @param b    colorB
-	 * @param step
-	 * @param out  interpolated color
-	 * @return
+	 * @return the next {@code ColorSpace} in the sequence
 	 */
-	public default double[] interpolateLinear(double[] a, double[] b, double step, double[] out) {
-		out[0] = a[0] + step * (b[0] - a[0]);
-		out[1] = a[1] + step * (b[1] - a[1]);
-		out[2] = a[2] + step * (b[2] - a[2]);
-		return out;
+	public ColorSpace next() {
+		return vals[(ordinal() + 1) % vals.length];
+	}
+
+	/**
+	 * Returns the previous color space in the sequence. This method wraps around to
+	 * the last element after the first one.
+	 * 
+	 * @return the previous {@code ColorSpace} in the sequence
+	 */
+	public ColorSpace prev() {
+		return vals[Math.floorMod((ordinal() - 1), vals.length)];
 	}
 }

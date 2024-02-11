@@ -12,7 +12,7 @@ package micycle.peasygradients.colorspace;
  * @author Michael Carleton
  *
  */
-final class HSB implements ColorSpace {
+final class HSB implements ColorSpaceTransform {
 
 	HSB() {
 	}
