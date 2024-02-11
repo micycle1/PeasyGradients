@@ -7,7 +7,8 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.EnumSource.Mode;
 
 /**
- * Tests forward-backward color conversion from RGB across all color spaces.
+ * Tests round-trip/forward-backward color conversion from RGB across all color
+ * spaces.
  * 
  * @author Michael Carleton
  *

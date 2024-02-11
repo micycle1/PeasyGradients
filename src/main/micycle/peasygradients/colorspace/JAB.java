@@ -4,15 +4,19 @@ import micycle.peasygradients.utilities.FastPow;
 import net.jafama.FastMath;
 
 /**
- * JAB (JzAzBz) is a a color space designed for perceptul uniformity in high
- * dynamic range (HDR) and wide color gamut (WCG) applications. Conceptually it
- * is similar to CIE L*a*b*, but has claimed improvements:
+ * JAB (J<sub>z</sub>A<sub>z</sub>B<sub>z</sub>) is a color space designed for
+ * perceptual uniformity in high dynamic range (HDR) and wide color gamut (WCG)
+ * applications. There are three channels: J<sub>z</sub> (lightness),
+ * a<sub>z</sub> (redness-greenness) and b<sub>z</sub> (yellowness-blueness).
+ * Conceptually it is similar to CIE L*a*b*, but has claimed improvements.
  * 
- * <p>
- * Perceptual color difference is predicted by Euclidean distance. Perceptually
- * uniform: MacAdam ellipses of just-noticable-difference (JND) are more
- * circular, and closer to the same sizes. Hue linearity: changing saturation or
- * lightness has less shift in hue.
+ * <ul>
+ * <li>Perceptual color difference is predicted by Euclidean distance.</li>
+ * <li>Perceptually uniform: MacAdam ellipses of just-noticable-difference (JND)
+ * are more circular, and closer to the same sizes.</li>
+ * <li>Hue linearity: changing saturation or lightness has less shift in
+ * hue.</li>
+ * </ul>
  * 
  * @author Michael Carleton
  *

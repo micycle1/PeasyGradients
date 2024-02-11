@@ -1,6 +1,5 @@
 package micycle.peasygradients.colorspace;
 
-import micycle.peasygradients.utilities.FastPow;
 import net.jafama.FastMath;
 
 /**
@@ -84,9 +83,7 @@ final class OKLAB implements ColorSpaceTransform {
 		} else {
 			RGB[2] /= 12.92;
 		}
-		
 
-		
 //		RGB[0] = f_inv(RGB[0]);
 //		RGB[1] = f_inv(RGB[1]);
 //		RGB[2] = f_inv(RGB[2]);

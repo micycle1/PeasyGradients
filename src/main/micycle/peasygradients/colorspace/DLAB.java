@@ -3,14 +3,14 @@ package micycle.peasygradients.colorspace;
 import net.jafama.FastMath;
 
 /**
- * DIN99 is a further development of the CIELAB color space system developed by
- * the Working Committee FNF / FNL 2 colorimetry.
+ * DLAB (DIN99) is a further development of the CIELAB color space system
+ * developed by the Working Committee FNF / FNL 2 colorimetry.
  * 
  * @author Michael Carleton
  *
  */
-final class DIN99 implements ColorSpaceTransform {
-	
+final class DLAB implements ColorSpaceTransform {
+
 	// https://github.com/frickels/colorspace/blob/master/src/main/java/info/kuechler/frickels/colorspace/DIN99.java
 
 	private static final double SIN_16DEG = Math.sin(Math.toRadians(16.));
@@ -19,7 +19,7 @@ final class DIN99 implements ColorSpaceTransform {
 	private static final double kCH = 1.;
 	private static final double kE = 1.;
 
-	DIN99() {
+	DLAB() {
 	}
 
 	/**

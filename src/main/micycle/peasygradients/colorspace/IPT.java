@@ -4,16 +4,10 @@ import micycle.peasygradients.utilities.FastPow;
 import net.jafama.FastMath;
 
 /**
- * IPT space, published by Ebner and Fairchild (1998)
- * 
+ * The IPT color space is similar in model to CIELAB color space but is more
+ * uniform in perceived hue. Published by Ebner and Fairchild in 1998.
  * <p>
- * The IPT space was derived specifically for image processing applications to
- * have a relatively simple formulation and specifically to have a hue angle
- * component with good prediction of constant perceived hue (important in
- * gamut-mapping applications).
- * 
- * <p>
- * IPT opponent space: I light–dark; P red–green, T yellow–blue.
+ * IPT opponents: I light–dark; P red–green, T yellow–blue.
  * 
  * @author Michael Carleton
  *

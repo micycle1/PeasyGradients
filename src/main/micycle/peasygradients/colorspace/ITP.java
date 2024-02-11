@@ -5,13 +5,14 @@ import net.jafama.FastMath;
 /**
  * Dolby ITP, aka ICtCp (not be confused with the IPT color space by Ebner and
  * Fairchild, 1998).
- * https://www.dolby.com/us/en/technologies/dolby-vision/ictcp-white-paper.pdf
- * https://www.dolby.com/us/en/technologies/dolby-vision/measuring-perceptual-color-volume-v7.1.pdf
  * 
  * @author Michael Carleton
  *
  */
 final class ITP implements ColorSpaceTransform {
+
+	// https://www.dolby.com/us/en/technologies/dolby-vision/ictcp-white-paper.pdf
+	// https://www.dolby.com/us/en/technologies/dolby-vision/measuring-perceptual-color-volume-v7.1.pdf
 
 	private static final double m1 = 2610d / 16384;
 	private static final double m2 = 2523d / 4096 * 128;

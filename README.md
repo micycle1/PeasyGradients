@@ -146,7 +146,7 @@ Remember that a 1D `Gradient` consists of only a few defined color stops; all ot
 |:---:|:---:|
 | **HSB**![](resources/color_space_examples/HSB.png ) | **XYZ (CIE 1931)**![](resources/color_space_examples/XYZ.png) |
 | **LAB (CIE L\*a\*b\*)**![](resources/color_space_examples/LAB.png ) | **HLAB (Hunter LAB)**![](resources/color_space_examples/HLAB.png) |
-| **DIN99**![](resources/color_space_examples/DIN99.png ) | **ITP (ICtCp)**![](resources/color_space_examples/ITP.png) |
+| **DLAB**![](resources/color_space_examples/DIN99.png ) | **ITP (ICtCp)**![](resources/color_space_examples/ITP.png) |
 | **LUV (CIE 1976 L\*, u\*, v\*)**![](resources/color_space_examples/DIN99.png ) | **JAB (JzAzBz)**![](resources/color_space_examples/JAB.png) |
 | **XYB**![](resources/color_space_examples/XYZ.png) | **IPT**![](resources/color_space_examples/IPT.png)
 

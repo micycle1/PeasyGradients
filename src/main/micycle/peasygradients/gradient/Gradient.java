@@ -420,10 +420,10 @@ public final class Gradient {
 	 * adjacent color stops. This affects the appearance of the gradient when it is
 	 * rendered as a 2D spectrum.
 	 * 
-	 * @param interpolationMode
+	 * @param interpolation
 	 */
-	public void setInterpolationMode(Interpolation interpolationMode) {
-		this.interpolationMode = interpolationMode;
+	public void setInterpolationMode(Interpolation interpolation) {
+		this.interpolationMode = interpolation;
 	}
 
 	public void nextInterpolationMode() {

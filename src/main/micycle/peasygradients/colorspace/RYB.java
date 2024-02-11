@@ -3,24 +3,19 @@ package micycle.peasygradients.colorspace;
 import micycle.peasygradients.utilities.Functions;
 
 /**
- * Red, yellow, blue RYB color Compositing:
- * http://nishitalab.org/user/UEI/publication/Sugita_IWAIT2015.pdf
- * http://nishitalab.org/user/UEI/publication/Sugita_SIG2015.pdf // TODO check
- * working properly
+ * Red, yellow, blue RYB color space.
  * 
  * @author Michael Carleton
  *
  */
 final class RYB implements ColorSpaceTransform {
 
+	// http://nishitalab.org/user/UEI/publication/Sugita_IWAIT2015.pdf
+	// http://nishitalab.org/user/UEI/publication/Sugita_SIG2015.pdf
+
 	RYB() {
 	}
 
-	/**
-	 * 
-	 * @param RGBA vals 0...1
-	 * @return
-	 */
 	@Override
 	public double[] fromRGB(double[] RGB) {
 		double R = RGB[0];

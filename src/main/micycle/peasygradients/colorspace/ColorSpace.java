@@ -2,8 +2,8 @@ package micycle.peasygradients.colorspace;
 
 /**
  * Represents the different color spaces that can be used for color gradients.
- * Each color space has its own way of representing colors and this affects how
- * colors are interpolated within the gradient.
+ * Each color space has its own way of representing colors and this affects the
+ * nature of interpolated colors within a a gradient.
  * <p>
  * Additionally, utility methods are provided to navigate through the enum
  * values, allowing one to easily cycle through the various color spaces.
@@ -12,9 +12,80 @@ package micycle.peasygradients.colorspace;
  */
 public enum ColorSpace {
 
-	RGB(new RGB()), XYZ(new XYZ()), LAB(new LAB()), DIN99(new DIN99()), ITP(new ITP()), HLAB(new HUNTER_LAB()),
-	SRLAB2(new SRLAB2()), LUV(new LUV()), OKLAB(new OKLAB()), JAB(new JAB()), XYB(new XYB()), IPT(new IPT()), RYB(new RYB()),
-	HSB(new HSB());
+	/**
+	 * RGB color space represents colors in terms of the intensity of Red, Green,
+	 * and Blue light. It is widely used in digital imaging.
+	 */
+	RGB(new RGB()),
+	/**
+	 * RYB color space is based on the primary colors Red, Yellow, and Blue. It is
+	 * often used in art and design education.
+	 */
+	RYB(new RYB()),
+	/**
+	 * HSB (Hue, Saturation, Brightness) color space defines colors in terms of
+	 * their shade, intensity, and brightness, making it intuitive for human
+	 * understanding.
+	 */
+	HSB(new HSB()),
+	/**
+	 * XYZ color space is a linear color space based on human vision, serving as a
+	 * basis for many other color spaces. It defines colors in terms of X, Y, and Z
+	 * coordinates.
+	 */
+	XYZ(new XYZ()),
+	/**
+	 * LAB color space describes colors in terms of Lightness, a (from green to
+	 * red), and b (from blue to yellow), aiming for perceptual uniformity.
+	 */
+	LAB(new LAB()),
+	/**
+	 * HLAB (Hunter L, a, b) color space is designed for visual uniformity, offering
+	 * improvements in the representation of yellow and blue colors compared to XYZ.
+	 */
+	HLAB(new HUNTER_LAB()),
+	/**
+	 * DLAB (DIN99) color space is designed for better uniformity in color
+	 * differences, based on the CIELAB model with adjustments for human vision.
+	 */
+	DLAB(new DLAB()),
+	/**
+	 * SRLAB2 color space offers a balance between CIELAB's simplicity and
+	 * CIECAM02's accuracy, aiming for practicality in color difference evaluation.
+	 */
+	SRLAB2(new SRLAB2()),
+	/**
+	 * Dolby ITP (IC<sub>T</sub>C<sub>P</sub>) color space focuses on high-fidelity
+	 * HDR/WCG content, with dimensions for intensity (I), chroma (Ct), and
+	 * protanopia (Cp).
+	 */
+	ITP(new ITP()),
+	/**
+	 * LUV color space emphasizes perceptual uniformity in lightness and
+	 * chromaticity, based on the CIE 1976 L*, u*, v* formulas.
+	 */
+	LUV(new LUV()),
+	/**
+	 * IPT color space is designed for uniformity in perceived hue, with dimensions
+	 * for lightness-darkness (I), red-green (P), and yellow-blue (T).
+	 */
+	IPT(new IPT()),
+	/**
+	 * Oklab color space is designed for uniform lightness and colorfulness based on
+	 * a perceptual model, improving upon the IPT principles.
+	 */
+	OKLAB(new OKLAB()),
+	/**
+	 * JAB (J<sub>z</sub>A<sub>z</sub>B<sub>z</sub>) color space aims for perceptual
+	 * uniformity in HDR/WCG environments, with dimensions for lightness (Jz),
+	 * red-green (Az), and yellow-blue (Bz).
+	 */
+	JAB(new JAB()),
+	/**
+	 * XYB color space, used in JPEG XL, focuses on perceptual uniformity with
+	 * dimensions for red-green (X), yellow (Y), and blue (B).
+	 */
+	XYB(new XYB());
 
 	public static final int SIZE = values().length;
 
