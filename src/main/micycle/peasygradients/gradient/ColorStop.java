@@ -57,7 +57,8 @@ public final class ColorStop implements Comparable<ColorStop> {
 		final double[] clrRGBDouble = ColorUtils.decomposeclrDouble(color);
 
 		for (int i = 0; i < ColorSpace.SIZE; i++) {
-			colorsMap.put(ColorSpace.get(i), ColorSpace.get(i).getColorSpace().fromRGB(clrRGBDouble));
+			// clone passed array just in case color space implementation mutates the array
+			colorsMap.put(ColorSpace.get(i), ColorSpace.get(i).getColorSpace().fromRGB(clrRGBDouble.clone()));
 		}
 
 		colorOut = colorsMap.get(colorSpace);

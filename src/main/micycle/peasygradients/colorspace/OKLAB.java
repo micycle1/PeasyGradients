@@ -68,41 +68,44 @@ final class OKLAB implements ColorSpaceTransform {
 	@Override
 	public double[] fromRGB(final double[] RGB) {
 		// convert sRGB (gamma-adjusted) to linear RGB (linear space for XYZ)
-		if (RGB[0] > 0.04045) {
-			RGB[0] = FastMath.pow((RGB[0] + 0.055) / 1.055, 2.4);
+		double a = RGB[0], b = RGB[1], c = RGB[2];
+		if (a > 0.04045) {
+			a = FastMath.pow((a + 0.055) / 1.055, 2.4);
 		} else {
-			RGB[0] /= 12.92;
+			a /= 12.92;
 		}
-		if (RGB[1] > 0.04045) {
-			RGB[1] = FastMath.pow((RGB[1] + 0.055) / 1.055, 2.4);
+		if (b > 0.04045) {
+			b = FastMath.pow((b + 0.055) / 1.055, 2.4);
 		} else {
-			RGB[1] /= 12.92;
+			b /= 12.92;
 		}
-		if (RGB[2] > 0.04045) {
-			RGB[2] = FastMath.pow((RGB[2] + 0.055) / 1.055, 2.4);
+		if (c > 0.04045) {
+			c = FastMath.pow((c + 0.055) / 1.055, 2.4);
 		} else {
-			RGB[2] /= 12.92;
+			c /= 12.92;
 		}
 
-//		RGB[0] = f_inv(RGB[0]);
-//		RGB[1] = f_inv(RGB[1]);
-//		RGB[2] = f_inv(RGB[2]);
+//		a = f_inv(a);
+//		b = f_inv(b);
+//		c = f_inv(c);
 
-		final double l = 0.4122214708 * RGB[0] + 0.5363325363 * RGB[1] + 0.0514459929 * RGB[2];
-		final double m = 0.2119034982 * RGB[0] + 0.6806995451 * RGB[1] + 0.1073969566 * RGB[2];
-		final double s = 0.0883024619 * RGB[0] + 0.2817188376 * RGB[1] + 0.6299787005 * RGB[2];
+		final double l = 0.4122214708 * a + 0.5363325363 * b + 0.0514459929 * c;
+		final double m = 0.2119034982 * a + 0.6806995451 * b + 0.1073969566 * c;
+		final double s = 0.0883024619 * a + 0.2817188376 * b + 0.6299787005 * c;
 
 		double l_ = FastMath.cbrt(l);
 		double m_ = FastMath.cbrt(m);
 		double s_ = FastMath.cbrt(s);
 
 		return new double[] { 0.2104542553 * l_ + 0.7936177850 * m_ - 0.0040720468 * s_,
-				1.9779984951 * l_ - 2.4285922050 * m_ + 0.4505937099 * s_, 0.0259040371 * l_ + 0.7827717662 * m_ - 0.8086757660 * s_, };
+				1.9779984951 * l_ - 2.4285922050 * m_ + 0.4505937099 * s_,
+				0.0259040371 * l_ + 0.7827717662 * m_ - 0.8086757660 * s_, };
 
 	}
 
 	/**
 	 * To gamma adjusted (forward)
+	 * 
 	 * @param x
 	 * @return
 	 */
