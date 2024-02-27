@@ -1,38 +1,41 @@
-name: gh-pages javadocs
+name: Build
 on:
   push:
     branches:
       - master
-
+  pull_request:
+    types: [opened, synchronize, reopened]
 jobs:
   build:
-    name: gh-pages javadocs
+    name: Build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Set up JDK 11
-        uses: actions/setup-java@v1
+      - name: Set up JDK
+        uses: actions/setup-java@v3
         with:
-          java-version: 11
-      - name: Build with Maven and uber-jar profile
-        run: mvn clean package -Puber-jar
-      - name: Upload artifact
-        uses: actions/upload-artifact@v2
+          java-version: 17
+          distribution: 'temurin'
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v3
         with:
-          name: uber-jar
-          path: target/*.jar
-      - name: Build javadocs with Maven
-        run: mvn javadoc:javadoc -Ddoclint=none -DexcludePackageNames=micycle.peasygradients.utilities
-      - name: Publish javadocs
-        uses: JamesIves/github-pages-deploy-action@4.1.1
-        with:
-          branch: gh-pages
-          folder: target/site/apidocs
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
       - name: Cache Maven packages
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
+      - name: Build and analyze
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: mvn -B -Puber-jar verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
+      - uses: actions/upload-artifact@v3
+        with:
+          name: PeasyGradients Uber-jar
+          path: target/*.jar
