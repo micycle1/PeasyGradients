@@ -112,7 +112,7 @@ public final class Palette {
 
 			double[] HSB = new double[] { h, PApplet.constrain(s + Functions.random(-sVarMax, sVarMax), sMin, 1),
 					PApplet.constrain(b + Functions.random(-bVarMax, bVarMax), bMin, 1) };
-			out[i] = ColorUtils.composeclr(ColorSpace.HSB.getColorSpace().toRGB(HSB));
+			out[i] = ColorUtils.RGB1ToRGB255(ColorSpace.HSB.getColorSpace().toRGB(HSB));
 			h += increment;
 			h %= 1;
 		}

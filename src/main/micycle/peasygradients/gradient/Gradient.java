@@ -210,11 +210,11 @@ public final class Gradient {
 		int alpha = (int) Math.floor((prevStop.alpha + (position * (currStop.alpha - prevStop.alpha))) + 0.5d); // TODO sometimes
 																												// 254?
 
-		/**
+		/*
 		 * Finally convert the given colorspace value to sARGB int to eventually write
 		 * to Processing's pixels[] array
 		 */
-		return ColorUtils.composeclrClamp(colorSpaceInstance.toRGB(interpolatedcolorOUT), alpha);
+		return ColorUtils.RGB1ToRGBA255Clamp(colorSpaceInstance.toRGB(interpolatedcolorOUT), alpha);
 	}
 
 	/**

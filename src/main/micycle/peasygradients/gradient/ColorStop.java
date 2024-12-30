@@ -18,8 +18,6 @@ import processing.core.PApplet;
  */
 public final class ColorStop implements Comparable<ColorStop> {
 
-	static final float TOLERANCE = 0.05f;
-
 //	float originalPercent; // percent at which this stop occurs (0...1.0)
 	float position; // percent, taking into account animation offset, etc.
 
@@ -54,7 +52,7 @@ public final class ColorStop implements Comparable<ColorStop> {
 		this.clr = color;
 		this.alpha = (color >> 24) & 0xff;
 
-		final double[] clrRGBDouble = ColorUtils.decomposeclrDouble(color);
+		final double[] clrRGBDouble = ColorUtils.RGB255ToRGB1(color);
 
 		for (int i = 0; i < ColorSpace.SIZE; i++) {
 			// clone passed array just in case color space implementation mutates the array
@@ -101,7 +99,7 @@ public final class ColorStop implements Comparable<ColorStop> {
 		for (int i = 0; i < decomposed.length - 1; i++) {
 			decomposed[i] = PApplet.constrain(decomposed[i] + (Functions.randomFloat() < 0.5 ? -1 : 1) * amt, 0, 255);
 		}
-		setColor(ColorUtils.composeclr255(decomposed));
+		setColor(ColorUtils.RGBA255ToRGBA255(decomposed));
 	}
 
 	/**
@@ -129,7 +127,7 @@ public final class ColorStop implements Comparable<ColorStop> {
 
 	@Override
 	public String toString() {
-		return Arrays.toString(ColorUtils.composeclrTo255(ColorUtils.decomposeclrDouble(clr)));
+		return Arrays.toString(ColorUtils.RGB1ToInt255(ColorUtils.RGB255ToRGB1(clr)));
 	}
 
 }
