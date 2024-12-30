@@ -14,7 +14,7 @@ This `README` provides an overview of the library — what it's capable of and h
 
 ### Key Features:
 * ### 11 Gradient Types
-* ### 12 Color Spaces
+* ### 13 Color Spaces
 * ### 14 Color Interpolation Functions
 * ### Fast!
 

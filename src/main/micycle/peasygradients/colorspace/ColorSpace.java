@@ -82,6 +82,11 @@ public enum ColorSpace {
 	 */
 	JAB(new JAB()),
 	/**
+	 * Natural color mixing by treating colors as real-life pigments using the
+	 * Kubelka & Munk theory to predict realistic color behavior.
+	 */
+	KMUNK(new K_MUNK()),
+	/**
 	 * XYB color space, used in JPEG XL, focuses on perceptual uniformity with
 	 * dimensions for red-green (X), yellow (Y), and blue (B).
 	 */
