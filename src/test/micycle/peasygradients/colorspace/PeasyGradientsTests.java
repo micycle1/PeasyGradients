@@ -2,10 +2,15 @@ package micycle.peasygradients.colorspace;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.Arrays;
+
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import micycle.peasygradients.PeasyGradients;
 import micycle.peasygradients.gradient.Gradient;
+import micycle.peasygradients.gradient.Palette;
 import micycle.peasygradients.utilities.ColorUtils;
 import processing.core.PConstants;
 import processing.core.PImage;
@@ -52,6 +57,23 @@ class PeasyGradientsTests {
 				assertEquals(columnValue, g.pixels[startingIndex + x]);
 			}
 		}
+	}
+
+	@ParameterizedTest
+	@ValueSource(ints = {1, 2, 3, 5, 50})
+	void testPosterise(int n) {
+	    PImage g = new PImage(1000, 1000);
+	    PeasyGradients pg = new PeasyGradients(g);
+	    pg.posterise(n);
+
+	    Gradient gradient = new Gradient(Palette.tetradic());
+	    pg.linearGradient(gradient, 0);
+
+	    assertEquals(n, makeUnique(g.pixels).length);
+	}
+
+	private static int[] makeUnique(int... values) {
+		return Arrays.stream(values).distinct().toArray();
 	}
 
 }

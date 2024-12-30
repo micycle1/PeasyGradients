@@ -37,4 +37,19 @@ class ColorSpaceTests {
 			assertArrayEquals(rgb, space.toRGB(space.fromRGB(rgb)), DELTA);
 		}
 	}
+
+	@Test
+	void testRYB() {
+		ColorSpaceTransform ryb = new RYB();
+		// from http://nishitalab.org/user/UEI/publication/Sugita_IWAIT2015.pdf
+		assertArrayEquals(new double[] { 1, 1, 1 }, ryb.fromRGB(new double[] { 0, 0, 0 }));
+		assertArrayEquals(new double[] { 1, 0, 0 }, ryb.fromRGB(new double[] { 1, 0, 0 }));
+		assertArrayEquals(new double[] { 0, 1, 1 }, ryb.fromRGB(new double[] { 0, 1, 0 }));
+		assertArrayEquals(new double[] { 0, 0.5, 1 }, ryb.fromRGB(new double[] { 0, 1, 1 }));
+
+		assertArrayEquals(new double[] { 1, 0, 1 }, ryb.toRGB(new double[] { 1, 0, 0.5 }));
+		assertArrayEquals(new double[] { 0, 0, 0 }, ryb.toRGB(new double[] { 1, 1, 1 }));
+//		assertArrayEquals(new double[] { 0, 1, 1 }, ryb.toRGB(new double[] { 0, 0.5, 1 })); // ?
+		assertArrayEquals(new double[] { 1, 1, 1 }, ryb.toRGB(new double[] { 0, 0, 0 }));
+	}
 }
