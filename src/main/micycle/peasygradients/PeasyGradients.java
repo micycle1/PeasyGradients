@@ -73,7 +73,7 @@ public final class PeasyGradients {
 	private static final double HALF_PI = (0.5 * Math.PI);
 	private static final double INV_TWO_PI = 1 / TWO_PI;
 	private static final double THREE_QRTR_PI = (0.75 * Math.PI);
-	private static final double DEFAULT_DITHER = 0.015;
+	private static final double DEFAULT_DITHER = 0.01;
 
 	private static final ExecutorService THREAD_POOL;
 
@@ -523,7 +523,7 @@ public final class PeasyGradients {
 		curveCount *= TWO_PI;
 
 		curviness = 1f / curviness;
-		curviness *= 0.5; // curviness of 1 == exponenent of 0.5
+		curviness *= 0.5; // curviness of 1 == exponent of 0.5
 
 		final double renderMidpointX = (centerPoint.x / gradientPG.width) * renderWidth;
 		final double renderMidpointY = (centerPoint.y / gradientPG.height) * renderHeight;
@@ -1117,7 +1117,6 @@ public final class PeasyGradients {
 
 			double t;
 			double spiralOffset = 0;
-
 			for (int y = rowOffset; y < rowOffset + rows; y++) {
 				double rise = renderMidpointY - y;
 				final double riseSquared = rise * rise;
@@ -1125,8 +1124,9 @@ public final class PeasyGradients {
 
 					double run = renderMidpointX - x;
 					t = Functions.fastAtan2b(rise, run) - angle; // -PI...PI
-					spiralOffset = curveCount * curviness == 0.5f ? Math.sqrt((riseSquared + run * run) * curveDenominator)
+					spiralOffset = curviness == 0.5f ? Math.sqrt((riseSquared + run * run) * curveDenominator)
 							: FastPow.fastPow((riseSquared + run * run) * curveDenominator, curviness);
+					spiralOffset*=curveCount;
 					t += spiralOffset;
 
 					t *= INV_TWO_PI; // normalise
