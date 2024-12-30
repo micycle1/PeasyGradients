@@ -14,20 +14,26 @@ import micycle.peasygradients.utilities.Interpolation;
 import net.jafama.FastMath;
 
 /**
- * A Gradient is a color spectrum, comprising of
- * {@link micycle.peasygradients.gradient.ColorStop color stops} (each
- * specifying a color and a position) arranged on a 1D axis.
- * 
+ * Represents a one-dimensional color gradient specification, defined by a
+ * sequence of {@link micycle.peasygradients.gradient.ColorStop color stops}
+ * along a normalized axis [0,1]. Each color stop defines both a color value and
+ * its position on this axis.
+ *
  * <p>
- * Gradients each define the gradient <b>interpolation</b> function (such as
- * sine()), which governs how the gradient's color transitions (the step used
- * during interpolation) and the <b>color space</b> this gradient will be
- * rendered this gradient's color stops are represented by.
- * 
+ * The gradient specification consists of two key components:
+ * <ul>
+ * <li>An interpolation function (e.g. linear, sine) that determines how colors
+ * transition between stops during sampling
+ * <li>A color space (e.g. RGB, LAB) in which the color interpolation is
+ * performed
+ * </ul>
+ *
  * <p>
- * Use a {@link #peasyGradients.PeasyGradients} instance to render Gradients as
- * 2D spectrums.
- * 
+ * This class defines only the mathematical gradient function - it does not
+ * handle the actual rendering or rasterization. To generate a two-dimensional
+ * visualization of this gradient, use a {@link #peasyGradients.PeasyGradients}
+ * instance, which will sample this function to create a 2D spectrum.
+ *
  * @author Michael Carleton
  *
  */

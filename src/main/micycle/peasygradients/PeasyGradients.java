@@ -24,20 +24,37 @@ import processing.core.PImage;
 import processing.core.PVector;
 
 /**
- * Renders 1D {@link Gradient gradients} as 2D spectrums in your Processing
- * sketch.
+ * Samples 1D {@link Gradient} specifications to generate 2D raster
+ * gradient visualizations in Processing sketches.
+ *
  * <p>
- * The class offers both quick constructors for more simple gradients (such as 2
- * color horizontal gradients) and more powerful constructors for more involved
- * gradients (centre-offset, angled, n-color gradient with color stops).
+ * The renderer provides multiple gradient sampling patterns. Here's a few examples:
+ * <ul>
+ * <li>Linear: Colors sampled along parallel lines
+ * <li>Radial: Colors sampled along concentric circles from a center point
+ * <li>Conic: Colors sampled along angular sweeps around a center point
+ * </ul>
+ *
  * <p>
- * By default, a PeasyGradients instance draws directly into the Processing
- * sketch; you can give it a specific <code>PGraphics</code> pane to draw into
- * with the <code>.setRenderTarget()</code> method).
+ * Supports two modes of construction:
+ * <ul>
+ * <li>Simple constructors for basic cases (e.g., two-color horizontal
+ * gradients)
+ * <li>Advanced constructors for complex configurations (e.g., angled gradients
+ * with multiple color stops and custom center offsets)
+ * </ul>
+ *
  * <p>
- * Algorithms for linear, radial & conic gradients are based on <a href=
- * "https://medium.com/@behreajj/color-gradients-in-processing-v-2-0-e5c0b87cdfd2">this</a>
- * work by Jeremy Behreandt; all others are mostly my own derivation.
+ * By default, renders directly to the Processing sketch. Use
+ * {@code .setRenderTarget()} to specify a custom {@code PGraphics} output
+ * buffer.
+ *
+ * <p>
+ * Linear, radial & conic sampling algorithms adapted from <a href=
+ * "https://medium.com/@behreajj/color-gradients-in-processing-v-2-0-e5c0b87cdfd2">
+ * Jeremy Behreandt's work</a>. Additional sampling patterns are original
+ * implementations.
+ *
  * 
  * @author Michael Carleton
  */
@@ -710,8 +727,8 @@ public final class PeasyGradients {
 	 *                          sizes being overlayed making for finer and finer
 	 *                          detail. 0...5 is a suitable range of possible values
 	 */
-	public void fractalNoiseGradient(Gradient gradient, PVector centerPoint, double angle, double scale, NoiseType noiseType,
-			FractalType fractalType, int fractalOctaves, double fractalGain, double fractalLacunarity) {
+	public void fractalNoiseGradient(Gradient gradient, PVector centerPoint, double angle, double scale, NoiseType noiseType, FractalType fractalType,
+			int fractalOctaves, double fractalGain, double fractalLacunarity) {
 
 		fastNoiseLite.SetFrequency((float) (1 / scale * 0.001f)); // normalise scale to a more appropriate value
 		fastNoiseLite.SetNoiseType(noiseType);
@@ -845,8 +862,7 @@ public final class PeasyGradients {
 		final double sin = FastMath.sin(PConstants.TWO_PI - angle);
 		final double cos = FastMath.cos(angle);
 
-		makeThreadPool(renderStrips, HourglassThread.class, renderMidpointX, renderMidpointY, sin, cos, zoom, angle, pinch, roundness,
-				denominator);
+		makeThreadPool(renderStrips, HourglassThread.class, renderMidpointX, renderMidpointY, sin, cos, zoom, angle, pinch, roundness, denominator);
 
 		gradientPG.updatePixels();
 
@@ -871,8 +887,10 @@ public final class PeasyGradients {
 
 		try {
 			@SuppressWarnings("unchecked")
-			Constructor<? extends RenderThread> constructor = (Constructor<? extends RenderThread>) gradientType
-					.getDeclaredConstructors()[0]; // only 1 constructor per thread class
+			Constructor<? extends RenderThread> constructor = (Constructor<? extends RenderThread>) gradientType.getDeclaredConstructors()[0]; // only 1
+																																				// constructor
+																																				// per thread
+																																				// class
 
 			int rows = renderHeight / partitionsY; // rows per strip (except for last strip, which may have less/more, due to floor
 													// division)
@@ -1029,7 +1047,7 @@ public final class PeasyGradients {
 
 					int stepInt = (int) (t * gradientCacheSize);
 					gradientPG.pixels[pixel++] = gradientCache[stepInt];
-					
+
 				}
 			}
 
@@ -1052,8 +1070,8 @@ public final class PeasyGradients {
 		private final double curviness;
 		private final double curveDenominator;
 
-		SpiralThread(int rowOffset, int rows, double renderMidpointX, double renderMidpointY, double curveDenominator, double curviness,
-				double angle, double curveCount) {
+		SpiralThread(int rowOffset, int rows, double renderMidpointX, double renderMidpointY, double curveDenominator, double curviness, double angle,
+				double curveCount) {
 			super(rowOffset, rows);
 			this.renderMidpointX = renderMidpointX;
 			this.renderMidpointY = renderMidpointY;
@@ -1388,8 +1406,8 @@ public final class PeasyGradients {
 		private final double pinch, roundness;
 		private final double denominator;
 
-		HourglassThread(int rowOffset, int rows, double renderMidpointX, double renderMidpointY, double sin, double cos, double zoom,
-				double angle, double pinch, double roundness, double denominator) {
+		HourglassThread(int rowOffset, int rows, double renderMidpointX, double renderMidpointY, double sin, double cos, double zoom, double angle,
+				double pinch, double roundness, double denominator) {
 			super(rowOffset, rows);
 			this.renderMidpointX = renderMidpointX;
 			this.renderMidpointY = renderMidpointY;
