@@ -26,8 +26,10 @@ public final class Functions {
 	private static final float PI = (float) Math.PI;
 	private static final float TWO_PI = (float) (2 * Math.PI);
 	private static final float HALF_PI = (float) (0.5f * Math.PI);
-	private static final float QRTR_PI = (float) (0.25f * Math.PI);
-	private static final float THREE_QRTR_PI = (float) (0.75f * Math.PI);
+	private static final float QRTR_PI_F = (float) (0.25f * Math.PI);
+	private static final float THREE_QRTR_PI_F = (float) (0.75f * Math.PI);
+	private static final double QRTR_PI = (0.25 * Math.PI);
+	private static final double THREE_QRTR_PI = (0.75 * Math.PI);
 
 	private static final Random random = ThreadLocalRandom.current();
 
@@ -143,6 +145,16 @@ public final class Functions {
 	 */
 	public static float randomFloat() {
 		return random.nextFloat();
+	}
+	
+	/**
+	 * Returns a pseudorandom, uniformly distributed double value between 0.0
+	 * (inclusive) and 1.0 (exclusive).
+	 * 
+	 * @return
+	 */
+	public static double randomDouble() {
+		return random.nextDouble();
 	}
 
 	/**
@@ -306,7 +318,7 @@ public final class Functions {
 	 * @return
 	 */
 	public static double fastAtan(double z) {
-		return z * (QRTR_PI + 0.273f * (1 - Math.abs(z)));
+		return z * (QRTR_PI_F + 0.273f * (1 - Math.abs(z)));
 	}
 
 	/**
@@ -366,10 +378,10 @@ public final class Functions {
 
 		if (x < 0.0f) {
 			r = (x + abs_y) / (abs_y - x); // (3)
-			angle = THREE_QRTR_PI; // (4)
+			angle = THREE_QRTR_PI_F; // (4)
 		} else {
 			r = (x - abs_y) / (x + abs_y); // (1)
-			angle = QRTR_PI; // (2)
+			angle = QRTR_PI_F; // (2)
 		}
 		angle += (0.1963f * r * r - 0.9817f) * r; // (2 | 4)
 		if (y < 0.0f) {
@@ -377,6 +389,25 @@ public final class Functions {
 		} else {
 			return (angle);
 		}
+	}
+	
+	public static double fastAtan2b(final double y, final double x) {
+	    double r, angle;
+	    final double abs_y = Math.abs(y) + 1e-10; // kludge to prevent 0/0 condition
+
+	    if (x < 0.0) {
+	        r = (x + abs_y) / (abs_y - x);
+	        angle = THREE_QRTR_PI;
+	    } else {
+	        r = (x - abs_y) / (x + abs_y);
+	        angle = QRTR_PI;
+	    }
+	    angle += (0.1963 * r * r - 0.9817) * r;
+	    if (y < 0.0) {
+	        return (-angle);
+	    } else {
+	        return (angle);
+	    }
 	}
 
 	/**
@@ -499,6 +530,18 @@ public final class Functions {
 		rect[2] = new PVector(rectWidth, rectHeight);
 		rect[3] = new PVector(rectWidth, 0);
 		return lineRectIntersection(rect, point, angle);
+	}
+	
+	/**
+	 * Double-argument version of {@link #lineRectIntersection(float, float, PVector, float)}.
+	 */
+	public static PVector[] lineRectIntersection(double rectWidth, double rectHeight, PVector point, double angle) {
+	    final PVector[] rect = new PVector[4];
+	    rect[0] = new PVector(0, 0);
+	    rect[1] = new PVector(0, (float) rectHeight);
+	    rect[2] = new PVector((float) rectWidth, (float) rectHeight);
+	    rect[3] = new PVector((float) rectWidth, 0);
+	    return lineRectIntersection(rect, point, (float) angle);
 	}
 
 	/**

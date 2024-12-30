@@ -39,11 +39,11 @@ public final class Gradient {
 
 	private double[] interpolatedcolorOUT = new double[4]; // define once here
 
-	private float offset = 0; // animation color offset 0...1
+	private double offset = 0; // animation color offset 0...1
 
 	private int lastCurrStopIndex;
 	private ColorStop currStop, prevStop;
-	private float denom;
+	private double denom;
 
 	public ColorSpace colorSpace = ColorSpace.OKLAB; // TODO public for testing
 	private ColorSpaceTransform colorSpaceInstance = colorSpace.getColorSpace();
@@ -65,7 +65,7 @@ public final class Gradient {
 	 */
 	public Gradient(int... colors) {
 		int sz = colors.length;
-		float szf = (sz <= 1.0f ? 1.0f : sz - 1.0f);
+		double szf = (sz <= 1.0 ? 1.0 : sz - 1.0);
 		for (int i = 0; i < sz; i++) {
 			colorStops.add(new ColorStop(colors[i], i / szf));
 		}
@@ -123,7 +123,7 @@ public final class Gradient {
 	 *                 gradient
 	 * @return ARGB integer for Processing pixel array.
 	 */
-	public int getColor(float position) {
+	public int getColor(double position) {
 
 		// TODO a version which writes to PeasyGradients int[] array (i.e. does all at
 		// once)
@@ -136,7 +136,7 @@ public final class Gradient {
 			position %= 1;
 		}
 
-//		position = (float) functStep(position); // apply interpolation function globally
+//		position = functStep(position); // apply interpolation function globally
 
 		/*
 		 * Calculate whether the current step has gone beyond the existing color stop
@@ -239,7 +239,7 @@ public final class Gradient {
 	 * @param index
 	 * @param position
 	 */
-	public void setStopPosition(int index, float position) {
+	public void setStopPosition(int index, double position) {
 		if (index > -1 && index < colorStops.size()) {
 			if (position < 0) { // (if animation offset negative)
 				position = Math.abs(position); // make positive
@@ -268,11 +268,11 @@ public final class Gradient {
 	 * this each frame (within draw() for example) to animate a gradient).
 	 * 
 	 * @param amt 0...1 smaller is less change
-	 * @see #setOffset(float)
+	 * @see #setOffset(double)
 	 * @see #primeAnimation() primeAnimation() -- consider calling this method
 	 *      before animate() to prevent a color seam
 	 */
-	public void animate(float amt) {
+	public void animate(double amt) {
 		offset += amt;
 		offset %= 1;
 	}
@@ -281,9 +281,9 @@ public final class Gradient {
 	 * Sets the offset of <b>all color stops</b> to a specific value.
 	 * 
 	 * @param offset
-	 * @see #animate(float)
+	 * @see #animate(double)
 	 */
-	public void setOffset(float offset) {
+	public void setOffset(double offset) {
 		this.offset = offset;
 	}
 
@@ -294,7 +294,7 @@ public final class Gradient {
 	 * 
 	 * @param amt magnitude of mutation [0...255]
 	 */
-	public void mutatecolor(float amt) {
+	public void mutatecolor(double amt) {
 		colorStops.forEach(c -> c.mutate(amt));
 	}
 
@@ -322,7 +322,7 @@ public final class Gradient {
 	 */
 	public void pushColor(int color) {
 		for (ColorStop colorStop : colorStops) {
-			colorStop.position *= ((colorStops.size() - 1) / (float) colorStops.size()); // scale down existing stop positions
+			colorStop.position *= ((colorStops.size() - 1) / (double) colorStops.size()); // scale down existing stop positions
 		}
 		add(color, 1);
 	}
@@ -339,7 +339,7 @@ public final class Gradient {
 			ColorStop last = colorStops.get(colorStops.size() - 1);
 			colorStops.remove(colorStops.size() - 1);
 
-			final float scaleFactor = last.position / colorStops.get(colorStops.size() - 1).position;
+			final double scaleFactor = last.position / colorStops.get(colorStops.size() - 1).position;
 
 			for (ColorStop colorStop : colorStops) {
 				colorStop.position *= scaleFactor; // scale up remaining stop positions
@@ -374,7 +374,7 @@ public final class Gradient {
 	 * @param clr
 	 * @param percent 0...1
 	 */
-	public void add(final int clr, final float percent) {
+	public void add(final int clr, final double percent) {
 		add(new ColorStop(clr, percent));
 	}
 
@@ -452,9 +452,9 @@ public final class Gradient {
 	public static Gradient randomGradientWithStops(int numColors) {
 		ColorStop[] temp = new ColorStop[numColors];
 		int[] colors = Palette.randomcolors(numColors);
-		float percent;
+		double percent;
 		for (int i = 0; i < numColors; ++i) {
-			percent = i == 0 ? 0 : i == numColors - 1 ? 1 : (float) Math.random();
+			percent = i == 0 ? 0 : i == numColors - 1 ? 1 : Math.random();
 			temp[i] = new ColorStop(colors[i], percent);
 		}
 		return new Gradient(temp);
@@ -552,35 +552,35 @@ public final class Gradient {
 	 * @param step 0...1
 	 * @return the eased/transformed step (0...1)
 	 */
-	private double functStep(final float step) {
+	private double functStep(final double step) {
 		switch (interpolationMode) {
 			case LINEAR:
 				return step;
 			case IDENTITY:
-				return step * step * (2.0f - step);
+				return step * step * (2.0 - step);
 			case SMOOTH_STEP:
-				return 3 * step * step - 2 * step * step * step; // polynomial approximation of (0.5-cos(PI*step)/2)
+				return 3 * step * step - 2 * step * step * step; // polynomial approximation o (0.5-cos(PI*step)/2)
 			case SMOOTHER_STEP:
 				return step * step * step * (step * (step * 6 - 15) + 10);
 			case EXPONENTIAL:
-				return step == 1.0f ? step : 1.0f - FastPow.fastPow(2, -10 * step);
+				return step == 1.0 ? step : 1.0 - FastPow.fastPow(2, -10 * step);
 			case CUBIC:
 				return step * step * step;
 			case BOUNCE:
-				float sPrime = step;
+				double sPrime = step;
 
 				if (sPrime < 0.36364) { // 1/2.75
-					return 7.5625f * sPrime * sPrime;
+					return 7.5625 * sPrime * sPrime;
 				}
 				if (sPrime < 0.72727) // 2/2.75
 				{
-					return 7.5625f * (sPrime -= 0.545454f) * sPrime + 0.75f;
+					return 7.5625 * (sPrime -= 0.545454) * sPrime + 0.75;
 				}
 				if (sPrime < 0.90909) // 2.5/2.75
 				{
-					return 7.5625f * (sPrime -= 0.81818f) * sPrime + 0.9375f;
+					return 7.5625 * (sPrime -= 0.81818) * sPrime + 0.9375;
 				}
-				return 7.5625f * (sPrime -= 0.95455f) * sPrime + 0.984375f;
+				return 7.5625 * (sPrime -= 0.95455) * sPrime + 0.984375;
 			case CIRCULAR:
 				return Math.sqrt((2.0 - step) * step);
 			case SINE:
@@ -588,21 +588,21 @@ public final class Gradient {
 			case PARABOLA:
 				return Math.sqrt(4.0 * step * (1.0 - step));
 			case GAIN1:
-				if (step < 0.5f) {
-					return 0.5f * FastPow.fastPow(2.0f * step, 0.3f);
+				if (step < 0.5) {
+					return 0.5 * FastPow.fastPow(2.0 * step, 0.3);
 				} else {
-					return 1 - 0.5f * FastPow.fastPow(2.0f * (1 - step), 0.3f);
+					return 1 - 0.5 * FastPow.fastPow(2.0 * (1 - step), 0.3);
 				}
 			case GAIN2:
-				if (step < 0.5f) {
-					return 0.5f * FastPow.fastPow(2.0f * step, 3.3333f);
+				if (step < 0.5) {
+					return 0.5 * FastPow.fastPow(2.0 * step, 3.3333);
 				} else {
-					return 1 - 0.5f * FastPow.fastPow(2.0f * (1 - step), 3.3333f);
+					return 1 - 0.5 * FastPow.fastPow(2.0 * (1 - step), 3.3333);
 				}
 			case EXPIMPULSE:
 				return (2 * step * FastMath.expQuick(1.0 - (2 * step)));
 			case HEARTBEAT:
-				final double v = FastMath.atan(FastMath.sinQuick(step * Math.PI * 1) * 6); // frequency = 1; intensity = 6
+				final double v = FastMath.atan(FastMath.sinQuick(step * Math.PI * 1) * 6); // requency = 1; intensity = 6
 				return (v + Math.PI / 2) / Math.PI;
 			default:
 				return step;

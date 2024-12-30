@@ -19,7 +19,7 @@ import processing.core.PApplet;
 public final class ColorStop implements Comparable<ColorStop> {
 
 //	float originalPercent; // percent at which this stop occurs (0...1.0)
-	float position; // percent, taking into account animation offset, etc.
+	double position; // percent, taking into account animation offset, etc.
 
 	int clr; // 32bit ARGB color int
 	int alpha; // 0-255 alpha
@@ -36,7 +36,7 @@ public final class ColorStop implements Comparable<ColorStop> {
 	 *                 defines how far along the gradient the color defined by this
 	 *                 stop is at.
 	 */
-	public ColorStop(int clr, float fraction) {
+	public ColorStop(int clr, double fraction) {
 		position = fraction > 1 ? 1 : fraction < 0 ? 0 : fraction; // constrain 0...1
 		colorsMap = new EnumMap<>(ColorSpace.class);
 		setColor(clr);
@@ -55,14 +55,14 @@ public final class ColorStop implements Comparable<ColorStop> {
 		final double[] clrRGBDouble = ColorUtils.RGB255ToRGB1(color);
 
 		for (int i = 0; i < ColorSpace.SIZE; i++) {
-			// clone passed array just in case color space implementation mutates the array
+			// NOTE clone passed array just in case color space implementation mutates the array
 			colorsMap.put(ColorSpace.get(i), ColorSpace.get(i).getColorSpace().fromRGB(clrRGBDouble.clone()));
 		}
 
 		colorOut = colorsMap.get(colorSpace);
 	}
 
-	void setPosition(float position) {
+	void setPosition(double position) {
 		if (position < 0) {
 			position += 1; // equivalent to floormod function
 		}
@@ -92,12 +92,13 @@ public final class ColorStop implements Comparable<ColorStop> {
 		colorOut = colorsMap.get(colorSpace);
 	}
 
-	protected void mutate(float amt) {
+	protected void mutate(double amt) {
 		// TODO fix with amt < 1
 		// TODO use noise function for better / more natural variance
 		float[] decomposed = ColorUtils.decomposeclrRGB(clr);
 		for (int i = 0; i < decomposed.length - 1; i++) {
-			decomposed[i] = PApplet.constrain(decomposed[i] + (Functions.randomFloat() < 0.5 ? -1 : 1) * amt, 0, 255);
+			double val = decomposed[i] + (Functions.randomDouble() < 0.5 ? -1 : 1) * amt;
+			decomposed[i] = PApplet.constrain((float) val, 0, 255);
 		}
 		setColor(ColorUtils.RGBA255ToRGBA255(decomposed));
 	}
@@ -108,7 +109,7 @@ public final class ColorStop implements Comparable<ColorStop> {
 	 */
 	@Override
 	public int compareTo(ColorStop other) {
-		return Float.compare(this.position, other.position);
+		return Double.compare(this.position, other.position);
 	}
 
 	@Override
