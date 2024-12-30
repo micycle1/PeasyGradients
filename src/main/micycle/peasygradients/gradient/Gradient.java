@@ -203,8 +203,8 @@ public final class Gradient {
 		 * colorstops adjacent to the position, and the (eased) step between the two
 		 * colorstops as the weighting.
 		 */
-		colorSpaceInstance.interpolateLinear(currStop.colorOut, prevStop.colorOut, smoothStep, interpolatedcolorOUT);
-		/**
+		interpolatedcolorOUT = colorSpaceInstance.interpolateLinear(currStop.colorOut, prevStop.colorOut, smoothStep);
+		/*
 		 * Treat alpha separately (to simplify colorspace classes)
 		 */
 		int alpha = (int) Math.floor((prevStop.alpha + (position * (currStop.alpha - prevStop.alpha))) + 0.5d); // TODO sometimes

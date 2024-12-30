@@ -137,7 +137,7 @@ final class HSB implements ColorSpaceTransform {
 	 * @return
 	 */
 	@Override
-	public double[] interpolateLinear(double[] a, double[] b, double st, double[] out) {
+	public double[] interpolateLinear(double[] a, double[] b, double st) {
 
 		// Find difference in hues.
 		double huea = a[0];
@@ -153,6 +153,7 @@ final class HSB implements ColorSpaceTransform {
 
 		// The two hues may be outside of 0 .. 1 range,
 		// so modulate by 1.
+		double[] out = new double[3];
 		out[0] = (huea + st * (hueb - huea)) % 1;
 		out[1] = a[1] + st * (b[1] - a[1]);
 		out[2] = a[2] + st * (b[2] - a[2]);

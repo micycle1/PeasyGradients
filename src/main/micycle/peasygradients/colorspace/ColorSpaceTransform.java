@@ -38,7 +38,8 @@ public interface ColorSpaceTransform {
 	 * implementation-independent manner. This method is designed to work across
 	 * different color spaces, providing a generic approach to color blending.
 	 * Specific color space implementations (like HSB) may override this method if a
-	 * more accurate or appropriate interpolation technique is required.
+	 * appropriate (non-linear) interpolation technique is required to mix colors
+	 * within the space.
 	 * 
 	 * @param a    an array of doubles representing the starting color in the color
 	 *             space
@@ -52,7 +53,8 @@ public interface ColorSpaceTransform {
 	 *             the color space
 	 * @return the {@code out} array containing the interpolated color
 	 */
-	public default double[] interpolateLinear(double[] a, double[] b, double step, double[] out) {
+	public default double[] interpolateLinear(double[] a, double[] b, double step) {
+		double[] out = new double[3];
 		out[0] = a[0] + step * (b[0] - a[0]);
 		out[1] = a[1] + step * (b[1] - a[1]);
 		out[2] = a[2] + step * (b[2] - a[2]);
