@@ -6,46 +6,47 @@
 [![](https://jitpack.io/v/micycle1/PeasyGradients.svg)](https://jitpack.io/#micycle1/PeasyGradients)
  [![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=micycle1_PeasyGradients&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=micycle1_PeasyGradients)
 
-*PeasyGradients* is a library for [Processing](https://processing.org/) that makes drawing color gradients easy-peasy. This library was inspired by Jeremy Behreandt's [*Color Gradients in Processing*](https://medium.com/@behreajj/color-gradients-in-processing-v-2-0-e5c0b87cdfd2) but has greatly developed the concepts and functionality presented there.
 
-This `README` provides an overview of the library — what it's capable of and how to use it. Access examples (Processing sketches) [here](https://github.com/micycle1/PeasyGradients/tree/master/examples); access documentation (online Javadocs) [here](https://micycle1.github.io/PeasyGradients/).
+# PeasyGradients
+A Processing library for creating and rendering color gradients.
 
-## **Overview**
+### Key Features
+* 11 Types of 2D Gradients
+* 13 Color Spaces
+* 14 Color Interpolation Functions
+* Fast!
 
-### Key Features:
-* ### 11 Gradient Types
-* ### 13 Color Spaces
-* ### 14 Color Interpolation Functions
-* ### Fast!
+_This `README` provides an overview of the library — what it's capable of and how to use it. Access examples (Processing sketches) [here](https://github.com/micycle1/PeasyGradients/tree/master/examples); access documentation (online Javadocs) [here](https://micycle1.github.io/PeasyGradients/)._
 
-### Creating a 1D gradient
+## Core Concepts
 
-The `PeasyGradients` class renders 1D `Gradients` as 2D spectrums in your Processing sketch. A 1D `Gradient` consists solely of color stops — these define the colors and the discrete position (percentage) each color occurs at on the 1D axis.
+PeasyGradients operates on two distinct levels:
 
-A simple black-to-white gradient is created as such:
+1. **Gradient Definition (1D)**: A mathematical function that maps positions along a single axis [0,1] to colors. Think of it as a recipe for color transitions.
+   - Defined by color stops (color + position pairs)
+   - Specifies interpolation method (how colors blend)
+   - Sets color space for calculations
 
-```
+2. **Gradient Rendering (2D)**: The process of sampling the 1D gradient definition to create a 2D visualization
+   - Different sampling patterns (linear, radial, conic)
+   - Controls for position, angle, and spread
+   - Direct output to Processing sketches
+
+## Quick Start
+
+```java
+// 1. Define your 1D gradient
 Gradient blackToWhite = new Gradient(color(0), color(255));
+// This creates the mathematical definition: position 0.0 = black, position 1.0 = white
+
+// 2. Create the renderer
+PeasyGradients renderer = new PeasyGradients(this);
+
+// 3. Render the gradient using different sampling patterns
+// renders into the Processing sketch by default
+renderer.linearGradient(blackToWhite, 0);  // as a horizontal fill
+renderer.radialGradient(blackToWhite, width/2, height/2, 200);  // As a circular gradient
 ```
-
-Here, `blackToWhite` is a 1D gradient with two equidistant color stops — black is at *0.00*, and white is at *1.00*.
-
-### Rendering a 2D gradient
-Merely instantiating a 1D gradient doesn't draw anything. How should this 1D spectrum be drawn? Do we want to render a black-to-white linear gradient? A radial gradient? Or something else? This is where the *PeasyGradients* class comes in... We pass a `Gradient` (here, the `blackToWhite` 1D gradient) to one of a variety of methods to draw a 2D gradient.
-
-```
-PeasyGradients peasyGradients;
-
-void setup() {
-    peasyGradients = new PeasyGradients(this);
-}
-
-void draw() {
-    peasyGradients.linearGradient(blackToWhite, 0); // angle = 0 (horizontal)
-}
-```
-
-That's it! Now a horizontal black-to-white linear gradient will be drawn in the sketch (by default, the library draws directly into the sketch; you can give it a specific `PGraphics` pane to draw into with the `.setRenderTarget()` method).
 
 See the *Gradients* section below for a showcase of each (2D) gradient type.
 
@@ -76,26 +77,24 @@ PeasyGradients is hosted as an artifact for use in Maven or Gradle projects via 
 </p>
 </details>
 
-## **Gradients**
+## Gradients
 
 PeasyGradients provides methods to render 11 types of 2D gradients.
 
-Zoom and rotation can be adjusted for most gradient types; certain gradient types offer additional parameters — for example, the polygon gradient requires a parameter specifying the number of polygon sides.
-
-For many of the gradient types, there are multiple methods available to call, offering varying degrees of customisation of the gradient's spectrum shape.
-
 Each gradient type is shown below. The screenshots are taken using the `LUV` color space with `SMOOTH_STEP` interpolation, and rotation set to 0 where applicable.
 
-| **Linear**![](resources/gradient_type_examples/linear.png ) | **Radial**![](resources/gradient_type_examples/radial.png) |
-|:---:|:---:|
-| **Conic**![](resources/gradient_type_examples/conic.png) | **Spiral**![](resources/gradient_type_examples/spiral.png) |
-| **Diamond**![](resources/gradient_type_examples/diamond.png) | **Cross**![](resources/gradient_type_examples/cross.png) |
-| **Polygon (n-sided)**![](resources/gradient_type_examples/polygon(6).png) | **Hourglass**![](resources/gradient_type_examples/hourglass.png) |
-| **Noise**![](resources/gradient_type_examples/noise.png) | **Fractal Noise**![](resources/gradient_type_examples/noise_fractal.png)
-| **Spotlight**![](resources/gradient_type_examples/spotlight.png)|
+| **Linear**![](resources/gradient_type_examples/linear.png) | **Radial**![](resources/gradient_type_examples/radial.png) | **Conic**![](resources/gradient_type_examples/conic.png) |
+|:---:|:---:|:---:|
+| **Spiral**![](resources/gradient_type_examples/spiral.png) | **Diamond**![](resources/gradient_type_examples/diamond.png) | **Cross**![](resources/gradient_type_examples/cross.png) |
+| **Polygon (n-sided)**![](resources/gradient_type_examples/polygon(6).png) | **Hourglass**![](resources/gradient_type_examples/hourglass.png) | **Spotlight**![](resources/gradient_type_examples/spotlight.png) |
+| **Fractal Noise**![](resources/gradient_type_examples/noise_fractal.png) | **Noise**![](resources/gradient_type_examples/noise.png) |  
+
+_Zoom and rotation can be adjusted for most gradient types; certain gradient types offer additional parameters — for example, the polygon gradient requires a parameter specifying the number of polygon sides._
+
+_For many of the gradient types, there are multiple methods available to call, offering varying degrees of customisation of the gradient's spectrum shape._
 
 
-## **Interpolation: Easing Functions**
+## Interpolation: Easing Functions
 In the parts of a `Gradient` between color stops, colors are composed via interpolating the neighbouring two color stops. Easing functions affect how these two adjacent stops contribute to the color of each point between them.
 
 For example, with *linear* interpolation, a point in a `Gradient` which is midway between 2 color stops is composed of 50% of the first color and 50% of the second color — there is a linear relationship between its position and the weighting of color it receives from each color stop. Other easing functions are non-linear (for example a point closer to one color stop may in some cases receive more color from the second color stop) which can result in more interesting gradients.
@@ -110,6 +109,12 @@ myGradient.setInterpolationMode(Interpolation.SMOOTH_STEP);
 
 See for a comparison of all available easing functions modes in expandable section below:
 
+| **Linear**![](resources/interpolation_examples/linear.png ) | **Identity**![](resources/interpolation_examples/identity.png) | **Smooth Step**![](resources/interpolation_examples/smooth_step.png ) | **Smoother Step**![](resources/interpolation_examples/smoother_step.png) |
+|:---:|:---:|:---:|:---:|
+| **Exponential**![](resources/interpolation_examples/exponential.png ) | **Cubic**![](resources/interpolation_examples/cubic.png) | **Circular**![](resources/interpolation_examples/circular.png ) | **Bounce**![](resources/interpolation_examples/bounce.png) |
+| **Sine**![](resources/interpolation_examples/sine.png ) | **Parabola**![](resources/interpolation_examples/parabola.png) | **Gain 1**![](resources/interpolation_examples/gain1.png ) | **Gain 2**![](resources/interpolation_examples/gain2.png) |
+| **Exponential Impulse**![](resources/interpolation_examples/expimpulse.png ) | **Heartbeat**![](resources/interpolation_examples/heartbeat.png ) | | |
+
 <details><summary style="font-size:135%; color:blue">💥See Interpolation Comparison...</summary>
 
 | **Linear**![](resources/interpolation_examples/linear.png ) | **Identity**![](resources/interpolation_examples/identity.png) |
@@ -123,7 +128,7 @@ See for a comparison of all available easing functions modes in expandable secti
 
 </details>
 
-## **Color Spaces**
+## Color Spaces
 
 Color spaces define how the color value at each color stop is represented.
 
@@ -152,7 +157,7 @@ Remember that a 1D `Gradient` consists of only a few defined color stops; all ot
 
 </details>
 
-## **Animating Gradients**
+## Animating Gradients
 
 ### Animating Color Offset
 
