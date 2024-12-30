@@ -73,6 +73,7 @@ public final class PeasyGradients {
 	private static final double HALF_PI = (0.5 * Math.PI);
 	private static final double INV_TWO_PI = 1 / TWO_PI;
 	private static final double THREE_QRTR_PI = (0.75 * Math.PI);
+	private static final double DEFAULT_DITHER = 0.015;
 
 	private static final ExecutorService THREAD_POOL;
 
@@ -104,6 +105,8 @@ public final class PeasyGradients {
 	private int renderHeight, renderWidth; // gradient region dimensions (usually the dimensions of gradientPG)
 	private int renderOffsetX, renderOffsetY; // gradient region offsets (usually 0, 0)
 	private double scaleY, scaleX;
+
+	private double ditherStrength = DEFAULT_DITHER;
 
 	/**
 	 * Number of horizontal strips the plane is paritioned into for threaded
@@ -234,8 +237,38 @@ public final class PeasyGradients {
 	}
 
 	/**
+	 * Sets the dithering strength.
+	 * <p>
+	 * Dithering helps to reduce the visibility of color-banding within gradients.
+	 * It breaks up the noticeable banding-edges and replace them with less
+	 * noticeable noise. The strength parameter defines the maximum amount by which
+	 * a color at read at location t may deviate from its position along the 1D
+	 * gradient spectrum.
+	 * 
+	 * @param strength A value >=0. Default = 0.015 (akin to a max deviation of 1.5%
+	 *                 from the colorstop)
+	 */
+
+	/**
+	 * Adjusts the dithering strength to reduce color banding in gradients.
+	 * <p>
+	 * Dithering disperses the visible color-banding by replacing sharp banding
+	 * edges with subtle noise. The 'strength' parameter specifies the maximum
+	 * permissible deviation for a color at a given position from its expected
+	 * position in the underlying 1D gradient spectrum, expressed as a fraction.
+	 *
+	 * @param strength A non-negative value specifying the deviation fraction.
+	 *                 Default is 0.015 (1.5% deviation).
+	 */
+	public void setDitherStrength(double strength) {
+		ditherStrength = strength;
+	}
+
+	/**
 	 * Restricts any and all rendered gradients to render in at most n colors
 	 * (a.k.a. posterisation).
+	 * <p>
+	 * Note that applying posterisation will disable dithering.
 	 * 
 	 * @param n max number of colors
 	 * @see #clearPosterisation()
@@ -245,15 +278,21 @@ public final class PeasyGradients {
 		if (n != gradientCacheSize) {
 			gradientCacheSize = n;
 			gradientCache = new int[gradientCacheSize];
+			ditherStrength = 0;
 		}
 	}
 
 	/**
 	 * Clears any user-defined color posterisation setting.
+	 * <p>
+	 * Note clearing posterisation restores dithering back to its default strength.
 	 * 
 	 * @see #posterise(int)
 	 */
 	public void clearPosterisation() {
+		if (ditherStrength == 0) {
+			ditherStrength = DEFAULT_DITHER;
+		}
 		setRenderTarget(gradientPG, renderOffsetX, renderOffsetY, renderWidth, renderHeight);
 	}
 
@@ -876,7 +915,40 @@ public final class PeasyGradients {
 			e.printStackTrace();
 		}
 		// else, the given args probably don't match the thread class args
+	}
 
+	/**
+	 * @return an appropriate index into the gradient color LUT
+	 */
+	private int clampAndDither(double t, int x, int y) {
+		/*
+		 * Clamp first, then dither (i.e. no point dithering values >1 if they are later
+		 * clamped back to 1.0.
+		 */
+		t = (t < 0) ? 0 : (t > 1 ? 1 : t); // clamp between 0...1
+
+		if (ditherStrength > 0) {
+			double d = interleavedGradientNoise(x, y);
+			t += d;
+			// reclamp
+			if (t < 0) {
+				t = 0;
+			}
+		}
+
+		// if t==1, index would be out of bounds, so take min()
+		int stepInt = Math.min((int) (t * gradientCacheSize), gradientCacheSize - 1);
+
+		return stepInt;
+	}
+
+	private double interleavedGradientNoise(final int x, final int y) {
+		// http://www.iryoku.com/next-generation-post-processing-in-call-of-duty-advanced-warfare
+		// https://bartwronski.com/2016/10/30/dithering-part-three-real-world-2d-quantization-dithering/
+		final double v = 52.9829189 * (0.06711056 * x + 0.00583715 * y);
+		double n = (v - Math.floor(v)); // take fractional part (range of 1)
+		n = n * 2 - 1; // adjust range from [0,1] to [-1,1]
+		return n * ditherStrength; // scale output
 	}
 
 	/**
@@ -932,10 +1004,10 @@ public final class PeasyGradients {
 				double xOff = 0; // set partition x offset to correct amount
 				for (int x = 0; x < renderWidth; x++) {
 					double step = (opXod + xOff) * odSqInverse; // get position of point on 1D gradient and normalise
-					step = (step < 0) ? 0 : (step > 1 ? 1 : step); // clamp between 0...1
-					int stepInt = Math.min((int) (step * gradientCacheSize), gradientCacheSize - 1);
-					gradientPG.pixels[pixel++] = gradientCache[stepInt];
 					xOff += odX * scaleX;
+
+					int stepInt = clampAndDither(step, x, y);
+					gradientPG.pixels[pixel++] = gradientCache[stepInt];
 				}
 			}
 
@@ -969,11 +1041,7 @@ public final class PeasyGradients {
 					double distSq = run + rise;
 					double dist = zoom * distSq;
 
-					if (dist > 1) { // clamp to a high of 1
-						dist = 1;
-					}
-
-					int stepInt = Math.min((int) (dist * gradientCacheSize), gradientCacheSize - 1);
+					int stepInt = clampAndDither(dist, x, y);
 					gradientPG.pixels[pixel++] = gradientCache[stepInt];
 				}
 			}
@@ -1008,14 +1076,7 @@ public final class PeasyGradients {
 					t *= INV_TWO_PI; // normalise
 					t -= Math.floor(t); // modulo
 
-//					Math.round(t * (gradientCacheSize - 1));
-//					t = (t < 0) ? 0 : (t >= 1 ? 1 - 1e-10 : t); // clamp between 0 and slightly less than 1
-					if (t > 1) { // clamp to a high of 1
-						t = 1;
-					}
-
-					int stepInt = Math.min((int) (t * gradientCacheSize), gradientCacheSize - 1);
-
+					int stepInt = clampAndDither(t, x, y);
 					gradientPG.pixels[pixel++] = gradientCache[stepInt];
 
 				}
@@ -1071,7 +1132,7 @@ public final class PeasyGradients {
 					t *= INV_TWO_PI; // normalise
 					t -= Math.floor(t); // modulo
 
-					int stepInt = Math.min((int) (t * gradientCacheSize), gradientCacheSize - 1);
+					int stepInt = clampAndDither(t, x, y);
 
 					gradientPG.pixels[pixel++] = gradientCache[stepInt];
 				}
@@ -1115,12 +1176,7 @@ public final class PeasyGradients {
 
 					double dist = polygonRatio * pointDistance;
 
-					if (dist > 1) { // clamp to a high of 1
-						dist = 1;
-					}
-
-					final int stepInt = Math.min((int) (dist * gradientCacheSize), gradientCacheSize - 1);
-
+					final int stepInt = clampAndDither(dist, x, y);
 					gradientPG.pixels[pixel++] = gradientCache[stepInt];
 				}
 			}
@@ -1156,12 +1212,7 @@ public final class PeasyGradients {
 
 					double dist = Math.min(Math.abs(newYpos - renderMidpointY), Math.abs(newXpos - renderMidpointX)) / denominator; // min
 
-					if (dist > 1) { // clamp to a high of 1
-						dist = 1;
-					}
-
-					final int stepInt = Math.min((int) (dist * gradientCacheSize), gradientCacheSize - 1);
-
+					final int stepInt = clampAndDither(dist, x, y);
 					gradientPG.pixels[pixel++] = gradientCache[stepInt];
 				}
 			}
@@ -1197,12 +1248,7 @@ public final class PeasyGradients {
 
 					double dist = Math.max(Math.abs(newYpos - renderMidpointY), Math.abs(newXpos - renderMidpointX)) / denominator; // max
 
-					if (dist > 1) { // clamp to a high of 1
-						dist = 1;
-					}
-
-					final int stepInt = Math.min((int) (dist * gradientCacheSize), gradientCacheSize - 1);
-
+					final int stepInt = clampAndDither(dist, x, y);
 					gradientPG.pixels[pixel++] = gradientCache[stepInt];
 				}
 			}
@@ -1235,8 +1281,7 @@ public final class PeasyGradients {
 
 					double step = fastNoiseLite.getSimplexNoiseFast((float) newXpos, (float) newYpos); // call custom method
 
-					final int stepInt = Math.min((int) (step * gradientCacheSize), gradientCacheSize - 1);
-
+					final int stepInt = clampAndDither(step, x, y);
 					gradientPG.pixels[pixel++] = gradientCache[stepInt];
 				}
 			}
@@ -1268,8 +1313,7 @@ public final class PeasyGradients {
 
 					double step = uniformNoise.uniformNoise(scale * newXpos, newYpos * scale, z);
 
-					final int stepInt = Math.min((int) (step * gradientCacheSize), gradientCacheSize - 1);
-
+					final int stepInt = clampAndDither(step, x, y);
 					gradientPG.pixels[pixel++] = gradientCache[stepInt];
 				}
 			}
@@ -1306,8 +1350,7 @@ public final class PeasyGradients {
 					double step = fastNoiseLite.GetNoise((float) newXpos, (float) newYpos);
 					step = ((step - min) * (maxMinDenom)); // scale to 0...1
 
-					final int stepInt = Math.min((int) (step * gradientCacheSize), gradientCacheSize - 1);
-
+					final int stepInt = clampAndDither(step, x, y);
 					gradientPG.pixels[pixel++] = gradientCache[stepInt];
 				}
 			}
@@ -1358,8 +1401,7 @@ public final class PeasyGradients {
 						step = 1;
 					}
 
-					int stepInt = Math.min((int) (step * gradientCacheSize), gradientCacheSize - 1);
-
+					int stepInt = clampAndDither(step, x, y);
 					gradientPG.pixels[pixel++] = gradientCache[stepInt];
 				}
 			}
@@ -1419,12 +1461,7 @@ public final class PeasyGradients {
 					double dist = Math.sqrt((yDist + xDist + pinch) * (z * z + roundness)) * denominator; // cos(atan(x)) === sqrt(z * z +
 																											// 1)
 
-					if (dist > 1) { // clamp to a high of 1
-						dist = 1;
-					}
-
-					final int stepInt = Math.min((int) (dist * gradientCacheSize), gradientCacheSize - 1);
-
+					final int stepInt = clampAndDither(dist, x, y);
 					gradientPG.pixels[pixel++] = gradientCache[stepInt];
 				}
 			}
