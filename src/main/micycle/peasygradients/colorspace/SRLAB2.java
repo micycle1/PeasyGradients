@@ -23,7 +23,7 @@ import net.jafama.FastMath;
  * https://www.magnetkern.de/srlab2.html
  *
  */
-public class SRLAB2 implements ColorSpaceTransform {
+class SRLAB2 implements ColorSpaceTransform {
 
 	@Override
 	public double[] toRGB(double[] color) {

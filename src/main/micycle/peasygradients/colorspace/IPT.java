@@ -12,7 +12,7 @@ import net.jafama.FastMath;
  * @author Michael Carleton
  *
  */
-public final class IPT implements ColorSpaceTransform {
+final class IPT implements ColorSpaceTransform {
 
 	@Override
 	public double[] toRGB(final double[] IPT) {

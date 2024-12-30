@@ -4,7 +4,7 @@ package micycle.peasygradients.colorspace;
  * Java implementation of <i>spectral.js</i>, a realistic color mixing library
  * based on the Kubelka-Munk theory that treats colors as real-life pigments.
  */
-public class K_MUNK implements ColorSpaceTransform {
+final class K_MUNK implements ColorSpaceTransform {
 
 	private static final int SIZE = 38;
 	private static final double GAMMA = 2.4;

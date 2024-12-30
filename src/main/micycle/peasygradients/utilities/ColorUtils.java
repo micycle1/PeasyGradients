@@ -71,6 +71,18 @@ public final class ColorUtils {
 	 * Composes a 32-bit ARGB color from RGBA components represented as a float
 	 * array.
 	 * 
+	 * @param RGBA The RGB components as a float array [R,G,B] with each value in
+	 *             the range 0...1.
+	 * @return The composed ARGB color as an integer.
+	 */
+	public static int RGBA1ToRGBA255(float[] RGBA) { // floatRGBToRGBInt
+		return (int) (RGBA[3] * 255) << 24 | (int) (RGBA[0] * 255) << 16 | (int) (RGBA[1] * 255) << 8 | (int) (RGBA[2] * 255);
+	}
+
+	/**
+	 * Composes a 32-bit ARGB color from RGBA components represented as a float
+	 * array.
+	 * 
 	 * @param RGBA The RGBA components as a float array [R,G,B,A] with each value in
 	 *             the range 0...255.
 	 * @return The composed ARGB color as an integer.
