@@ -7,7 +7,6 @@ package micycle.peasygradients.colorspace;
  * 
  * @author Michael Carleton
  * @deprecated not needed since the LUT optimisation.
- *
  */
 @Deprecated
 final class XYZ_FAST {

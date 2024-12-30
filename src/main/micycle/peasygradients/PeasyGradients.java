@@ -49,8 +49,8 @@ public final class PeasyGradients {
 	// for examples
 
 	private static final double TWO_PI = (2 * Math.PI);
-	private static final float TWO_PIf = (float) (2 * Math.PI);
-	private static final float PIf = (float) Math.PI;
+	private static final float TWO_PI_F = (float) (2 * Math.PI);
+	private static final float PI_F = (float) Math.PI;
 	private static final double HALF_PI = (0.5f * Math.PI);
 	private static final float INV_TWO_PI = 1f / PConstants.TWO_PI;
 	private static final float THREE_QRTR_PI = (float) (0.75f * Math.PI);
@@ -222,6 +222,7 @@ public final class PeasyGradients {
 	 * @see #clearPosterisation()
 	 */
 	public void posterise(int n) {
+		n = Math.max(n, 0);
 		if (n != gradientCacheSize) {
 			gradientCacheSize = n;
 			gradientCache = new int[n + 1];
@@ -257,7 +258,7 @@ public final class PeasyGradients {
 		// get edge-line intersection points
 		PVector[] o = Functions.lineRectIntersection(gradientPG.width, gradientPG.height, centerPoint, angle);
 
-		float modAngle = angle % TWO_PIf;
+		float modAngle = angle % TWO_PI_F;
 
 		if (modAngle > PConstants.HALF_PI && modAngle <= PConstants.HALF_PI * 3) {
 			linearGradient(gradient, o[0], o[1]);
@@ -285,7 +286,7 @@ public final class PeasyGradients {
 		// get edge-line intersection points
 		PVector[] o = Functions.lineRectIntersection(gradientPG.width, gradientPG.height, centerPoint, angle);
 
-		float modAngle = angle % TWO_PIf;
+		float modAngle = angle % TWO_PI_F;
 
 		if (modAngle > PConstants.HALF_PI && modAngle <= PConstants.HALF_PI * 3) {
 			linearGradient(gradient, o[0], o[1]);
@@ -317,7 +318,7 @@ public final class PeasyGradients {
 		o[0].lerp(centerPoint, 1 - length); // mutate length
 		o[1].lerp(centerPoint, 1 - length); // mutate length
 
-		float modAngle = angle % TWO_PIf;
+		float modAngle = angle % TWO_PI_F;
 
 		if (modAngle > PConstants.HALF_PI && modAngle <= PConstants.HALF_PI * 3) {
 			linearGradient(gradient, o[0], o[1]);
@@ -474,7 +475,7 @@ public final class PeasyGradients {
 			gradientCache[i] = gradient.getColor(i / (float) gradientCache.length);
 		}
 
-		angle %= TWO_PIf;
+		angle %= TWO_PI_F;
 
 		final double curveDenominator = 1d / (renderWidth * renderWidth + renderHeight * renderHeight);
 		curveCount *= TWO_PI;
@@ -565,7 +566,7 @@ public final class PeasyGradients {
 
 		final float denominator = (Math.max(renderHeight, renderWidth) / 2f) * zoom; // calc here, not in loop
 		angle += PConstants.QUARTER_PI; // for 'X' orientation when angle = 0
-		angle = TWO_PIf - angle; // orient rotation clockwise
+		angle = TWO_PI_F - angle; // orient rotation clockwise
 
 		final float sin = (float) FastMath.sin(angle);
 		final float cos = (float) FastMath.cos(angle);
@@ -598,7 +599,7 @@ public final class PeasyGradients {
 
 		final float denominator = (Math.max(renderHeight, renderWidth) / 2f) * zoom; // calc here, not in loop
 		angle += PConstants.QUARTER_PI; // angled at 0
-		angle = TWO_PIf - angle; // orient rotation clockwise
+		angle = TWO_PI_F - angle; // orient rotation clockwise
 
 		final float sin = (float) FastMath.sin(angle);
 		final float cos = (float) FastMath.cos(angle);
@@ -767,7 +768,7 @@ public final class PeasyGradients {
 			gradientCache[i] = gradient.getColor(i / (float) gradientCache.length);
 		}
 
-		beamAngle = Math.min(beamAngle, PIf);
+		beamAngle = Math.min(beamAngle, PI_F);
 
 		/*
 		 * fudge angle slightly to prevent solid line drawn above the gradient when
@@ -796,9 +797,9 @@ public final class PeasyGradients {
 	 * @param endPoint
 	 */
 	public void spotlightGradient(Gradient gradient, PVector originPoint, PVector endPoint) {
-		final float angle = Functions.angleBetween(endPoint, originPoint) + PIf * 1.5f;
+		final float angle = Functions.angleBetween(endPoint, originPoint) + PI_F * 1.5f;
 		spotlightGradient(gradient, originPoint, angle,
-				PApplet.map(PVector.dist(originPoint, endPoint), 0, Math.max(renderWidth, renderHeight) * 1.25f, PIf / 8, PIf));
+				PApplet.map(PVector.dist(originPoint, endPoint), 0, Math.max(renderWidth, renderHeight) * 1.25f, PI_F / 8, PI_F));
 	}
 
 	/**

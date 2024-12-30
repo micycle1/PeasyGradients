@@ -35,7 +35,7 @@ public final class Gradient {
 
 	// TODO export as JSON / load from JSON
 
-	private ArrayList<ColorStop> colorStops = new ArrayList<>();
+	private List<ColorStop> colorStops = new ArrayList<>(); // TODO add get method
 
 	private double[] interpolatedcolorOUT = new double[4]; // define once here
 
@@ -45,7 +45,7 @@ public final class Gradient {
 	private ColorStop currStop, prevStop;
 	private float denom;
 
-	public ColorSpace colorSpace = ColorSpace.LUV; // TODO public for testing
+	public ColorSpace colorSpace = ColorSpace.OKLAB; // TODO public for testing
 	private ColorSpaceTransform colorSpaceInstance = colorSpace.getColorSpace();
 	public Interpolation interpolationMode = Interpolation.SMOOTH_STEP; // TODO public for testing
 
@@ -138,7 +138,7 @@ public final class Gradient {
 
 //		position = (float) functStep(position); // apply interpolation function globally
 
-		/**
+		/*
 		 * Calculate whether the current step has gone beyond the existing color stop
 		 * boundary (either above or below). If the first color stop is at a position >
 		 * 0 or last color stop at a position < 1, then when step > currStop.percent or
@@ -180,8 +180,8 @@ public final class Gradient {
 		 * position/step (which happens when we pre-compute interpolated color results
 		 * into a LUT within PeasyGradients methods) this simpler approach below works
 		 * to find adjacent colorstops. HOWEVER, this approach doesn't work when
-		 * animating the gradient, since the position value is no longer montonic, HENCE
-		 * it's commented out and we need the longer approach above.
+		 * animating the gradient, since the position value is no longer monotonic,
+		 * HENCE it's commented out and we need the longer approach above.
 		 */
 //		if (step > currStop.percent && lastCurrStopIndex != (colorStops.size() - 1) ) {
 //			prevStop = colorStops.get(lastCurrStopIndex);
@@ -190,7 +190,7 @@ public final class Gradient {
 //			denom = 1 / (prevStop.percent - currStop.percent); // compute denominator inverse
 //		}
 
-		/**
+		/*
 		 * NOTE this approach applies the easing function between adjacent color stops,
 		 * and not globally. TODO apply easing function to the raw position, not the
 		 * color-stop-dependent position?
@@ -198,7 +198,7 @@ public final class Gradient {
 		double smoothStep = functStep((position - currStop.position) * denom); // apply interpolation function between colorstops
 //		double smoothStep = (position - currStop.position) * denom; // applicable when applying interpolation function globally
 
-		/**
+		/*
 		 * Calculate the interpolated color in the given colorspace by using the two
 		 * colorstops adjacent to the position, and the (eased) step between the two
 		 * colorstops as the weighting.
@@ -303,7 +303,6 @@ public final class Gradient {
 	 * gradient to the end, and repositions all other color stops proportionally to
 	 * where they were before), to ensure a seamless gradient spectrum, regardless
 	 * of offset.
-	 * 
 	 * <p>
 	 * Animating a gradient without calling {@link #primeAnimation()} may lead to an
 	 * ugly and undesirable seam in the gradient where the first and last color
@@ -335,7 +334,7 @@ public final class Gradient {
 	 * 
 	 * @see #pushColor(int)
 	 */
-	public void removeLast() {
+	public void removeLast() { // TODO rename pop and return colorstop?
 		if (colorStops.size() > 2) { // don't go below a 2 color gradient
 			ColorStop last = colorStops.get(colorStops.size() - 1);
 			colorStops.remove(colorStops.size() - 1);
@@ -488,16 +487,34 @@ public final class Gradient {
 	 */
 	@Override
 	public String toString() {
+		//@formatter:off
 		StringBuilder sb = new StringBuilder();
-		sb.append("Gradient\n");
-		sb.append("Offset: " + offset + "\n");
-		sb.append("color Stops (" + colorStops.size() + "):\n");
-		sb.append(String.format("    " + "%-10s%-25s%-12s%-20s\n", "Position", "RGBA", "clrInteger", "clrCurrentColSpace"));
-		for (ColorStop colorStop : colorStops) {
-			sb.append(String.format("    " + "%-10s%-25s%-12s%-20s\n", colorStop.position,
-					Functions.formatArray(ColorUtils.decomposeclrRGBDouble(colorStop.clr, colorStop.alpha), 0, 2), colorStop.clr,
-					Functions.formatArray(colorStop.getColor(colorSpace), 2, 3)));
-		}
+		// info
+	    sb.append("Gradient ").append(super.toString()).append('\n')
+	      .append("Offset: ").append(offset).append('\n')
+	      .append("Current Color Space: ").append(colorSpace).append('\n')
+	      .append("Color Stops (n=").append(colorStops.size()).append("):\n");
+
+	    String tableFormat = "  %-10s%-25s%-12s%-20s%n";
+	    
+	    // color stops header
+	    sb.append(String.format(tableFormat,
+	        "Position",
+	        "RGBA",
+	        "clrInteger",
+	        "clrCurrentColSpace"));
+	    // add color stop info
+	    for (ColorStop stop : colorStops) {
+	        double[] rgbaValues = ColorUtils.decomposeclrRGBDouble(stop.clr, stop.alpha);
+	        double[] colorSpaceValues = stop.getColor(colorSpace);
+	        
+	        sb.append(String.format(tableFormat,
+	            stop.position,
+	            Functions.formatArray(rgbaValues, 0, 2),
+	            stop.clr,
+	            Functions.formatArray(colorSpaceValues, 2, 3)));
+	    }
+	    //@formatter:on	    
 		return sb.toString();
 	}
 
@@ -537,19 +554,19 @@ public final class Gradient {
 	 */
 	private double functStep(final float step) {
 		switch (interpolationMode) {
-			case LINEAR :
+			case LINEAR:
 				return step;
-			case IDENTITY :
+			case IDENTITY:
 				return step * step * (2.0f - step);
-			case SMOOTH_STEP :
+			case SMOOTH_STEP:
 				return 3 * step * step - 2 * step * step * step; // polynomial approximation of (0.5-cos(PI*step)/2)
-			case SMOOTHER_STEP :
+			case SMOOTHER_STEP:
 				return step * step * step * (step * (step * 6 - 15) + 10);
-			case EXPONENTIAL :
+			case EXPONENTIAL:
 				return step == 1.0f ? step : 1.0f - FastPow.fastPow(2, -10 * step);
-			case CUBIC :
+			case CUBIC:
 				return step * step * step;
-			case BOUNCE :
+			case BOUNCE:
 				float sPrime = step;
 
 				if (sPrime < 0.36364) { // 1/2.75
@@ -564,30 +581,30 @@ public final class Gradient {
 					return 7.5625f * (sPrime -= 0.81818f) * sPrime + 0.9375f;
 				}
 				return 7.5625f * (sPrime -= 0.95455f) * sPrime + 0.984375f;
-			case CIRCULAR :
+			case CIRCULAR:
 				return Math.sqrt((2.0 - step) * step);
-			case SINE :
+			case SINE:
 				return FastMath.sinQuick(step);
-			case PARABOLA :
+			case PARABOLA:
 				return Math.sqrt(4.0 * step * (1.0 - step));
-			case GAIN1 :
+			case GAIN1:
 				if (step < 0.5f) {
 					return 0.5f * FastPow.fastPow(2.0f * step, 0.3f);
 				} else {
 					return 1 - 0.5f * FastPow.fastPow(2.0f * (1 - step), 0.3f);
 				}
-			case GAIN2 :
+			case GAIN2:
 				if (step < 0.5f) {
 					return 0.5f * FastPow.fastPow(2.0f * step, 3.3333f);
 				} else {
 					return 1 - 0.5f * FastPow.fastPow(2.0f * (1 - step), 3.3333f);
 				}
-			case EXPIMPULSE :
+			case EXPIMPULSE:
 				return (2 * step * FastMath.expQuick(1.0 - (2 * step)));
-			case HEARTBEAT :
+			case HEARTBEAT:
 				final double v = FastMath.atan(FastMath.sinQuick(step * Math.PI * 1) * 6); // frequency = 1; intensity = 6
 				return (v + Math.PI / 2) / Math.PI;
-			default :
+			default:
 				return step;
 		}
 	}

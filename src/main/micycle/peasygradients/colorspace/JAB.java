@@ -126,15 +126,11 @@ final class JAB implements ColorSpaceTransform {
 	}
 
 	/**
-	 * TODO
-	 * https://stackoverflow.com/questions/6475373/optimizations-for-pow-with-const-non-integer-exponent
-	 * 
-	 * @param jab
-	 * @return
 	 * @deprecated
 	 */
 	@Deprecated
 	private static double[] jab2xyzQuick(double[] jab) {
+		// https://stackoverflow.com/questions/6475373/optimizations-for-pow-with-const-non-integer-exponent
 		double[] xyz = new double[3];
 
 		double iab0 = (jab[0] + d0) / (1 + d - d * (jab[0] + d0));

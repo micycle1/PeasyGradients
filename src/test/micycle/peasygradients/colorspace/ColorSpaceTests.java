@@ -1,7 +1,7 @@
 package micycle.peasygradients.colorspace;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.EnumSource.Mode;
@@ -18,7 +18,7 @@ class ColorSpaceTests {
 	private static final double DELTA = 0.05;
 
 	@ParameterizedTest
-	@EnumSource(value = ColorSpace.class, mode = Mode.EXCLUDE, names = { "OKLAB", "RYB" })
+	@EnumSource(value = ColorSpace.class, mode = Mode.EXCLUDE, names = { "RYB" })
 	void testColorSpace(ColorSpace colorSpace) {
 		test(colorSpace.getColorSpace());
 	}
