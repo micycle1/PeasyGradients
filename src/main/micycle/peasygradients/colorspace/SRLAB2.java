@@ -11,19 +11,15 @@ import net.jafama.FastMath;
  * (which is assumed to be completely adapted) has to be known. Compared to RLAB
  * the SRLAB2 model uses the more recent chromatic adaption model of CIECAM02.
  * <p>
- * For a fixed white point, successive linear transformations can be
- * precalulated to form a single matrix, which reduces the complexity of the
- * calculations to two matrix vector multiplications and the componentwise
- * application of the compression function. The SRLAB2 model is almost as easy
- * to use as CIELAB, while overcoming its errors especially visible in
- * hue-changes of blue colors. *
+ * The SRLAB2 model is almost as easy to use as CIELAB, while overcoming its
+ * errors especially visible in hue-changes of blue colors.
  * <p>
- * Implementation of 'Deficiencies of the CIE-L*a*b* color space and
- * introduction of the SRLAB2 color model'. See
- * https://www.magnetkern.de/srlab2.html
- *
+ * A Java implementation of 'Deficiencies of the CIE-L*a*b* color space and
+ * introduction of the SRLAB2 color model'.
  */
 class SRLAB2 implements ColorSpaceTransform {
+
+	// https://www.magnetkern.de/srlab2.html
 
 	@Override
 	public double[] toRGB(double[] color) {
@@ -128,7 +124,7 @@ class SRLAB2 implements ColorSpaceTransform {
 		return new double[] { lightness, a, b };
 	}
 
-	private static double cube(double x) {
+	private static double cube(final double x) {
 		return x * x * x;
 	}
 

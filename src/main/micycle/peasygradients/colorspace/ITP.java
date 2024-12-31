@@ -3,8 +3,35 @@ package micycle.peasygradients.colorspace;
 import net.jafama.FastMath;
 
 /**
- * Dolby ITP, aka ICtCp (not be confused with the IPT color space by Ebner and
- * Fairchild, 1998).
+ * Dolby ITP, aka ICtCp (not be confused with the
+ * {@link micycle.peasygradients.colorspace.IPT IPT} color space by Ebner and
+ * Fairchild, 1998, from which this color space is developed).
+ * <p>
+ * <table>
+ * <thead>
+ * <tr>
+ * <th>Channel</th>
+ * <th>Range</th>
+ * <th>Description</th>
+ * </tr>
+ * </thead> <tbody>
+ * <tr>
+ * <td>i</td>
+ * <td>[0, 0.581]≈</td>
+ * <td>Intensity</td>
+ * </tr>
+ * <tr>
+ * <td>t</td>
+ * <td>[-0.282, 0.278]≈</td>
+ * <td>Blue-yellow component (“tritanopia”)</td>
+ * </tr>
+ * <tr>
+ * <td>p</td>
+ * <td>[-0.162, 0.279]≈</td>
+ * <td>Green–red component (“protanopia”)</td>
+ * </tr>
+ * </tbody>
+ * </table>
  * 
  * @author Michael Carleton
  *

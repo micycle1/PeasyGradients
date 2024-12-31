@@ -70,6 +70,10 @@ public enum ColorSpace {
 	 * for lightness-darkness (I), red-green (P), and yellow-blue (T).
 	 */
 	IPT(new IPT()),
+	/**
+	 * A 2021 optimisation to IPT, which improves both colour order and perceptual
+	 * uniformity with respect to the original.
+	 */
 	IPTo(new IPTo()),
 	/**
 	 * Oklab color space is designed for uniform lightness and colorfulness based on
