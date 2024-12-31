@@ -22,7 +22,7 @@ jobs:
         uses: JamesIves/github-pages-deploy-action@4.1.1
         with:
           branch: gh-pages # The branch the action should deploy to.
-          folder: target/site/apidocs # The folder the action should deploy.
+          folder: target/reports/apidocs # The folder the action should deploy.
       - name: Cache Maven packages
         uses: actions/cache@v2
         with:
