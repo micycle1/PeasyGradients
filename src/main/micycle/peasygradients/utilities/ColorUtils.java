@@ -59,7 +59,7 @@ public final class ColorUtils {
 	 * Composes a 32-bit ARGB color from RGB components represented as a float
 	 * array.
 	 * 
-	 * @param RGBA The RGB components as a float array [R,G,B] with each value in
+	 * @param RGB The RGB components as a float array [R,G,B] with each value in
 	 *             the range 0...1.
 	 * @return The composed ARGB color as an integer.
 	 */

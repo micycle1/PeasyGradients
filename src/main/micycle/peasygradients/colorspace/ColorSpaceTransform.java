@@ -48,9 +48,6 @@ public interface ColorSpaceTransform {
 	 * @param step a double value between 0.0 and 1.0 representing the interpolation
 	 *             factor, where 0.0 corresponds to the starting color, 1.0 to the
 	 *             ending color, and values in between to intermediate colors
-	 * @param out  an array of doubles where the interpolated color will be stored.
-	 *             This array must be pre-allocated and of appropriate length for
-	 *             the color space
 	 * @return the {@code out} array containing the interpolated color
 	 */
 	public default double[] interpolateLinear(double[] a, double[] b, double step) {

@@ -31,7 +31,7 @@ import net.jafama.FastMath;
  * <p>
  * This class defines only the mathematical gradient function - it does not
  * handle the actual rendering or rasterization. To generate a two-dimensional
- * visualization of this gradient, use a {@link #peasyGradients.PeasyGradients}
+ * visualization of this gradient, use a {@link micycle.peasygradients.PeasyGradients PeasyGradients}
  * instance, which will sample this function to create a 2D spectrum.
  *
  * @author Michael Carleton
@@ -239,7 +239,7 @@ public final class Gradient {
 
 	/**
 	 * Sets the 1D position of a color stop (given by its index) to a certain
-	 * position on the 1D gradient axis. Positions < 0 or > 1 will wrap around the
+	 * position on the 1D gradient axis. Positions &lt; 0 or &gt; 1 will wrap around the
 	 * gradient.
 	 * 
 	 * @param index

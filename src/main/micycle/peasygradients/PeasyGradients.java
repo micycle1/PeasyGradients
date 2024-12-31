@@ -47,17 +47,14 @@ import processing.core.PVector;
  * with multiple color stops and custom center offsets)
  * </ul>
  *
- * <p>
- * By default, renders directly to the Processing sketch. Use
+ * <p>By default, renders directly to the Processing sketch. Use
  * {@code .setRenderTarget()} to specify a custom {@code PGraphics} output
- * buffer.
+ * buffer.</p>
  *
  * <p>
- * Linear, radial & conic sampling algorithms adapted from <a href=
- * "https://medium.com/@behreajj/color-gradients-in-processing-v-2-0-e5c0b87cdfd2">
- * Jeremy Behreandt's work</a>. Additional sampling patterns are original
- * implementations.
- *
+ * Linear, radial &amp; conic sampling algorithms adapted from Jeremy
+ * Behreandt. Additional sampling patterns are original implementations.
+ * </p>
  * 
  * @author Michael Carleton
  */
@@ -178,7 +175,7 @@ public final class PeasyGradients {
 	 * PGraphics object provided by the user.
 	 * 
 	 * @param g PImage or PGraphics object to render gradients into
-	 * @see #renderIntoSketch()
+	 * @see #setRenderTarget(PApplet)
 	 */
 	public void setRenderTarget(PImage g) {
 		setRenderTarget(g, 0, 0, g.width, g.height);
@@ -356,7 +353,6 @@ public final class PeasyGradients {
 	/**
 	 * Renders a linear gradient using a given gradient centerpoint, angle and
 	 * length.
-	 * 
 	 * <p>
 	 * It's called 'linear' because the colors flow from left-to-right,
 	 * top-to-bottom, or at any angle you chose in a single direction.
@@ -367,8 +363,9 @@ public final class PeasyGradients {
 	 * @param angle       in radians
 	 * @param length      coefficient to lerp from centrepoint to edges (that
 	 *                    intersect with angle). default = 1: (first and last colors
-	 *                    will be exactly on edge); <1: colors will be sqashed; >1
-	 *                    colors spread out (outermost colors will leave the view).
+	 *                    will be exactly on edge); When &lt;1, colors will be
+	 *                    squashed; when &gt;1, colors spread out (outermost colors
+	 *                    will leave the view).
 	 */
 	public void linearGradient(Gradient gradient, PVector centerPoint, double angle, double length) {
 		// get edge-line intersection points
@@ -456,19 +453,11 @@ public final class PeasyGradients {
 	 * angle provided and the contrast between the color values is great enough to
 	 * tell a difference.
 	 * 
-	 * <p>
-	 * This method creates a hard stop where the first and last colors bump right up
-	 * to one another. See
-	 * {@link #conicGradientSmooth(Gradient, PVector, double, double)
-	 * conicGradientSmooth()} to render a conic gradient with a smooth transition
-	 * between the first and last colors.
-	 * 
 	 * @param gradient    1D {@link Gradient gradient} to use as the basis for the
 	 *                    conic gradient
 	 * @param centerPoint The PVector center point of the gradient — the position
 	 *                    where it radiates from.
 	 * @param angle       in radians, where 0 is east; going clockwise
-	 * @see #conicGradientSmooth(Gradient, PVector, double, double)
 	 */
 	public void conicGradient(Gradient gradient, PVector centerPoint, double angle) {
 		// TODO add zoom arg
@@ -1457,8 +1446,8 @@ public final class PeasyGradients {
 
 					double z = (renderMidpointY - newYpos) / (renderMidpointX - newXpos); // atan2(y,x) === atan(y/x), so calc y/x here
 
-					double dist = Math.sqrt((yDist + xDist + pinch) * (z * z + roundness)) * denominator; // cos(atan(x)) === sqrt(z * z +
-																											// 1)
+					// cos(atan(x)) === sqrt(z * z + 1)
+					double dist = Math.sqrt((yDist + xDist + pinch) * (z * z + roundness)) * denominator;
 
 					final int stepInt = clampAndDither(dist, x, y);
 					gradientPG.pixels[pixel++] = gradientCache[stepInt];

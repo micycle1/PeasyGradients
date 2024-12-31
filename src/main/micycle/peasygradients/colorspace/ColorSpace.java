@@ -83,7 +83,7 @@ public enum ColorSpace {
 	JAB(new JAB()),
 	/**
 	 * Natural color mixing by treating colors as real-life pigments using the
-	 * Kubelka & Munk theory to predict realistic color behavior.
+	 * Kubelka &amp; Munk theory to predict realistic color behavior.
 	 */
 	KMUNK(new K_MUNK()),
 	/**

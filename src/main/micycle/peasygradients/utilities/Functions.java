@@ -328,7 +328,7 @@ public final class Functions {
 	 * @param y
 	 * @param x
 	 * @return
-	 * @see #fastAtan(float)
+	 * @see #fastAtan(double)
 	 */
 	public static double fastAtan2a(double y, double x) {
 		if (x != 0.0f) {
@@ -460,17 +460,15 @@ public final class Functions {
 	 * given by a point inside the rectangle and an angle.
 	 * <p>
 	 * A Java/Processing implementation of
-	 * <a href="https://gamedev.stackexchange.com/questions/124108/i-need-to-find-
-	 * intersection-point-of-a-vector-in-an-axis-aligned-rectangle">this SE Game Dev
+	 * <a href="https://gamedev.stackexchange.com/questions/124108">this SE Game Dev
 	 * answer</a>.
-	 * 
-	 * 
-	 * @param rectCoords a float[4] containing the rectangle corner coordinates
-	 *                   {UL,BL,BR,UR}
-	 * @param point      2D coordinates of point within rectangle (i.e. where the
-	 *                   line originates from)
-	 * @param angle      angle of line in radians (where 0 faces east). Increases in
-	 *                   a clockwise manner
+	 *
+	 * @param rect  a float[4] containing the rectangle corner coordinates
+	 *              {UL,BL,BR,UR}
+	 * @param point 2D coordinates of point within rectangle (i.e. where the line
+	 *              originates from)
+	 * @param angle angle of line in radians (where 0 faces east). Increases in a
+	 *              clockwise manner
 	 * @return PVector[2] containing the two points of intersection
 	 * @see #lineRectIntersection(float, float, PVector, float)
 	 */
@@ -506,7 +504,7 @@ public final class Functions {
 	}
 
 	/**
-	 * An x-axis & y-axis aligned version of
+	 * An x-axis &amp; y-axis aligned version of
 	 * {@link #lineRectIntersection(PVector[], PVector, float) this} method.
 	 * 
 	 * <p>

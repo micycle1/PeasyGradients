@@ -9,7 +9,7 @@ import net.jafama.FastMath;
  * "http://www.hxa7241.org/articles/content/fast-pow-adjustable_hxa7241_2007.html">Fast
  * pow() With Adjustable Accuracy</a> by Harrison Ainsworth.
  * <p>
- * When precision = 11 (8KB table), mean error is < 0.01%, and max error is <
+ * When precision = 11 (8KB table), mean error is &lt; 0.01%, and max error is &lt;
  * 0.02% (proportional, ie: abs(true - approx) / true).
  * <p>
  * The essential approximation is a 'staircase' function across the fraction
@@ -49,7 +49,7 @@ public final class FastPow {
 	 * 
 	 * fastLog speed factor drops off after 14 bits.
 	 * 
-	 * @param precision number of mantissa bits used, >= 0 and <= 18
+	 * @param precision number of mantissa bits used, &ge; 0 and &le; 18
 	 */
 	public static void init(int precision) {
 
@@ -112,7 +112,7 @@ public final class FastPow {
 	/**
 	 * Includes further optimisation to calculate base representation.
 	 * 
-	 * @param baseRepresentation the exact base
+	 * @param base the exact base
 	 * @param exponent           power to raise radix to
 	 * @return
 	 * @see #fastPow(float, float)
