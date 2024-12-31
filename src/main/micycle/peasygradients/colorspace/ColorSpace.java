@@ -70,6 +70,7 @@ public enum ColorSpace {
 	 * for lightness-darkness (I), red-green (P), and yellow-blue (T).
 	 */
 	IPT(new IPT()),
+	IPTo(new IPTo()),
 	/**
 	 * Oklab color space is designed for uniform lightness and colorfulness based on
 	 * a perceptual model, improving upon the IPT principles.
