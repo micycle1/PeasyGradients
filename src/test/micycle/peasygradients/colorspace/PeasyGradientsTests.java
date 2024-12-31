@@ -1,6 +1,7 @@
 package micycle.peasygradients.colorspace;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
 
@@ -32,13 +33,13 @@ class PeasyGradientsTests {
 		// test all values same
 		Gradient gradient = new Gradient(GREY, GREY);
 		pg.linearGradient(gradient, 0);
-		for (int i = 0; i < g.pixels.length; i++) {
-			assertEquals(GREY, g.pixels[i]);
+		for (int pixel : g.pixels) {
+			assertEquals(GREY, pixel);
 		}
 
 		// test gradient rendered monotonically
 		gradient = new Gradient(WHITE, BLACK);
-		pg.linearGradient(gradient, PConstants.TWO_PI); // also tests ange=two_pi == angle=0
+		pg.linearGradient(gradient, PConstants.TWO_PI); // also tests that angle=two_pi == angle=0
 		float[] lastCol = new float[] { 256, 256, 256 };
 		for (int i = 0; i < g.pixels.length; i++) {
 			float[] col = ColorUtils.decomposeclrRGB(g.pixels[i]);
@@ -60,16 +61,47 @@ class PeasyGradientsTests {
 	}
 
 	@ParameterizedTest
-	@ValueSource(ints = {1, 2, 3, 5, 50})
+	@ValueSource(doubles = { 0, 2 * Math.PI, PConstants.TWO_PI })
+	void testLinearGradientVerticalDivision(double angle) {
+		/*
+		 * Test the linear gradient division. Each half (with posterisation=2) should be
+		 * each respective color.
+		 */
+		int w = 100;
+		int h = 100;
+		PImage g = new PImage(w, h);
+		PeasyGradients pg = new PeasyGradients(g);
+		pg.posterise(2);
+
+		int colA = WHITE;
+		int colB = BLACK;
+		Gradient gradient = new Gradient(colA, colB);
+		pg.linearGradient(gradient, angle);
+
+		for (int x = 0; x < w / 2; x++) {
+			for (int y = 0; y < h; y++) {
+				assertEquals(colA, g.pixels[y * w + x], "Failed at x=" + x + ", y=" + y);
+			}
+		}
+		for (int x = w / 2; x < w; x++) {
+			for (int y = 0; y < h; y++) {
+				assertEquals(colB, g.pixels[y * w + x], "Failed at x=" + x + ", y=" + y);
+			}
+		}
+
+	}
+
+	@ParameterizedTest
+	@ValueSource(ints = { 1, 2, 3, 5, 50 })
 	void testPosterise(int n) {
-	    PImage g = new PImage(1000, 1000);
-	    PeasyGradients pg = new PeasyGradients(g);
-	    pg.posterise(n);
+		PImage g = new PImage(1000, 1000);
+		PeasyGradients pg = new PeasyGradients(g);
+		pg.posterise(n);
 
-	    Gradient gradient = new Gradient(Palette.tetradic());
-	    pg.linearGradient(gradient, 0);
+		Gradient gradient = new Gradient(Palette.tetradic());
+		pg.linearGradient(gradient, 0);
 
-	    assertEquals(n, makeUnique(g.pixels).length);
+		assertEquals(n, makeUnique(g.pixels).length);
 	}
 
 	private static int[] makeUnique(int... values) {

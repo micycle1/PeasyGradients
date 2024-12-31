@@ -24,8 +24,9 @@ public final class Functions {
 	private static final FastLog fastLog = new DFastLog(10); // Used in veryFastPow(), 10 => 2KB table
 
 	private static final float PI = (float) Math.PI;
-	private static final float TWO_PI = (float) (2 * Math.PI);
-	private static final float HALF_PI = (float) (0.5f * Math.PI);
+	private static final float TWO_PI_F = (float) (2 * Math.PI);
+	private static final double TWO_PI = 2 * Math.PI;
+	private static final float HALF_PI_F = (float) (0.5f * Math.PI);
 	private static final float QRTR_PI_F = (float) (0.25f * Math.PI);
 	private static final float THREE_QRTR_PI_F = (float) (0.75f * Math.PI);
 	private static final double QRTR_PI = (0.25 * Math.PI);
@@ -73,17 +74,17 @@ public final class Functions {
 	public static float angleBetween(PVector tail, PVector head) {
 		float a = fastAtan2b(tail.y - head.y, tail.x - head.x);
 		if (a < 0) {
-			a += TWO_PI;
+			a += TWO_PI_F;
 		}
 		return a;
 	}
 
-	public static double angleBetween(PVector head, float tailX, float tailY) {
+	public static double angleBetween(PVector head, double tailX, double tailY) {
 		double a = fastAtan2b(tailY - head.y, tailX - head.x);
 		if (a < 0) {
 			a += TWO_PI;
 		}
-		return a;
+		return snapAngleToQuarterPi(a);
 	}
 
 	/**
@@ -146,7 +147,7 @@ public final class Functions {
 	public static float randomFloat() {
 		return random.nextFloat();
 	}
-	
+
 	/**
 	 * Returns a pseudorandom, uniformly distributed double value between 0.0
 	 * (inclusive) and 1.0 (exclusive).
@@ -349,16 +350,16 @@ public final class Functions {
 				final double z = x / y;
 				if (y > 0.0) {
 					// atan2(y,x) = PI/2 - atan(x/y) if |y/x| > 1, y > 0
-					return -fastAtan(z) + HALF_PI;
+					return -fastAtan(z) + HALF_PI_F;
 				} else {
 					// atan2(y,x) = -PI/2 - atan(x/y) if |y/x| > 1, y < 0
-					return -fastAtan(z) - HALF_PI;
+					return -fastAtan(z) - HALF_PI_F;
 				}
 			}
 		} else if (y > 0.0f) { // x = 0, y > 0
-			return HALF_PI;
+			return HALF_PI_F;
 		} else if (y < 0.0f) { // x = 0, y < 0
-			return -HALF_PI;
+			return -HALF_PI_F;
 		}
 		return 0.0f; // x,y = 0. Could return NaN instead.
 	}
@@ -390,24 +391,24 @@ public final class Functions {
 			return (angle);
 		}
 	}
-	
-	public static double fastAtan2b(final double y, final double x) {
-	    double r, angle;
-	    final double abs_y = Math.abs(y) + 1e-10; // kludge to prevent 0/0 condition
 
-	    if (x < 0.0) {
-	        r = (x + abs_y) / (abs_y - x);
-	        angle = THREE_QRTR_PI;
-	    } else {
-	        r = (x - abs_y) / (x + abs_y);
-	        angle = QRTR_PI;
-	    }
-	    angle += (0.1963 * r * r - 0.9817) * r;
-	    if (y < 0.0) {
-	        return (-angle);
-	    } else {
-	        return (angle);
-	    }
+	public static double fastAtan2b(final double y, final double x) {
+		double r, angle;
+		final double abs_y = Math.abs(y) + 1e-10; // kludge to prevent 0/0 condition
+
+		if (x < 0.0) {
+			r = (x + abs_y) / (abs_y - x);
+			angle = THREE_QRTR_PI;
+		} else {
+			r = (x - abs_y) / (x + abs_y);
+			angle = QRTR_PI;
+		}
+		angle += (0.1963 * r * r - 0.9817) * r;
+		if (y < 0.0) {
+			return (-angle);
+		} else {
+			return (angle);
+		}
 	}
 
 	/**
@@ -451,8 +452,8 @@ public final class Functions {
 	 * @return the interpolated angle in the range [0, 2PI]
 	 */
 	public static float lerpAngle(float fromRadians, float toRadians, float progress) {
-		float delta = ((toRadians - fromRadians + TWO_PI + PI) % TWO_PI) - PI;
-		return (fromRadians + delta * progress + TWO_PI) % TWO_PI;
+		float delta = ((toRadians - fromRadians + TWO_PI_F + PI) % TWO_PI_F) - PI;
+		return (fromRadians + delta * progress + TWO_PI_F) % TWO_PI_F;
 	}
 
 	/**
@@ -472,14 +473,15 @@ public final class Functions {
 	 * @return PVector[2] containing the two points of intersection
 	 * @see #lineRectIntersection(float, float, PVector, float)
 	 */
-	public static PVector[] lineRectIntersection(PVector[] rect, PVector point, float angle) {
+	public static PVector[] lineRectIntersection(PVector[] rect, PVector point, double angle) {
 
 		PVector[] output = new PVector[2];
 		output[0] = new PVector();
 		output[1] = new PVector();
 
-		final float tanA = (float) Math.tan(TWO_PI - angle); // 'TWO_PI - ___' for clockwise orientation
-		
+		angle = snapAngleToQuarterPi(angle); // handle float versions of PI properly
+		final double tanA = Math.tan(TWO_PI - angle); // 'TWO_PI - ___' for clockwise orientation
+
 		// Avoid division by zero
 		if (tanA == 0) {
 			output[0].x = rect[3].x;
@@ -529,17 +531,40 @@ public final class Functions {
 		rect[3] = new PVector(rectWidth, 0);
 		return lineRectIntersection(rect, point, angle);
 	}
-	
+
 	/**
-	 * Double-argument version of {@link #lineRectIntersection(float, float, PVector, float)}.
+	 * Double-argument version of
+	 * {@link #lineRectIntersection(float, float, PVector, float)}.
 	 */
 	public static PVector[] lineRectIntersection(double rectWidth, double rectHeight, PVector point, double angle) {
-	    final PVector[] rect = new PVector[4];
-	    rect[0] = new PVector(0, 0);
-	    rect[1] = new PVector(0, (float) rectHeight);
-	    rect[2] = new PVector((float) rectWidth, (float) rectHeight);
-	    rect[3] = new PVector((float) rectWidth, 0);
-	    return lineRectIntersection(rect, point, (float) angle);
+		final PVector[] rect = new PVector[4];
+		rect[0] = new PVector(0, 0);
+		rect[1] = new PVector(0, (float) rectHeight);
+		rect[2] = new PVector((float) rectWidth, (float) rectHeight);
+		rect[3] = new PVector((float) rectWidth, 0);
+		return lineRectIntersection(rect, point, angle);
+	}
+
+	/**
+	 * Corrects the angle to be a multiple of π/4 if it is very close to that
+	 * multiple, addressing floating-point precision issues with common angles like
+	 * π and π/2.
+	 * <p>
+	 * This method is especially useful when exact values are crucial for functions
+	 * like sin, cos, or tan, which may not behave as expected due to floating-point
+	 * inaccuracies (such as <code>float</code> version of π).
+	 *
+	 * @param angle the original angle in radians.
+	 * @return the adjusted angle, snapped to the nearest multiple of π/4 if within
+	 *         a small threshold.
+	 */
+	public static double snapAngleToQuarterPi(double angle) {
+		angle = angle % TWO_PI;
+		double halfPiMultiple = Math.round(angle / QRTR_PI) * QRTR_PI;
+		if (Math.abs(angle - halfPiMultiple) < 0.00314) {
+			angle = halfPiMultiple;
+		}
+		return angle;
 	}
 
 	/**
@@ -552,10 +577,10 @@ public final class Functions {
 	 * @param tanA  tangent of the angle of the line within rectangle
 	 * @return points of intersection
 	 */
-	private static void calcProjection(float w, float h, PVector point, float tanA, PVector[] output) {
+	private static void calcProjection(double w, double h, PVector point, double tanA, PVector[] output) {
 
-		float yCD = point.y - (tanA * (w - point.x));
-		float yAB = point.y + (tanA * point.x);
+		double yCD = point.y - (tanA * (w - point.x));
+		double yAB = point.y + (tanA * point.x);
 
 		if (tanA < 0) {
 			tanA = -tanA;
@@ -563,25 +588,25 @@ public final class Functions {
 
 		// First projection onto CD
 		if (yCD < 0) {
-			output[0].x = w + (yCD / tanA);
+			output[0].x = (float) (w + (yCD / tanA));
 		} else if (yCD > h) {
-			float opposite = yCD - h;
-			output[0].x = w - (opposite / tanA);
-			output[0].y = h;
+			double opposite = yCD - h;
+			output[0].x = (float) (w - (opposite / tanA));
+			output[0].y = (float) h;
 		} else {
-			output[0].x = w;
-			output[0].y = yCD;
+			output[0].x = (float) w;
+			output[0].y = (float) yCD;
 		}
 
 		// Second projection onto AB
 		if (yAB < 0) {
-			output[1].x = -yAB / tanA;
+			output[1].x = (float) (-yAB / tanA);
 		} else if (yAB > h) {
-			float opposite = yAB - h;
-			output[1].x = opposite / tanA;
-			output[1].y = h;
+			double opposite = yAB - h;
+			output[1].x = (float) (opposite / tanA);
+			output[1].y = (float) h;
 		} else {
-			output[1].y = yAB;
+			output[1].y = (float) yAB;
 		}
 	}
 

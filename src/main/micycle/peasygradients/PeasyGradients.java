@@ -343,7 +343,7 @@ public final class PeasyGradients {
 
 		double modAngle = angle % TWO_PI;
 
-		if (modAngle > PConstants.HALF_PI && modAngle <= PConstants.HALF_PI * 3) {
+		if (modAngle > HALF_PI && modAngle <= HALF_PI * 3) {
 			linearGradient(gradient, o[0], o[1]);
 		} else {
 			linearGradient(gradient, o[1], o[0]);
@@ -543,11 +543,11 @@ public final class PeasyGradients {
 		 * of the polygon to the midpoint of each side (which are closer than vertices)
 		 */
 		final double MIN_LENGTH_RATIO = FastMath.tan(HALF_PI - (Math.PI / sides)); // used for hexagon gradient (== tan(60)) tan(SIDES)
-		final double SEGMENT_ANGLE = (2 * Math.PI) / sides; // max angle of polygon segment in radians
+		final double SEGMENT_ANGLE = TWO_PI / sides; // max angle of polygon segment in radians
 
 		angle %= SEGMENT_ANGLE; // mod angle to minimise difference between theta and SEGMENT_ANGLE in loop
 
-		final double denominator = MIN_LENGTH_RATIO / ((Math.max(renderHeight, renderWidth)) * (0.01 * zoom * FastMath.pow(sides, 2.4)));
+		final double denominator = MIN_LENGTH_RATIO / ((Math.max(renderHeight, renderWidth)) * (0.0125 * zoom * FastMath.pow(sides, 2.4)));
 
 		int LUT_SIZE = (int) Functions.max(2000, renderWidth * 20f, renderHeight * 20f); // suitable value?
 		final int HALF_LUT_SIZE = (int) (LUT_SIZE / TWO_PI);
@@ -1061,7 +1061,7 @@ public final class PeasyGradients {
 				rise = renderMidpointY - y;
 				for (int x = 0; x < gradientPG.width; x++) { // FULL WIDTH
 					run = renderMidpointX - x;
-					t = Functions.fastAtan2b(rise, run) + PConstants.PI - angle; // + PI to align bump with angle
+					t = Functions.fastAtan2b(rise, run) + Math.PI - angle; // + PI to align bump with angle
 					t *= INV_TWO_PI; // normalise
 					t -= Math.floor(t); // modulo
 
