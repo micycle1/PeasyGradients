@@ -558,9 +558,9 @@ public final class PeasyGradients {
 
 		angle %= SEGMENT_ANGLE; // mod angle to minimise difference between theta and SEGMENT_ANGLE in loop
 
-		final double denominator = MIN_LENGTH_RATIO / ((Math.max(renderHeight, renderWidth)) * (0.01 * zoom * FastPow.fastPow(sides, 2.4)));
+		final double denominator = MIN_LENGTH_RATIO / ((Math.max(renderHeight, renderWidth)) * (0.01 * zoom * FastMath.pow(sides, 2.4)));
 
-		final int LUT_SIZE = (int) Functions.min(2000, renderWidth * 10f, renderHeight * 10f); // suitable value?
+		int LUT_SIZE = (int) Functions.max(2000, renderWidth * 20f, renderHeight * 20f); // suitable value?
 		final int HALF_LUT_SIZE = (int) (LUT_SIZE / TWO_PI);
 		final double[] ratioLookup = new double[(LUT_SIZE) + 1]; // LUT
 
@@ -574,7 +574,7 @@ public final class PeasyGradients {
 			theta *= Math.PI;
 			theta -= angle;
 			theta = (Math.abs(theta) % SEGMENT_ANGLE);
-			ratioLookup[i] = ((MIN_LENGTH_RATIO * FastMath.cosQuick(theta) + FastMath.sinQuick(theta)) * denominator);
+			ratioLookup[i] = ((MIN_LENGTH_RATIO * FastMath.cos(theta) + FastMath.sin(theta)) * denominator);
 		}
 
 		makeThreadPool(gradient, renderStrips, PolygonThread.class, renderMidpointX, renderMidpointY, ratioLookup, HALF_LUT_SIZE);
@@ -1169,8 +1169,7 @@ public final class PeasyGradients {
 					final double pointDistance = Math.sqrt(yDist * yDist + xDist * xDist); // euclidean dist between (x,y) and midpoint
 					xDist--;
 
-					final double theta = Functions.fastAtan2b((renderMidpointY - y), (renderMidpointX - x)); // range = -PI...PI
-
+					double theta = FastMath.atan2((renderMidpointY - y), (renderMidpointX - x)); // range = -PI...PI
 					// Use LUT: +PI to make theta in range 0...2PI and array index positive
 					double polygonRatio = ratioLookup[(int) ((theta + Math.PI) * HALF_LUT_SIZE)]; // use LUT
 
