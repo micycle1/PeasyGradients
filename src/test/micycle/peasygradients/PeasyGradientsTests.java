@@ -9,12 +9,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import micycle.peasygradients.PeasyGradients;
 import micycle.peasygradients.gradient.Gradient;
 import micycle.peasygradients.gradient.Palette;
 import micycle.peasygradients.utilities.ColorUtils;
+import micycle.peasygradients.utilities.FastNoiseLite.FractalType;
+import micycle.peasygradients.utilities.FastNoiseLite.NoiseType;
 import processing.core.PConstants;
 import processing.core.PImage;
+import processing.core.PVector;
 
 /**
  * Tests to ensure 2D gradients are rendered as expected.
@@ -24,6 +26,90 @@ class PeasyGradientsTests {
 	private static final int WHITE = ColorUtils.RGB255ToRGB255(255, 255, 255);
 	private static final int GREY = ColorUtils.RGB255ToRGB255(128, 128, 128);
 	private static final int BLACK = ColorUtils.RGB255ToRGB255(0, 0, 0);
+
+	@Test
+	void testSubregionRendering() {
+		PeasyGradients pg = new PeasyGradients();
+
+		PImage i = new PImage(1000, 1000);
+		i.loadPixels();
+		Arrays.fill(i.pixels, WHITE);
+		i.updatePixels();
+		for (int value : i.pixels) {
+			assertEquals(WHITE, value);
+		}
+
+		int offsetX = 250;
+		int offsetY = 250;
+		int regionWidth = 500;
+		int regionHeight = 500;
+		pg.setRenderTarget(i, offsetX, offsetY, regionWidth, regionHeight); // offSetX, offSetY, width, height
+		pg.setRenderStrips(4);
+
+		PVector v = new PVector(500, 500);
+		Gradient g = new Gradient(BLACK, BLACK);
+
+		pg.linearGradient(g, 0);
+		assertRegion(i, offsetX, offsetY, regionWidth, regionHeight);
+		Arrays.fill(i.pixels, WHITE);
+
+		pg.radialGradient(g, v, 1);
+		assertRegion(i, offsetX, offsetY, regionWidth, regionHeight);
+		Arrays.fill(i.pixels, WHITE);
+
+		pg.conicGradient(g, new PVector(500, 500), 0);
+		assertRegion(i, offsetX, offsetY, regionWidth, regionHeight);
+		Arrays.fill(i.pixels, WHITE);
+
+		pg.spiralGradient(g, new PVector(500, 500), 0, 0, 5);
+		assertRegion(i, offsetX, offsetY, regionWidth, regionHeight);
+		Arrays.fill(i.pixels, WHITE);
+
+		pg.polygonGradient(g, v, 0, 0, 5);
+		assertRegion(i, offsetX, offsetY, regionWidth, regionHeight);
+		Arrays.fill(i.pixels, WHITE);
+
+		pg.crossGradient(g, v, 0, 1);
+		assertRegion(i, offsetX, offsetY, regionWidth, regionHeight);
+		Arrays.fill(i.pixels, WHITE);
+
+		pg.diamondGradient(g, v, 0, 1);
+		assertRegion(i, offsetX, offsetY, regionWidth, regionHeight);
+		Arrays.fill(i.pixels, WHITE);
+
+		pg.noiseGradient(g, v, 0, 1);
+		assertRegion(i, offsetX, offsetY, regionWidth, regionHeight);
+		Arrays.fill(i.pixels, WHITE);
+
+		pg.uniformNoiseGradient(g, v, 0, 0, 1);
+		assertRegion(i, offsetX, offsetY, regionWidth, regionHeight);
+		Arrays.fill(i.pixels, WHITE);
+
+		pg.fractalNoiseGradient(g, v, 0, 1, NoiseType.Perlin, FractalType.None, 0, 0, 0);
+		assertRegion(i, offsetX, offsetY, regionWidth, regionHeight);
+		Arrays.fill(i.pixels, WHITE);
+
+		pg.spotlightGradient(g, v, v.copy().add(100, 100));
+		assertRegion(i, offsetX, offsetY, regionWidth, regionHeight);
+		Arrays.fill(i.pixels, WHITE);
+
+		pg.hourglassGradient(g, v, 0, 1);
+		assertRegion(i, offsetX, offsetY, regionWidth, regionHeight);
+		Arrays.fill(i.pixels, WHITE);
+	}
+
+	private void assertRegion(PImage image, int offsetX, int offsetY, int regionWidth, int regionHeight) {
+		for (int y = 0; y < image.height; y++) {
+			for (int x = 0; x < image.width; x++) {
+				int index = y * image.width + x;
+				if (x >= offsetX && x < offsetX + regionWidth && y >= offsetY && y < offsetY + regionHeight) {
+					assertEquals(BLACK, image.pixels[index], "Pixel at (" + x + ", " + y + ") should be black");
+				} else {
+					assertEquals(WHITE, image.pixels[index], "Pixel at (" + x + ", " + y + ") should be white");
+				}
+			}
+		}
+	}
 
 	@Test
 	void testLinearGradient() {

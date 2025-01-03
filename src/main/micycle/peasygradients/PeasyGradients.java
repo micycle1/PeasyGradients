@@ -47,13 +47,15 @@ import processing.core.PVector;
  * with multiple color stops and custom center offsets)
  * </ul>
  *
- * <p>By default, renders directly to the Processing sketch. Use
+ * <p>
+ * By default, renders directly to the Processing sketch. Use
  * {@code .setRenderTarget()} to specify a custom {@code PGraphics} output
- * buffer.</p>
+ * buffer.
+ * </p>
  *
  * <p>
- * Linear, radial &amp; conic sampling algorithms adapted from Jeremy
- * Behreandt. Additional sampling patterns are original implementations.
+ * Linear, radial &amp; conic sampling algorithms adapted from Jeremy Behreandt.
+ * Additional sampling patterns are original implementations.
  * </p>
  * 
  * @author Michael Carleton
@@ -107,9 +109,13 @@ public final class PeasyGradients {
 
 	/**
 	 * Number of horizontal strips the plane is paritioned into for threaded
-	 * rendering
+	 * rendering.
 	 */
-	private int renderStrips = (int) Math.max(cpuThreads * 0.75, 1);
+	private int renderStrips = (int) Math.min(Math.max(cpuThreads * 0.75, 1), 10); // 1..10 strips
+	
+	void setRenderStrips(int renderStrips) {
+		this.renderStrips = renderStrips;
+	}
 
 	/**
 	 * Constructs a new PeasyGradients renderer from a running Processing sketch;
@@ -194,21 +200,19 @@ public final class PeasyGradients {
 	 * @param height  height of region to render gradients into
 	 */
 	public void setRenderTarget(PImage g, int offSetX, int offSetY, int width, int height) {
-		if (offSetX < 0 || offSetY < 0 || (width + offSetX) > g.width || (offSetY + height) > g.height) {
-			System.err.println("Invalid parameters.");
-			return;
-		}
+		renderOffsetX = Math.max(0, offSetX); // Offset X cannot be less than 0
+		renderOffsetX = Math.min(renderOffsetX, g.width - 1); // Offset X cannot be beyond (image width - 1)
+		renderOffsetY = Math.max(0, offSetY); // Offset Y cannot be less than 0
+		renderOffsetY = Math.min(renderOffsetY, g.height - 1); // Offset Y cannot be beyond (image height - 1)
 
-		final int actualWidth = width - offSetX;
-		final int actualHeight = height - offSetY;
+		// 2. Constrain Width and Height based on Constrained Offsets:
+		renderWidth = Math.max(0, width); // Width cannot be negative
+		renderWidth = Math.min(renderWidth, g.width - renderOffsetX); // Width cannot extend beyond the image's right edge
+		renderHeight = Math.max(0, height); // Height cannot be negative
+		renderHeight = Math.min(renderHeight, g.height - renderOffsetY); // Height cannot extend beyond the image's bottom edge
 
 		scaleX = g.width / (double) width; // used for correct rendering increment for some gradients
 		scaleY = g.height / (double) height; // used for correct rendering increment for some gradients
-
-		renderWidth = width;
-		renderHeight = height;
-		renderOffsetX = offSetX;
-		renderOffsetY = offSetY;
 
 		if (!g.isLoaded()) { // load pixel array if not already done
 			if (g instanceof PGraphics) {
@@ -220,7 +224,7 @@ public final class PeasyGradients {
 
 		gradientPG = g;
 
-		gradientCacheSize = (3 * Math.max(actualWidth, actualHeight));
+		gradientCacheSize = (3 * Math.max(renderWidth, renderHeight));
 		gradientCache = new int[gradientCacheSize];
 	}
 
@@ -403,7 +407,6 @@ public final class PeasyGradients {
 		double odY = controlPoint2.y - controlPoint1.y; // Rise and run of line.
 		final double odSqInverse = 1 / (odX * odX + odY * odY); // Distance-squared of line.
 		double opXod = -controlPoint1.x * odX + -controlPoint1.y * odY;
-
 		makeThreadPool(gradient, renderStrips, LinearThread.class, odX, odY, odSqInverse, opXod);
 
 		gradientPG.updatePixels();
@@ -849,8 +852,8 @@ public final class PeasyGradients {
 
 	/**
 	 * Creates a pool of threads to split the rendering work for the given gradient
-	 * type (each thread works on a portion of the pixels array). This method starts
-	 * the threads and returns when all threads have completed.
+	 * type (each thread works on a horizontal strip portion of the pixels array).
+	 * This method starts the threads and returns when all threads have completed.
 	 * 
 	 * @param gradient     TODO
 	 * @param partitionsY
@@ -879,14 +882,15 @@ public final class PeasyGradients {
 			// division)
 			int rows = renderHeight / partitionsY;
 			for (int strip = 0; strip < partitionsY - 1; strip++) {
-				fullArgs[1] = rows * strip;
-				fullArgs[2] = rows;
+				fullArgs[1] = rows * strip; // row vertical offset (y coord to start rendering at)
+				fullArgs[2] = rows; // row count (height of horizontal strip)
 				RenderThread thread = constructor.newInstance(fullArgs);
 				taskList.add(thread);
 			}
 
 			fullArgs[1] = rows * (partitionsY - 1);
 			fullArgs[2] = renderHeight - rows * (partitionsY - 1);
+
 			RenderThread thread = constructor.newInstance(fullArgs);
 			taskList.add(thread);
 
@@ -941,7 +945,7 @@ public final class PeasyGradients {
 	}
 
 	/**
-	 * Threads operate on a portion of the pixels grid.
+	 * Threads operate on a portion (horizontal strip) of the pixels grid.
 	 * 
 	 * RenderThread child classes will implement call(); here the parallel gradient
 	 * rendering work is done.
@@ -963,7 +967,7 @@ public final class PeasyGradients {
 		RenderThread(int rowOffset, int rows) {
 			this.rowOffset = rowOffset;
 			this.rows = rows;
-			pixel = rowOffset * renderWidth;
+			pixel = (rowOffset + renderOffsetY) * gradientPG.width; // Start at the correct global row, only considering renderOffsetY here.
 		}
 	}
 
@@ -987,19 +991,20 @@ public final class PeasyGradients {
 			 * Usually we'd call Functions.linearProject() to calculate step at each pixel,
 			 * but the function is inlined here to optimise speed.
 			 */
-			opXod += rowOffset * odY * scaleY; // offset for thread
+			opXod += rowOffset * odY * scaleY;
 			for (int y = rowOffset; y < rowOffset + rows; y++) {
 				opXod += odY * scaleY;
-				double xOff = 0; // set partition x offset to correct amount
+				// Add renderOffsetX only at the start of each row.
+				pixel += renderOffsetX;
 				for (int x = 0; x < renderWidth; x++) {
-					double step = (opXod + xOff) * odSqInverse; // get position of point on 1D gradient and normalise
-					xOff += odX * scaleX;
+					double step = (opXod + x * odX * scaleX) * odSqInverse;
 
 					int stepInt = clampAndDither(step, x, y);
 					gradientPG.pixels[pixel++] = gradientCache[stepInt];
 				}
+				// After rendering a row, jump to the beginning of the next row.
+				pixel += gradientPG.width - (renderWidth + renderOffsetX);
 			}
-
 			return true;
 		}
 
@@ -1022,6 +1027,7 @@ public final class PeasyGradients {
 			for (int y = rowOffset; y < rowOffset + rows; y++) {
 				double rise = renderMidpointY - y;
 				rise *= rise;
+				pixel += renderOffsetX;
 				for (int x = 0; x < renderWidth; x++) {
 
 					double run = renderMidpointX - x;
@@ -1033,6 +1039,7 @@ public final class PeasyGradients {
 					int stepInt = clampAndDither(dist, x, y);
 					gradientPG.pixels[pixel++] = gradientCache[stepInt];
 				}
+				pixel += gradientPG.width - (renderWidth + renderOffsetX);
 			}
 			return true;
 		}
@@ -1059,7 +1066,8 @@ public final class PeasyGradients {
 
 			for (int y = rowOffset; y < rowOffset + rows; y++) {
 				rise = renderMidpointY - y;
-				for (int x = 0; x < gradientPG.width; x++) { // FULL WIDTH
+				pixel += renderOffsetX;
+				for (int x = 0; x < renderWidth; x++) { // FULL WIDTH
 					run = renderMidpointX - x;
 					t = Functions.fastAtan2b(rise, run) + Math.PI - angle; // + PI to align bump with angle
 					t *= INV_TWO_PI; // normalise
@@ -1069,6 +1077,7 @@ public final class PeasyGradients {
 					gradientPG.pixels[pixel++] = gradientCache[stepInt];
 
 				}
+				pixel += gradientPG.width - (renderWidth + renderOffsetX);
 			}
 
 			return true;
@@ -1107,15 +1116,16 @@ public final class PeasyGradients {
 			double t;
 			double spiralOffset = 0;
 			for (int y = rowOffset; y < rowOffset + rows; y++) {
+				pixel += renderOffsetX;
 				double rise = renderMidpointY - y;
 				final double riseSquared = rise * rise;
-				for (int x = 0; x < gradientPG.width; x++) { // FULL WIDTH
+				for (int x = 0; x < renderWidth; x++) { // FULL WIDTH
 
 					double run = renderMidpointX - x;
 					t = Functions.fastAtan2b(rise, run) - angle; // -PI...PI
 					spiralOffset = curviness == 0.5f ? Math.sqrt((riseSquared + run * run) * curveDenominator)
 							: FastPow.fastPow((riseSquared + run * run) * curveDenominator, curviness);
-					spiralOffset*=curveCount;
+					spiralOffset *= curveCount;
 					t += spiralOffset;
 
 					t *= INV_TWO_PI; // normalise
@@ -1125,6 +1135,7 @@ public final class PeasyGradients {
 
 					gradientPG.pixels[pixel++] = gradientCache[stepInt];
 				}
+				pixel += gradientPG.width - (renderWidth + renderOffsetX);
 			}
 
 			return true;
@@ -1152,6 +1163,7 @@ public final class PeasyGradients {
 			double xDist; // x distance between midpoint and a given pixel
 
 			for (int y = rowOffset; y < rowOffset + rows; y++) {
+				pixel += renderOffsetX;
 				yDist = (renderMidpointY - y);
 				xDist = renderMidpointX;
 				for (int x = 0; x < renderWidth; x++) {
@@ -1167,6 +1179,7 @@ public final class PeasyGradients {
 					final int stepInt = clampAndDither(dist, x, y);
 					gradientPG.pixels[pixel++] = gradientCache[stepInt];
 				}
+				pixel += gradientPG.width - (renderWidth + renderOffsetX);
 			}
 
 			return true;
@@ -1193,6 +1206,7 @@ public final class PeasyGradients {
 		public Boolean call() {
 
 			for (int y = rowOffset; y < rowOffset + rows; y++) {
+				pixel += renderOffsetX;
 				final double yTranslate = (y - renderMidpointY);
 				for (int x = 0; x < renderWidth; x++) {
 					final double newXpos = (x - renderMidpointX) * cos - yTranslate * sin + renderMidpointX; // rotate x about midpoint
@@ -1203,6 +1217,7 @@ public final class PeasyGradients {
 					final int stepInt = clampAndDither(dist, x, y);
 					gradientPG.pixels[pixel++] = gradientCache[stepInt];
 				}
+				pixel += gradientPG.width - (renderWidth + renderOffsetX);
 			}
 
 			return true;
@@ -1229,6 +1244,7 @@ public final class PeasyGradients {
 		public Boolean call() {
 
 			for (int y = rowOffset; y < rowOffset + rows; y++) {
+				pixel += renderOffsetX;
 				final double yTranslate = (y - renderMidpointY);
 				for (int x = 0; x < renderWidth; x++) {
 					final double newXpos = (x - renderMidpointX) * cos - yTranslate * sin + renderMidpointX; // rotate x about midpoint
@@ -1239,6 +1255,7 @@ public final class PeasyGradients {
 					final int stepInt = clampAndDither(dist, x, y);
 					gradientPG.pixels[pixel++] = gradientCache[stepInt];
 				}
+				pixel += gradientPG.width - (renderWidth + renderOffsetX);
 			}
 
 			return true;
@@ -1262,8 +1279,9 @@ public final class PeasyGradients {
 		public Boolean call() {
 
 			for (int y = rowOffset; y < rowOffset + rows; y++) {
+				pixel += renderOffsetX;
 				final double yTranslate = (y - centerPoint.y);
-				for (int x = 0; x < gradientPG.width; x++) {
+				for (int x = 0; x < renderWidth; x++) {
 					double newXpos = (x - centerPoint.x) * cos - yTranslate * sin + centerPoint.x; // rotate x about midpoint
 					double newYpos = yTranslate * cos + (x - centerPoint.x) * sin + centerPoint.y; // rotate y about midpoint
 
@@ -1272,6 +1290,7 @@ public final class PeasyGradients {
 					final int stepInt = clampAndDither(step, x, y);
 					gradientPG.pixels[pixel++] = gradientCache[stepInt];
 				}
+				pixel += gradientPG.width - (renderWidth + renderOffsetX);
 			}
 
 			return true;
@@ -1294,8 +1313,9 @@ public final class PeasyGradients {
 		public Boolean call() {
 
 			for (int y = rowOffset; y < rowOffset + rows; y++) {
+				pixel += renderOffsetX;
 				final double yTranslate = (y - centerPoint.y);
-				for (int x = 0; x < gradientPG.width; x++) {
+				for (int x = 0; x < renderWidth; x++) {
 					double newXpos = (x - centerPoint.x) * cos - yTranslate * sin + centerPoint.x; // rotate x about midpoint
 					double newYpos = yTranslate * cos + (x - centerPoint.x) * sin + centerPoint.y; // rotate y about midpoint
 
@@ -1304,6 +1324,7 @@ public final class PeasyGradients {
 					final int stepInt = clampAndDither(step, x, y);
 					gradientPG.pixels[pixel++] = gradientCache[stepInt];
 				}
+				pixel += gradientPG.width - (renderWidth + renderOffsetX);
 			}
 
 			return true;
@@ -1330,8 +1351,9 @@ public final class PeasyGradients {
 		public Boolean call() {
 
 			for (int y = rowOffset; y < rowOffset + rows; y++) {
+				pixel += renderOffsetX;
 				final double yTranslate = (y - centerPoint.y);
-				for (int x = 0; x < gradientPG.width; x++) {
+				for (int x = 0; x < renderWidth; x++) {
 					double newXpos = (x - centerPoint.x) * cos - yTranslate * sin + centerPoint.x; // rotate x about midpoint
 					double newYpos = yTranslate * cos + (x - centerPoint.x) * sin + centerPoint.y; // rotate y about midpoint
 
@@ -1341,6 +1363,7 @@ public final class PeasyGradients {
 					final int stepInt = clampAndDither(step, x, y);
 					gradientPG.pixels[pixel++] = gradientCache[stepInt];
 				}
+				pixel += gradientPG.width - (renderWidth + renderOffsetX);
 			}
 
 			return true;
@@ -1368,6 +1391,7 @@ public final class PeasyGradients {
 		public Boolean call() {
 
 			for (int y = rowOffset; y < rowOffset + rows; y++) {
+				pixel += renderOffsetX;
 				final double yTranslate = (y - originPoint.y);
 				for (int x = 0; x < renderWidth; x++) {
 					double newXpos = (x - originPoint.x) * cos - yTranslate * sin + originPoint.x; // rotate x about midpoint
@@ -1392,6 +1416,7 @@ public final class PeasyGradients {
 					int stepInt = clampAndDither(step, x, y);
 					gradientPG.pixels[pixel++] = gradientCache[stepInt];
 				}
+				pixel += gradientPG.width - (renderWidth + renderOffsetX);
 			}
 
 			return true;
@@ -1428,6 +1453,7 @@ public final class PeasyGradients {
 			double xDist;
 
 			for (int y = rowOffset; y < rowOffset + rows; y++) {
+				pixel += renderOffsetX;
 				yDist = (renderMidpointY - y) * (renderMidpointY - y);
 				final double yTranslate = (y - renderMidpointY);
 				for (int x = 0; x < renderWidth; x++) {
@@ -1452,6 +1478,7 @@ public final class PeasyGradients {
 					final int stepInt = clampAndDither(dist, x, y);
 					gradientPG.pixels[pixel++] = gradientCache[stepInt];
 				}
+				pixel += gradientPG.width - (renderWidth + renderOffsetX);
 			}
 
 			return true;
