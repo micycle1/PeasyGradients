@@ -7,8 +7,7 @@ import processing.core.PApplet;
 
 /**
  * Provides methods for generating color palettes based on various color harmony
- * principles, employing the HSB color space and producing colors as sRGB
- * integers. The palettes can be used for creating gradients and other
+ * principles The palettes can be used for creating gradients and other
  * color-related visual elements.
  * 
  * @author Michael Carleton
@@ -28,7 +27,7 @@ public final class Palette {
 	private static final float bMin = 0.75f; // min brightness
 	private static final float sVarMax = 0.1f; // max saturation variance
 	private static final float bVarMax = 0.1f; // max brightness variance
-	private static final float GRC = 0.618033988749895f; // Golden ratio conjugate for hue distribution
+	private static final double GRC = (Math.sqrt(5) + 1) / 2 - 1; // Golden ratio conjugate for hue distribution
 
 	/**
 	 * https://martin.ankerl.com/2009/12/09/how-to-create-random-colors-programmatically/
@@ -88,7 +87,7 @@ public final class Palette {
 	public static int[] randomRandomcolors(int ncolors) {
 		int[] out = new int[ncolors];
 		for (int i = 0; i < ncolors; i++) {
-			out[i] = -Functions.randomInt(0, 2 << 24);
+			out[i] = (255 << 24) | -Functions.randomInt(0, 2 << 24);
 		}
 		return out;
 	}
@@ -102,17 +101,17 @@ public final class Palette {
 	 * @param increment The hue increment between consecutive colors.
 	 * @return An array of colors, represented as ARGB integers.
 	 */
-	private static int[] generic(int colors, float increment) {
+	private static int[] generic(int colors, double increment) {
 		int[] out = new int[colors];
 		float h = Functions.randomFloat(); // 0...1
 		float s = Functions.random(sMin, 1);
 		float b = Functions.random(bMin, 1);
 
 		for (int i = 0; i < colors; i++) {
-
 			double[] HSB = new double[] { h, PApplet.constrain(s + Functions.random(-sVarMax, sVarMax), sMin, 1),
 					PApplet.constrain(b + Functions.random(-bVarMax, bVarMax), bMin, 1) };
-			out[i] = ColorUtils.RGB1ToRGB255(ColorSpace.HSB.getColorSpace().toRGB(HSB));
+			int color = ColorUtils.RGB1ToRGB255(ColorSpace.HSB.getColorSpace().toRGB(HSB));
+			out[i] = color;
 			h += increment;
 			h %= 1;
 		}

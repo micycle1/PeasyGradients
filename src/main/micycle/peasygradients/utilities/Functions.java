@@ -319,7 +319,7 @@ public final class Functions {
 	 * @return
 	 */
 	public static double fastAtan(double z) {
-		return z * (QRTR_PI_F + 0.273f * (1 - Math.abs(z)));
+		return z * (QRTR_PI_F + 0.273f * (1 - Math.abs(z))); // NOTE _F
 	}
 
 	/**

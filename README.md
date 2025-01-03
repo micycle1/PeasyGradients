@@ -1,11 +1,10 @@
+[![](https://jitpack.io/v/micycle1/PeasyGradients.svg)](https://jitpack.io/#micycle1/PeasyGradients)
+ [![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=micycle1_PeasyGradients&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=micycle1_PeasyGradients)
+
 <h1 align="center">
   <a href="https://github.com/micycle1/PeasyGradients">
   <img src="resources/logo/Banner-2.png" alt="PeasyGradients"/></a>
 </h1>
-
-[![](https://jitpack.io/v/micycle1/PeasyGradients.svg)](https://jitpack.io/#micycle1/PeasyGradients)
- [![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=micycle1_PeasyGradients&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=micycle1_PeasyGradients)
-
 
 # PeasyGradients
 A Processing library for creating and rendering color gradients.
@@ -94,56 +93,92 @@ _Zoom and rotation can be adjusted for most gradient types; certain gradient typ
 _For many of the gradient types, there are multiple methods available to call, offering varying degrees of customisation of the gradient's spectrum shape._
 
 
-## Interpolation: Easing Functions
-In the parts of a `Gradient` between color stops, colors are composed via interpolating the neighbouring two color stops. Easing functions affect how these two adjacent stops contribute to the color of each point between them.
+## Color Interpolation
 
-For example, with *linear* interpolation, a point in a `Gradient` which is midway between 2 color stops is composed of 50% of the first color and 50% of the second color — there is a linear relationship between its position and the weighting of color it receives from each color stop. Other easing functions are non-linear (for example a point closer to one color stop may in some cases receive more color from the second color stop) which can result in more interesting gradients.
- 
-Certain easing functions suit some gradient types better than others — for example, the `BOUNCE` function works well with polygon gradients but rather more poorly with linear gradients. Therefore, and as with color spaces, experimentation with different interpolation functions is encouraged.
+In 1D gradients, colors between stops are calculated by interpolating between adjacent stop colors. The interpolation/easing function controls how colors blend:
 
-Set the interpolation (easing) function for a given `Gradient` with `.setInterpolationMode()`, like so:
+- **Linear**: Colors blend evenly based on position (50% position = 50% of each color)
+- **Non-linear**: Colors blend with varying weights, creating more dynamic transitions
 
+```java
+// Set interpolation mode
+gradient.setInterpolationMode(Interpolation.SMOOTH_STEP);
 ```
-myGradient.setInterpolationMode(Interpolation.SMOOTH_STEP);
-```
 
-See for a comparison of all available easing functions modes in expandable section below:
+Different interpolation modes suit different rendering patterns. For example, `BOUNCE` works well with polygon gradients but can appear jarring in linear gradients. Experiment with different modes to achieve desired effects.
 
-| **Linear**![](resources/interpolation_examples/linear.png ) | **Identity**![](resources/interpolation_examples/identity.png) | **Smooth Step**![](resources/interpolation_examples/smooth_step.png ) | **Smoother Step**![](resources/interpolation_examples/smoother_step.png) |
-|:---:|:---:|:---:|:---:|
-| **Exponential**![](resources/interpolation_examples/exponential.png ) | **Cubic**![](resources/interpolation_examples/cubic.png) | **Circular**![](resources/interpolation_examples/circular.png ) | **Bounce**![](resources/interpolation_examples/bounce.png) |
-| **Sine**![](resources/interpolation_examples/sine.png ) | **Parabola**![](resources/interpolation_examples/parabola.png) | **Gain 1**![](resources/interpolation_examples/gain1.png ) | **Gain 2**![](resources/interpolation_examples/gain2.png) |
-| **Exponential Impulse**![](resources/interpolation_examples/expimpulse.png ) | **Heartbeat**![](resources/interpolation_examples/heartbeat.png ) | | |
+Here's a comparison between all available interpolation modes:
 
-<details><summary style="font-size:135%; color:blue">💥See Interpolation Comparison...</summary>
-
-| **Linear**![](resources/interpolation_examples/linear.png ) | **Identity**![](resources/interpolation_examples/identity.png) |
-|:---:|:--:|
-| **Smooth Step**![](resources/interpolation_examples/smooth_step.png ) | **Smoother Step**![](resources/interpolation_examples/smoother_step.png) |
-| **Exponential**![](resources/interpolation_examples/exponential.png ) | **Cubic**![](resources/interpolation_examples/cubic.png) |
-| **Circular**![](resources/interpolation_examples/circular.png ) | **Bounce**![](resources/interpolation_examples/bounce.png) |
-| **Sine**![](resources/interpolation_examples/sine.png ) | **Parabola**![](resources/interpolation_examples/parabola.png) |
-| **Gain 1**![](resources/interpolation_examples/gain1.png ) | **Gain 2**![](resources/interpolation_examples/gain2.png) |
-| **Exponential Impulse**![](resources/interpolation_examples/expimpulse.png ) | **Heartbeat**![](resources/interpolation_examples/heartbeat.png )
+<table>
+  <tr>
+    <td align="center" valign="center"><b>Linear</b></td>
+    <td align="center" valign="center"><b>Identity</b></td>
+    <td align="center" valign="center"><b>Smooth Step</b></td>
+    <td align="center" valign="center"><b>Smoother Step</b></td>
+  </tr>
+  <tr>
+    <td valign="top" width="25%"><img src="resources/interpolation_examples/linear.png"></td>
+    <td valign="top" width="25%"><img src="resources/interpolation_examples/identity.png"></td>
+    <td valign="top" width="25%"><img src="resources/interpolation_examples/smooth_step.png"></td>
+    <td valign="top" width="25%"><img src="resources/interpolation_examples/smoother_step.png"></td>
+  </tr>
+  <tr>
+    <td align="center" valign="center"><b>Exponential</b></td>
+    <td align="center" valign="center"><b>Cubic</b></td>
+    <td align="center" valign="center"><b>Circular</b></td>
+    <td align="center" valign="center"><b>Bounce</b></td>
+  </tr>
+  <tr>
+    <td valign="top" width="25%"><img src="resources/interpolation_examples/exponential.png"></td>
+    <td valign="top" width="25%"><img src="resources/interpolation_examples/cubic.png"></td>
+    <td valign="top" width="25%"><img src="resources/interpolation_examples/circular.png"></td>
+    <td valign="top" width="25%"><img src="resources/interpolation_examples/bounce.png"></td>
+  </tr>
+  <tr>
+    <td align="center" valign="center"><b>Sine</b></td>
+    <td align="center" valign="center"><b>Parabola</b></td>
+    <td align="center" valign="center"><b>Gain 1</b></td>
+    <td align="center" valign="center"><b>Gain 2</b></td>
+  </tr>
+  <tr>
+    <td valign="top" width="25%"><img src="resources/interpolation_examples/sine.png"></td>
+    <td valign="top" width="25%"><img src="resources/interpolation_examples/parabola.png"></td>
+    <td valign="top" width="25%"><img src="resources/interpolation_examples/gain1.png"></td>
+    <td valign="top" width="25%"><img src="resources/interpolation_examples/gain2.png"></td>
+  </tr>
+  <tr>
+    <td align="center" valign="center"><b>Exponential Impulse</b></td>
+    <td align="center" valign="center"><b>Heartbeat</b></td>
+    <td align="center" valign="center"></td>
+    <td align="center" valign="center"></td>
+  </tr>
+  <tr>
+    <td valign="top" width="25%"><img src="resources/interpolation_examples/expimpulse.png"></td>
+    <td valign="top" width="25%"><img src="resources/interpolation_examples/heartbeat.png"></td>
+    <td valign="top" width="25%"></td>
+    <td valign="top" width="25%"></td>
+  </tr>
+</table>
 
 </details>
 
 ## Color Spaces
 
-Color spaces define how the color value at each color stop is represented.
+Color space determines how colors are numerically represented, and this affects how colors blend during interpolation. Different color spaces can produce noticeably different gradients even with the same color stops.
 
-Remember that a 1D `Gradient` consists of only a few defined color stops; all other colors in a `Gradient`'s spectrum are **composed** by **interpolating** between any two adjacent color stops. Representing color stops differently (in different color spaces) affects the results of interpolation, and this can have a noticeable effect on the overall spectrum of a gradient (so experimentation with different color spaces is encouraged). A rule of thumb: avoid the `RGB`, `RYB` and `HSB` color spaces as they don't interpolate luminosity well.
+<b> main comparison is perceptually uniform vs not!</b>
+  ideally uniform hue perception and 
+
+  A smooth transition using a model designed to mimic human perception of color. The blending is done so that the perceived brightness and color varies smoothly and evenly.
 
 
- Set the color space for a given `Gradient` with `.setColorSpace()`, like so:
- 
- ```
- myGradient.setColorSpace(ColorSpace.RGB);
- ```
+```java
+gradient.setColorSpace(ColorSpace.LAB);  // Perceptually uniform blending
+```
 
- PeasyGradients supports many different color spaces — all possible color spaces are accessible via `ColorSpace.class` and examples of each are shown in the expandable section below:
+For smooth, perceptually uniform gradients, prefer spaces like `OKLAB`, `ITP`, or `K_MUNK` over `RGB`, `RYB`, or `HSB`. This is because the latter don't maintain consistent perceived brightness during interpolation.
 
-<details><summary style="font-size:135%; color:blue">💥See Color Space Comparison...</summary>
+All available spaces are accessible via `ColorSpace.class` and demonstration of each are shown in the expandable section below:
 
 *Note that with the chosen gradient, the spectrum differences aren't too apparent between many of the colorspaces in the images below. Other gradients (i.e. using different colors) may exhibit more substantial differences between the different colorspaces.*
 
