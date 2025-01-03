@@ -1,4 +1,4 @@
-package micycle.peasygradients.colorspace;
+package micycle.peasygradients;
 
 import static org.junit.jupiter.api.Assertions.*;
 

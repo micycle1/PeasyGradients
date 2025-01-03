@@ -1,4 +1,4 @@
-package micycle.peasygradients.colorspace;
+package micycle.peasygradients;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -7,6 +7,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.EnumSource.Mode;
 
+import micycle.peasygradients.colorspace.ColorSpace;
 import micycle.peasygradients.gradient.Gradient;
 import micycle.peasygradients.utilities.ColorUtils;
 import micycle.peasygradients.utilities.Interpolation;
