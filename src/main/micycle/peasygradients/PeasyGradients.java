@@ -112,7 +112,7 @@ public final class PeasyGradients {
 	 * rendering.
 	 */
 	private int renderStrips = (int) Math.min(Math.max(cpuThreads * 0.75, 1), 10); // 1..10 strips
-	
+
 	void setRenderStrips(int renderStrips) {
 		this.renderStrips = renderStrips;
 	}
@@ -156,8 +156,9 @@ public final class PeasyGradients {
 	 * 
 	 * @param p
 	 */
-	public void setRenderTarget(PApplet p) {
+	public PeasyGradients setRenderTarget(PApplet p) {
 		setRenderTarget(p.getGraphics(), 0, 0, p.width, p.height);
+		return this;
 	}
 
 	/**
@@ -172,8 +173,9 @@ public final class PeasyGradients {
 	 * @param width   width of region to render gradients into
 	 * @param height  height of region to render gradients into
 	 */
-	public void setRenderTarget(PApplet p, int offSetX, int offSetY, int width, int height) {
+	public PeasyGradients setRenderTarget(PApplet p, int offSetX, int offSetY, int width, int height) {
 		setRenderTarget(p.getGraphics(), offSetX, offSetY, width, height);
+		return this;
 	}
 
 	/**
@@ -183,8 +185,9 @@ public final class PeasyGradients {
 	 * @param g PImage or PGraphics object to render gradients into
 	 * @see #setRenderTarget(PApplet)
 	 */
-	public void setRenderTarget(PImage g) {
+	public PeasyGradients setRenderTarget(PImage g) {
 		setRenderTarget(g, 0, 0, g.width, g.height);
+		return this;
 	}
 
 	/**
@@ -199,7 +202,7 @@ public final class PeasyGradients {
 	 * @param width   width of region to render gradients into
 	 * @param height  height of region to render gradients into
 	 */
-	public void setRenderTarget(PImage g, int offSetX, int offSetY, int width, int height) {
+	public PeasyGradients setRenderTarget(PImage g, int offSetX, int offSetY, int width, int height) {
 		renderOffsetX = Math.max(0, offSetX); // Offset X cannot be less than 0
 		renderOffsetX = Math.min(renderOffsetX, g.width - 1); // Offset X cannot be beyond (image width - 1)
 		renderOffsetY = Math.max(0, offSetY); // Offset Y cannot be less than 0
@@ -226,6 +229,7 @@ public final class PeasyGradients {
 
 		gradientCacheSize = (3 * Math.max(renderWidth, renderHeight));
 		gradientCache = new int[gradientCacheSize];
+		return this;
 	}
 
 	/**
@@ -233,8 +237,9 @@ public final class PeasyGradients {
 	 * 
 	 * @param seed any integer; PeasyGradients default is 0.
 	 */
-	public void setNoiseSeed(int seed) {
+	public PeasyGradients setNoiseSeed(int seed) {
 		fastNoiseLite.SetSeed(seed);
+		return this;
 	}
 
 	/**
@@ -261,8 +266,24 @@ public final class PeasyGradients {
 	 * @param strength A non-negative value specifying the deviation fraction.
 	 *                 Default is 0.015 (1.5% deviation).
 	 */
-	public void setDitherStrength(double strength) {
+	public PeasyGradients setDitherStrength(double strength) {
 		ditherStrength = strength;
+		return this;
+	}
+
+	/**
+	 * Disables dithering.
+	 * <p>
+	 * Dithering disperses the visible color-banding by replacing sharp banding
+	 * edges with subtle noise. The 'strength' parameter specifies the maximum
+	 * permissible deviation for a color at a given position from its expected
+	 * position in the underlying 1D gradient spectrum, expressed as a fraction.
+	 * 
+	 * @return this
+	 */
+	public PeasyGradients disableDithering() {
+		setDitherStrength(0);
+		return this;
 	}
 
 	/**
@@ -274,27 +295,24 @@ public final class PeasyGradients {
 	 * @param n max number of colors
 	 * @see #clearPosterisation()
 	 */
-	public void posterise(int n) {
+	public PeasyGradients posterise(int n) {
 		n = Math.max(n, 0);
 		if (n != gradientCacheSize) {
 			gradientCacheSize = n;
 			gradientCache = new int[gradientCacheSize];
-			ditherStrength = 0;
+			disableDithering();
 		}
+		return this;
 	}
 
 	/**
 	 * Clears any user-defined color posterisation setting.
-	 * <p>
-	 * Note clearing posterisation restores dithering back to its default strength.
 	 * 
 	 * @see #posterise(int)
 	 */
-	public void clearPosterisation() {
-		if (ditherStrength == 0) {
-			ditherStrength = DEFAULT_DITHER;
-		}
+	public PeasyGradients clearPosterisation() {
 		setRenderTarget(gradientPG, renderOffsetX, renderOffsetY, renderWidth, renderHeight);
+		return this;
 	}
 
 	/**

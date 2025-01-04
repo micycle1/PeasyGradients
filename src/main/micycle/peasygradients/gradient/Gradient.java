@@ -229,12 +229,13 @@ public final class Gradient {
 	 * @param stopIndex
 	 * @param col       ARGB color integer representation
 	 */
-	public void setStopColor(int stopIndex, int col) {
+	public Gradient setStopColor(int stopIndex, int col) {
 		if (stopIndex > -1 && stopIndex < colorStops.size()) {
 			colorStops.get(stopIndex).setColor(col);
 		} else {
 			System.err.println("Color stop index out of bounds.");
 		}
+		return this;
 	}
 
 	/**
@@ -245,7 +246,7 @@ public final class Gradient {
 	 * @param index
 	 * @param position
 	 */
-	public void setStopPosition(int index, double position) {
+	public Gradient setStopPosition(int index, double position) {
 		if (index > -1 && index < colorStops.size()) {
 			if (position < 0) { // (if animation offset negative)
 				position = Math.abs(position); // make positive
@@ -258,15 +259,18 @@ public final class Gradient {
 		} else {
 			System.err.println("Color stop index out of bounds.");
 		}
+		return this;
 	}
 
 	/**
 	 * Reverses the order of colors in this gradient. This mutates the gradient's
 	 * colorstops' positions.
+	 * @return 
 	 */
-	public void reverse() {
+	public Gradient reverse() {
 		colorStops.forEach(s -> s.position = 1 - s.position);
 		Collections.sort(colorStops);
+		return this;
 	}
 
 	/**
@@ -274,13 +278,15 @@ public final class Gradient {
 	 * this each frame (within draw() for example) to animate a gradient).
 	 * 
 	 * @param amt 0...1 smaller is less change
+	 * @return 
 	 * @see #setOffset(double)
 	 * @see #primeAnimation() primeAnimation() -- consider calling this method
 	 *      before animate() to prevent a color seam
 	 */
-	public void animate(double amt) {
+	public Gradient animate(double amt) {
 		offset += amt;
 		offset %= 1;
+		return this;
 	}
 
 	/**
@@ -289,8 +295,9 @@ public final class Gradient {
 	 * @param offset
 	 * @see #animate(double)
 	 */
-	public void setOffset(double offset) {
+	public Gradient setOffset(double offset) {
 		this.offset = offset;
+		return this;
 	}
 
 	/**
@@ -300,8 +307,9 @@ public final class Gradient {
 	 * 
 	 * @param amt magnitude of mutation [0...255]
 	 */
-	public void mutatecolor(double amt) {
+	public Gradient mutatecolor(double amt) {
 		colorStops.forEach(c -> c.mutate(amt));
+		return this;
 	}
 
 	/**
@@ -315,8 +323,9 @@ public final class Gradient {
 	 * stops (at positions 0.00 and 1.00 respectively) bump right up against each
 	 * other.
 	 */
-	public void primeAnimation() {
+	public Gradient primeAnimation() {
 		pushColor(colorAt(0));
+		return this;
 	}
 
 	/**
@@ -326,11 +335,12 @@ public final class Gradient {
 	 * @param color
 	 * @see #removeLast()
 	 */
-	public void pushColor(int color) {
+	public Gradient pushColor(int color) {
 		for (ColorStop colorStop : colorStops) {
 			colorStop.position *= ((colorStops.size() - 1) / (double) colorStops.size()); // scale down existing stop positions
 		}
 		add(color, 1);
+		return this;
 	}
 
 	/**
@@ -340,7 +350,7 @@ public final class Gradient {
 	 * 
 	 * @see #pushColor(int)
 	 */
-	public void removeLast() { // TODO rename pop and return colorstop?
+	public Gradient removeLast() { // TODO rename pop and return colorstop?
 		if (colorStops.size() > 2) { // don't go below a 2 color gradient
 			ColorStop last = colorStops.get(colorStops.size() - 1);
 			colorStops.remove(colorStops.size() - 1);
@@ -353,6 +363,7 @@ public final class Gradient {
 		} else {
 			System.err.println("This gradient has only 2 colors. No more colors can be removed from this gradient.");
 		}
+		return this;
 	}
 
 	/**
@@ -380,8 +391,9 @@ public final class Gradient {
 	 * @param clr
 	 * @param percent 0...1
 	 */
-	public void add(final int clr, final double percent) {
+	public Gradient add(final int clr, final double percent) {
 		add(new ColorStop(clr, percent));
+		return this;
 	}
 
 	/**
@@ -389,10 +401,11 @@ public final class Gradient {
 	 * 
 	 * @param colorStop
 	 */
-	public void add(final ColorStop colorStop) {
+	public Gradient add(final ColorStop colorStop) {
 		colorStops.add(colorStop);
 		Collections.sort(colorStops); // sort color stops by position
 		colorStop.setColorSpace(colorSpace);
+		return this;
 	}
 
 	/**
@@ -401,23 +414,26 @@ public final class Gradient {
 	 * 
 	 * @param colorSpace
 	 */
-	public void setColorSpace(ColorSpace colorSpace) {
+	public Gradient setColorSpace(ColorSpace colorSpace) {
 		// TODO color space is defined for user at peasyGradients level, not gradient?
 		this.colorSpace = colorSpace;
 		colorSpaceInstance = colorSpace.getColorSpace();
 		colorStops.forEach(c -> c.setColorSpace(colorSpace));
+		return this;
 	}
 
-	public void nextColSpace() {
+	public Gradient nextColSpace() {
 		colorSpace = colorSpace.next();
 		colorSpaceInstance = colorSpace.getColorSpace();
 		colorStops.forEach(c -> c.setColorSpace(colorSpace));
+		return this;
 	}
 
-	public void prevColSpace() {
+	public Gradient prevColSpace() {
 		colorSpace = colorSpace.prev();
 		colorSpaceInstance = colorSpace.getColorSpace();
 		colorStops.forEach(c -> c.setColorSpace(colorSpace));
+		return this;
 	}
 
 	/**
@@ -427,16 +443,19 @@ public final class Gradient {
 	 * 
 	 * @param interpolation
 	 */
-	public void setInterpolationMode(Interpolation interpolation) {
+	public Gradient setInterpolationMode(Interpolation interpolation) {
 		this.interpolationMode = interpolation;
+		return this;
 	}
 
-	public void nextInterpolationMode() {
+	public Gradient nextInterpolationMode() {
 		interpolationMode = interpolationMode.next();
+		return this;
 	}
 
-	public void prevInterpolationMode() {
+	public Gradient prevInterpolationMode() {
 		interpolationMode = interpolationMode.prev();
+		return this;
 	}
 
 	boolean remove(ColorStop colorStop) {
