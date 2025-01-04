@@ -6,8 +6,9 @@ import net.jafama.FastMath;
 
 /**
  * CIE XYZ (aka CIE 1931) (aka tristimulus values) is a device-invariant
- * representation of color. It serves as a standard reference against which many
- * other color spaces are defined.
+ * representation of color. The values correspond roughly to how our eyes
+ * perceive red, green, and blue light. CIE XYZ is used as the foundation for
+ * many other color spaces
  *
  * @author Michael Carleton
  *
@@ -39,9 +40,12 @@ final class XYZ implements ColorSpaceTransform {
 
 		double r, g, b;
 
-		double x = xyz[0] * 0.01;
-		double y = xyz[1] * 0.01;
-		double z = xyz[2] * 0.01;
+		/*
+		 * Undo customary scaling.
+		 */
+		double x = xyz[0]/100;
+		double y = xyz[1]/100;
+		double z = xyz[2]/100;
 
 		r = x * 3.2406 + y * -1.5372 + z * -0.4986;
 		g = x * -0.9689 + y * 1.8758 + z * 0.0415;
@@ -172,17 +176,17 @@ final class XYZ implements ColorSpaceTransform {
 			z /= 12.92;
 		}
 
-		/**
-		 * Normalise values to fall between 0 and 100 (roughly speaking – values greater
-		 * than 100 are valid in certain cases)
+		/*
+		 * While not strictly required, it's customary to scale the XYZ values so they
+		 * fall within a range where Y (representing luminance) is approximately 0 to
+		 * 100 for typical colors.
 		 */
 		x *= 100;
 		y *= 100;
 		z *= 100;
 
 		return new double[] { x * 0.41239079926595 + y * 0.35758433938387 + z * 0.18048078840183,
-				x * 0.21263900587151 + y * 0.71516867876775 + z * 0.072192315360733,
-				x * 0.019330818715591 + y * 0.11919477979462 + z * 0.95053215224966 };
+				x * 0.21263900587151 + y * 0.71516867876775 + z * 0.072192315360733, x * 0.019330818715591 + y * 0.11919477979462 + z * 0.95053215224966 };
 
 	}
 
@@ -194,8 +198,8 @@ final class XYZ implements ColorSpaceTransform {
 	 */
 	static double[] xyz2rgb(double[] xyz) {
 
-		/**
-		 * Unnormalise values from XYZ100 to XYZ1
+		/*
+		 * Undo customary scaling.
 		 */
 		double x = xyz[0] / 100;
 		double y = xyz[1] / 100;
@@ -209,17 +213,17 @@ final class XYZ implements ColorSpaceTransform {
 
 		// convert linear RGB back to (gamma-adjusted) sRGB
 		if (r > 0.0031308) {
-			r = 1.055 * FastMath.powQuick(r, constA) - 0.055; // powQuick(n, 1/2.4) max error is 1E-5 over range of n = [0...1]
+			r = 1.055 * FastMath.pow(r, constA) - 0.055; // powQuick(n, 1/2.4) max error is 1E-5 over range of n = [0...1]
 		} else {
 			r *= 12.92;
 		}
 		if (g > 0.0031308) {
-			g = 1.055 * FastMath.powQuick(g, constA) - 0.055;
+			g = 1.055 * FastMath.pow(g, constA) - 0.055;
 		} else {
 			g *= 12.92;
 		}
 		if (b > 0.0031308) {
-			b = 1.055 * FastMath.powQuick(b, constA) - 0.055;
+			b = 1.055 * FastMath.pow(b, constA) - 0.055;
 		} else {
 			b *= 12.92;
 		}

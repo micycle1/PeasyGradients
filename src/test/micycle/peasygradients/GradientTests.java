@@ -40,7 +40,7 @@ class GradientTests {
 	}
 
 	@ParameterizedTest
-	@EnumSource(value = ColorSpace.class, mode = Mode.EXCLUDE, names = { "JAB", "IPT", "IPTo" }) // NOTE exlude failing
+	@EnumSource(value = ColorSpace.class, mode = Mode.EXCLUDE, names = { "IPT", "IPTo" }) // NOTE exlude failing
 	void testBiGradientIsMonotonic(ColorSpace colorSpace) {
 		Gradient gradient = new Gradient(WHITE, BLACK);
 		gradient.setInterpolationMode(Interpolation.LINEAR);

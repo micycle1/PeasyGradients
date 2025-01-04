@@ -33,6 +33,7 @@ final class JAB implements ColorSpaceTransform {
 	 * https://github.com/quag/JzAzBz/blob/master/glsl/jchz.glsl
 	 * http://im.snibgo.com/jzazbz.htm
 	 * https://www.osapublishing.org/oe/fulltext.cfm?uri=oe-25-13-15131&id=368272
+	 * https://github.com/tompazourek/Colourful/blob/master/docs/spaces-jzazbz.md
 	 */
 
 	private static final double b = 1.15;
@@ -45,7 +46,7 @@ final class JAB implements ColorSpaceTransform {
 	private static final double p = 1.7 * (2523 / Math.pow(2, 5));
 	private static final double pInverse = 1 / p; // ~0.00746
 	private static final double d = -0.56;
-	private static final double d0 = 1.6295499532821567 * Math.pow(10, -11);
+	private static final double d0 = 1.6295499532821566e-11;
 
 	JAB() {
 	}
@@ -69,7 +70,11 @@ final class JAB implements ColorSpaceTransform {
 	}
 
 	private static double[] xyz2jab(double[] xyz) {
-		double[] jab = new double[3];
+		// Scale XYZ values to the JAB expected range (assuming Y in ranges from 0 to
+		// 100)
+		xyz[0] /= 100.0;
+		xyz[1] /= 100.0;
+		xyz[2] /= 100.0;
 
 		double[] XYZp = new double[3];
 		XYZp[0] = b * xyz[0] - ((b - 1) * xyz[2]);
@@ -91,6 +96,7 @@ final class JAB implements ColorSpaceTransform {
 		Iab[1] = 3.524000 * LMSp[0] - 4.066708 * LMSp[1] + 0.542708 * LMSp[2];
 		Iab[2] = 0.199076 * LMSp[0] + 1.096799 * LMSp[1] - 1.295875 * LMSp[2];
 
+		double[] jab = new double[3];
 		jab[0] = ((1 + d) * Iab[0] / (1 + d * Iab[0])) - d0;
 		jab[1] = Iab[1];
 		jab[2] = Iab[2];
@@ -101,7 +107,7 @@ final class JAB implements ColorSpaceTransform {
 	private static double[] jab2xyz(double[] jab) {
 		double[] xyz = new double[3];
 
-		double iab0 = (jab[0] + d0) / (1 + d - d * (jab[0] + d0));
+		final double iab0 = (jab[0] + d0) / (1 + d - d * (jab[0] + d0));
 
 		double[] LMSp = new double[3];
 		LMSp[0] = iab0 + 0.138605043271539 * jab[1] + 0.058047316156119 * jab[2];
@@ -109,9 +115,18 @@ final class JAB implements ColorSpaceTransform {
 		LMSp[2] = iab0 - 0.096019242026319 * jab[1] - 0.811891896056039 * jab[2];
 
 		double[] LMS = new double[3];
-		LMS[0] = FastMath.powQuick((c1 - FastMath.pow(LMSp[0], pInverse)) / ((c3 * FastMath.pow(LMSp[0], pInverse)) - c2), nInverse);
-		LMS[1] = FastMath.powQuick((c1 - FastMath.pow(LMSp[1], pInverse)) / ((c3 * FastMath.pow(LMSp[1], pInverse)) - c2), nInverse);
-		LMS[2] = FastMath.powQuick((c1 - FastMath.pow(LMSp[2], pInverse)) / ((c3 * FastMath.pow(LMSp[2], pInverse)) - c2), nInverse);
+		// Calculate the common sub-expression once for each element
+		double temp0 = FastMath.pow(LMSp[0], pInverse);
+		double denom0 = c3 * temp0 - c2;
+		LMS[0] = FastMath.pow((c1 - temp0) / denom0, nInverse);
+
+		double temp1 = FastMath.pow(LMSp[1], pInverse);
+		double denom1 = c3 * temp1 - c2;
+		LMS[1] = FastMath.pow((c1 - temp1) / denom1, nInverse);
+
+		double temp2 = FastMath.pow(LMSp[2], pInverse);
+		double denom2 = c3 * temp2 - c2;
+		LMS[2] = FastMath.pow((c1 - temp2) / denom2, nInverse);
 
 		double[] XYZp = new double[3];
 		XYZp[0] = 1.924226435787607 * LMS[0] - 1.004792312595365 * LMS[1] + 0.037651404030618 * LMS[2];
@@ -121,6 +136,11 @@ final class JAB implements ColorSpaceTransform {
 		xyz[0] = (XYZp[0] + (b - 1) * XYZp[2]) / b;
 		xyz[1] = (XYZp[1] + (g - 1) * xyz[0]) / g;
 		xyz[2] = XYZp[2];
+
+		// Rescale XYZ values back to the expected range
+		xyz[0] *= 100.0;
+		xyz[1] *= 100.0;
+		xyz[2] *= 100.0;
 
 		return xyz;
 	}
